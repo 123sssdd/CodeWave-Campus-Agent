@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 个性化题库系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-home text-primary"></i> 
+        欢迎使用个性化题库系统
+    </h1>
+</div>
+
+<!-- 用户选择区域 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">选择用户</h5>
+                <div class="row" id="user-list">
+                    <!-- 用户列表将动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 功能介绍 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">智能推荐</h5>
+                <p class="card-text">
+                    基于你的学习记录和偏好，系统会智能推荐最适合的题目，
+                    帮助你高效提升编程能力。
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-code fa-3x text-success mb-3"></i>
+                <h5 class="card-title">在线编程</h5>
+                <p class="card-text">
+                    支持多种编程语言的在线编程环境，实时代码执行和测试，
+                    提供即时反馈。
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">学习分析</h5>
+                <p class="card-text">
+                    详细的学习统计和进度分析，帮助你了解学习状况，
+                    制定更好的学习计划。
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 系统特色 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-star text-warning"></i> 
+                    系统特色
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <strong>个性化学习路径：</strong>根据知识掌握情况自动规划学习顺序
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <strong>多样化题型：</strong>理论题、编程题、选择题、实践题全覆盖
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <strong>难度自适应：</strong>智能调整题目难度，保持最佳学习节奏
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <strong>实时代码执行：</strong>支持Python、Java、C++等多种语言
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <strong>外部平台集成：</strong>可接入LeetCode、HackerRank等平台
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <strong>学习数据分析：</strong>详细的答题统计和知识点掌握度分析
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快速开始 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>准备好开始学习了吗？</h4>
+                <p class="mb-3">选择一个用户身份，开始你的个性化学习之旅！</p>
+                <button class="btn btn-light btn-lg" onclick="startLearning()">
+                    <i class="fas fa-rocket"></i> 开始学习
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedUserId = null;
+
+    // 加载用户列表
+    async function loadUsers() {
+        try {
+            const users = await apiCall('/users');
+            const userList = document.getElementById('user-list');
+            
+            userList.innerHTML = users.map(user => `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card user-card" onclick="selectUser(${user.id})" style="cursor: pointer;">
+                        <div class="card-body text-center">
+                            <div class="avatar mb-3">
+                                <i class="fas fa-user-circle fa-3x text-primary"></i>
+                            </div>
+                            <h6 class="card-title">${user.username}</h6>
+                            <small class="text-muted">${user.email}</small>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary">${user.preferred_difficulty}</span>
+                                <span class="badge bg-info">${user.preferred_interaction_type}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('加载用户失败:', error);
+            showToast('加载用户列表失败', 'error');
+        }
+    }
+
+    function selectUser(userId) {
+        selectedUserId = userId;
+        currentUser = userId;
+        
+        // 移除之前的选中状态
+        document.querySelectorAll('.user-card').forEach(card => {
+            card.classList.remove('border-primary', 'bg-light');
+        });
+        
+        // 添加选中状态
+        event.currentTarget.classList.add('border-primary', 'bg-light');
+        
+        // 更新快速统计
+        loadQuickStats();
+        
+        showToast(`已选择用户: ${event.currentTarget.querySelector('.card-title').textContent}`, 'success');
+    }
+
+    function startLearning() {
+        if (!selectedUserId) {
+            showToast('请先选择一个用户', 'warning');
+            return;
+        }
+        
+        window.location.href = `/practice/${selectedUserId}`;
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUsers();
+        
+        // 默认选择第一个用户
+        setTimeout(() => {
+            const firstUserCard = document.querySelector('.user-card');
+            if (firstUserCard) {
+                firstUserCard.click();
+            }
+        }, 500);
+    });
+</script>
+{% endblock %}

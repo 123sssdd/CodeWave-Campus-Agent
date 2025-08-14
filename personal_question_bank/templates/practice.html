@@ -1,0 +1,696 @@
+{% extends "base.html" %}
+
+{% block title %}练习模式 - 个性化题库系统{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .timer {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #dc3545;
+    }
+    
+    .code-editor {
+        height: 400px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    
+    .test-case {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 5px 0;
+    }
+    
+    .execution-result {
+        background: #2d3748;
+        color: #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .progress-bar-container {
+        position: relative;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .question-nav {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    .answer-feedback {
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .feedback-correct {
+        background: linear-gradient(45deg, #d4edda, #c3e6cb);
+        border: 2px solid #28a745;
+    }
+    
+    .feedback-incorrect {
+        background: linear-gradient(45deg, #f8d7da, #f1b0b7);
+        border: 2px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="question-container">
+    <!-- 题目导航栏 -->
+    <div class="card question-nav mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h6 class="mb-0">
+                        <span id="current-question-num">1</span> / <span id="total-questions">10</span>
+                    </h6>
+                    <div class="progress-bar-container mt-2">
+                        <div class="progress-bar-fill" id="progress-bar" style="width: 10%"></div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="timer" id="timer">00:00</div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-outline-primary btn-sm" onclick="getNewRecommendations()">
+                        <i class="fas fa-refresh"></i> 获取新推荐
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 题目内容 -->
+    <div id="question-content">
+        <!-- 题目将动态加载 -->
+    </div>
+
+    <!-- 答题区域 -->
+    <div id="answer-area">
+        <!-- 答题界面将根据题目类型动态生成 -->
+    </div>
+
+    <!-- 控制按钮 -->
+    <div class="text-center mt-4">
+        <button class="btn btn-secondary me-2" id="prev-btn" onclick="previousQuestion()" disabled>
+            <i class="fas fa-chevron-left"></i> 上一题
+        </button>
+        <button class="btn btn-primary me-2" id="submit-btn" onclick="submitAnswer()">
+            <i class="fas fa-paper-plane"></i> 提交答案
+        </button>
+        <button class="btn btn-success" id="next-btn" onclick="nextQuestion()" style="display: none;">
+            <i class="fas fa-chevron-right"></i> 下一题
+        </button>
+    </div>
+
+    <!-- 答案反馈 -->
+    <div id="answer-feedback" style="display: none;">
+        <!-- 反馈内容将动态生成 -->
+    </div>
+</div>
+
+<!-- 完成练习模态框 -->
+<div class="modal fade" id="completionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-trophy text-warning"></i> 练习完成！
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="completion-stats">
+                <!-- 完成统计将动态生成 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="startNewPractice()">
+                    继续练习
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="goToDashboard()">
+                    查看统计
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let startTime = Date.now();
+    let timerInterval = null;
+    let practiceResults = [];
+    const userId = {{ user_id }};
+
+    // 初始化练习
+    async function initPractice() {
+        try {
+            showLoading('正在为您准备个性化题目...');
+            
+            // 获取推荐题目
+            const response = await apiCall(`/recommendations/${userId}?count=10`);
+            currentQuestions = response.recommendations;
+            
+            if (currentQuestions.length === 0) {
+                showToast('暂无可推荐的题目', 'warning');
+                return;
+            }
+            
+            // 更新总题数
+            document.getElementById('total-questions').textContent = currentQuestions.length;
+            
+            // 显示第一题
+            showQuestion(0);
+            
+            // 开始计时
+            startTimer();
+            
+            hideLoading();
+            
+        } catch (error) {
+            hideLoading();
+            showToast('加载题目失败: ' + error.message, 'error');
+        }
+    }
+
+    // 显示题目
+    function showQuestion(index) {
+        if (index < 0 || index >= currentQuestions.length) return;
+        
+        currentQuestionIndex = index;
+        const question = currentQuestions[index];
+        
+        // 更新进度
+        updateProgress();
+        
+        // 生成题目内容
+        const questionContent = document.getElementById('question-content');
+        questionContent.innerHTML = generateQuestionHTML(question);
+        
+        // 生成答题区域
+        const answerArea = document.getElementById('answer-area');
+        answerArea.innerHTML = generateAnswerAreaHTML(question);
+        
+        // 隐藏反馈区域
+        document.getElementById('answer-feedback').style.display = 'none';
+        
+        // 更新按钮状态
+        updateButtonStates();
+        
+        // 语法高亮
+        if (question.question_type === 'coding') {
+            Prism.highlightAll();
+        }
+    }
+
+    // 生成题目HTML
+    function generateQuestionHTML(question) {
+        const difficultyClass = `difficulty-${question.difficulty}`;
+        const typeClass = `type-${question.question_type}`;
+        
+        return `
+            <div class="card question-card ${difficultyClass} ${typeClass}">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">
+                                <i class="${getTypeIcon(question.question_type)}"></i>
+                                ${question.title}
+                            </h5>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge" style="background-color: ${getDifficultyColor(question.difficulty)}">
+                                ${question.difficulty}
+                            </span>
+                            <span class="badge bg-secondary ms-1">
+                                ${question.question_type}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="question-content">
+                        ${question.content.replace(/\n/g, '<br>')}
+                    </div>
+                    
+                    ${question.knowledge_point ? `
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-tag"></i> 知识点: ${question.knowledge_point.name}
+                            </small>
+                        </div>
+                    ` : ''}
+                    
+                    ${question.estimated_time ? `
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 预估时间: ${question.estimated_time} 分钟
+                            </small>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // 生成答题区域HTML
+    function generateAnswerAreaHTML(question) {
+        switch (question.question_type) {
+            case 'coding':
+                return generateCodingAnswerArea(question);
+            case 'multiple_choice':
+                return generateMultipleChoiceAnswerArea(question);
+            case 'theory':
+            case 'practical':
+                return generateTextAnswerArea(question);
+            default:
+                return '<div class="alert alert-warning">未知题目类型</div>';
+        }
+    }
+
+    // 生成编程题答题区域
+    function generateCodingAnswerArea(question) {
+        return `
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-code"></i> 代码编辑器</h6>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <select class="form-select form-select-sm" id="language-select" style="width: auto;">
+                                <option value="python"${question.programming_language === 'python' ? ' selected' : ''}>Python</option>
+                                <option value="java"${question.programming_language === 'java' ? ' selected' : ''}>Java</option>
+                                <option value="cpp"${question.programming_language === 'cpp' ? ' selected' : ''}>C++</option>
+                                <option value="javascript"${question.programming_language === 'javascript' ? ' selected' : ''}>JavaScript</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-primary btn-sm" onclick="runCode()">
+                                <i class="fas fa-play"></i> 运行代码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <textarea id="code-editor" class="form-control code-editor" placeholder="在这里编写您的代码...">${question.starter_code || ''}</textarea>
+                    
+                    ${question.test_cases ? `
+                        <div class="mt-3">
+                            <h6>测试用例:</h6>
+                            ${question.test_cases.map((tc, i) => `
+                                <div class="test-case">
+                                    <strong>用例 ${i + 1}:</strong><br>
+                                    <small>输入: <code>${tc.input}</code></small><br>
+                                    <small>期望输出: <code>${tc.expected_output}</code></small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <div id="execution-result" style="display: none;">
+                        <h6 class="mt-3">执行结果:</h6>
+                        <div class="execution-result" id="result-content"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 生成选择题答题区域
+    function generateMultipleChoiceAnswerArea(question) {
+        if (!question.options) return '<div class="alert alert-warning">选项数据缺失</div>';
+        
+        return `
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-list"></i> 请选择正确答案</h6>
+                </div>
+                <div class="card-body">
+                    ${question.options.map((option, index) => `
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="answer" id="option${index}" value="${option.charAt(0)}">
+                            <label class="form-check-label" for="option${index}">
+                                ${option}
+                            </label>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // 生成文本答题区域
+    function generateTextAnswerArea(question) {
+        return `
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-edit"></i> 请输入您的答案</h6>
+                </div>
+                <div class="card-body">
+                    <textarea id="text-answer" class="form-control" rows="6" 
+                              placeholder="请在这里输入您的答案..."></textarea>
+                </div>
+            </div>
+        `;
+    }
+
+    // 运行代码
+    async function runCode() {
+        const code = document.getElementById('code-editor').value;
+        const language = document.getElementById('language-select').value;
+        const question = currentQuestions[currentQuestionIndex];
+        
+        if (!code.trim()) {
+            showToast('请输入代码', 'warning');
+            return;
+        }
+        
+        try {
+            const resultDiv = document.getElementById('execution-result');
+            const resultContent = document.getElementById('result-content');
+            
+            resultDiv.style.display = 'block';
+            resultContent.textContent = '正在执行代码...';
+            
+            const response = await apiCall('/code/run', {
+                method: 'POST',
+                body: JSON.stringify({
+                    code: code,
+                    language: language,
+                    test_cases: question.test_cases || []
+                })
+            });
+            
+            let resultText = '';
+            if (response.success) {
+                resultText += `执行成功!\n`;
+                resultText += `执行时间: ${response.execution_time}ms\n`;
+                if (response.total_test_cases > 0) {
+                    resultText += `测试通过: ${response.test_cases_passed}/${response.total_test_cases}\n`;
+                }
+                resultText += `\n输出:\n${response.output}`;
+            } else {
+                resultText = `执行失败:\n${response.error}`;
+            }
+            
+            resultContent.textContent = resultText;
+            
+        } catch (error) {
+            document.getElementById('result-content').textContent = `网络错误: ${error.message}`;
+        }
+    }
+
+    // 提交答案
+    async function submitAnswer() {
+        const question = currentQuestions[currentQuestionIndex];
+        const questionStartTime = Date.now();
+        let userAnswer = '';
+        
+        // 获取用户答案
+        switch (question.question_type) {
+            case 'coding':
+                userAnswer = document.getElementById('code-editor').value;
+                break;
+            case 'multiple_choice':
+                const checkedOption = document.querySelector('input[name="answer"]:checked');
+                userAnswer = checkedOption ? checkedOption.value : '';
+                break;
+            case 'theory':
+            case 'practical':
+                userAnswer = document.getElementById('text-answer').value;
+                break;
+        }
+        
+        if (!userAnswer.trim()) {
+            showToast('请先回答题目', 'warning');
+            return;
+        }
+        
+        try {
+            showLoading('正在评判答案...');
+            
+            const timeSpent = Math.floor((Date.now() - (startTime + currentQuestionIndex * 30000)) / 1000);
+            
+            const response = await apiCall('/learning-records', {
+                method: 'POST',
+                body: JSON.stringify({
+                    user_id: userId,
+                    question_id: question.id,
+                    user_answer: userAnswer,
+                    time_spent: Math.max(timeSpent, 10), // 最少10秒
+                    interaction_type: 'practice_session'
+                })
+            });
+            
+            // 记录结果
+            practiceResults.push({
+                question: question,
+                userAnswer: userAnswer,
+                isCorrect: response.is_correct,
+                timeSpent: timeSpent,
+                feedback: response
+            });
+            
+            // 显示反馈
+            showAnswerFeedback(response);
+            
+            hideLoading();
+            
+        } catch (error) {
+            hideLoading();
+            showToast('提交失败: ' + error.message, 'error');
+        }
+    }
+
+    // 显示答案反馈
+    function showAnswerFeedback(response) {
+        const feedbackDiv = document.getElementById('answer-feedback');
+        const isCorrect = response.is_correct;
+        
+        feedbackDiv.className = `answer-feedback ${isCorrect ? 'feedback-correct' : 'feedback-incorrect'}`;
+        feedbackDiv.innerHTML = `
+            <div class="row">
+                <div class="col-md-8">
+                    <h5>
+                        <i class="fas fa-${isCorrect ? 'check-circle text-success' : 'times-circle text-danger'}"></i>
+                        ${isCorrect ? '回答正确！' : '回答错误'}
+                    </h5>
+                    <div class="mt-2">
+                        <strong>正确答案:</strong> ${response.correct_answer}
+                    </div>
+                    ${response.explanation ? `
+                        <div class="mt-2">
+                            <strong>解释:</strong> ${response.explanation}
+                        </div>
+                    ` : ''}
+                    ${response.execution_result ? `
+                        <div class="mt-2">
+                            <strong>代码执行结果:</strong>
+                            <div class="execution-result mt-1">
+                                ${response.execution_result.success ? '执行成功' : '执行失败'}
+                                ${response.execution_result.total_test_cases > 0 ? 
+                                    `\n测试通过: ${response.execution_result.test_cases_passed}/${response.execution_result.total_test_cases}` : ''}
+                                ${response.execution_result.output ? `\n输出:\n${response.execution_result.output}` : ''}
+                                ${response.execution_result.error ? `\n错误:\n${response.execution_result.error}` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="progress-circle" style="background-color: ${isCorrect ? '#28a745' : '#dc3545'}">
+                        ${isCorrect ? '+10' : '+0'}
+                    </div>
+                    <small class="d-block mt-2">积分</small>
+                </div>
+            </div>
+        `;
+        
+        feedbackDiv.style.display = 'block';
+        
+        // 更新按钮状态
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    // 下一题
+    function nextQuestion() {
+        if (currentQuestionIndex < currentQuestions.length - 1) {
+            showQuestion(currentQuestionIndex + 1);
+            resetAnswerArea();
+        } else {
+            // 完成练习
+            completePractice();
+        }
+    }
+
+    // 上一题
+    function previousQuestion() {
+        if (currentQuestionIndex > 0) {
+            showQuestion(currentQuestionIndex - 1);
+            resetAnswerArea();
+        }
+    }
+
+    // 重置答题区域
+    function resetAnswerArea() {
+        document.getElementById('submit-btn').style.display = 'inline-block';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('answer-feedback').style.display = 'none';
+    }
+
+    // 更新进度
+    function updateProgress() {
+        const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('current-question-num').textContent = currentQuestionIndex + 1;
+    }
+
+    // 更新按钮状态
+    function updateButtonStates() {
+        document.getElementById('prev-btn').disabled = currentQuestionIndex === 0;
+    }
+
+    // 开始计时
+    function startTimer() {
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // 更新计时器
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        document.getElementById('timer').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // 完成练习
+    function completePractice() {
+        clearInterval(timerInterval);
+        
+        // 计算统计
+        const totalQuestions = practiceResults.length;
+        const correctAnswers = practiceResults.filter(r => r.isCorrect).length;
+        const totalTime = Math.floor((Date.now() - startTime) / 1000);
+        const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).toFixed(1) : 0;
+        
+        // 显示完成统计
+        document.getElementById('completion-stats').innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                <h4>恭喜完成本次练习！</h4>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-3 text-center">
+                    <div class="stats-card">
+                        <div class="stats-number">${totalQuestions}</div>
+                        <div>总题数</div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="stats-card">
+                        <div class="stats-number text-success">${correctAnswers}</div>
+                        <div>正确数</div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="stats-card">
+                        <div class="stats-number text-primary">${accuracy}%</div>
+                        <div>正确率</div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="stats-card">
+                        <div class="stats-number text-info">${formatTime(totalTime)}</div>
+                        <div>总用时</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h6>答题详情:</h6>
+                <div class="list-group">
+                    ${practiceResults.map((result, index) => `
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">题目 ${index + 1}: ${result.question.title}</h6>
+                                <small>
+                                    <i class="fas fa-${result.isCorrect ? 'check text-success' : 'times text-danger'}"></i>
+                                    ${formatTime(result.timeSpent)}
+                                </small>
+                            </div>
+                            <p class="mb-1">${result.question.question_type} - ${result.question.difficulty}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        // 显示模态框
+        new bootstrap.Modal(document.getElementById('completionModal')).show();
+    }
+
+    // 获取新推荐
+    async function getNewRecommendations() {
+        if (confirm('确定要获取新的推荐题目吗？当前进度将丢失。')) {
+            location.reload();
+        }
+    }
+
+    // 开始新练习
+    function startNewPractice() {
+        location.reload();
+    }
+
+    // 去仪表板
+    function goToDashboard() {
+        window.location.href = `/dashboard/${userId}`;
+    }
+
+    // 显示加载中
+    function showLoading(message = '加载中...') {
+        // 实现加载提示
+        showToast(message, 'info');
+    }
+
+    // 隐藏加载中
+    function hideLoading() {
+        // 隐藏加载提示
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        initPractice();
+    });
+</script>
+{% endblock %}
