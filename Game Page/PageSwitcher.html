@@ -1,70 +1,91 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>小游戏导航中心</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="PageSwitcher.css">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="PageSwitcher.css" />
+</script>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>小游戏中心</h1>
-            <p class="subtitle">长时间学习，来点小游戏放松一下吧~</p>
-            
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="搜索游戏...">
+      <header>
+        <h1>小游戏中心</h1>
+        <p class="subtitle">长时间学习，来点小游戏放松一下吧~</p>
+
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="搜索游戏..." />
+        </div>
+      </header>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="fas fa-box-open"></i>
             </div>
-        </header>
-        
-        <div class="grid">
-            <div class="card">
-                <div class="card-content">
-                    <div class="card-icon">
-                        <i class="fas fa-box-open"></i>
-                    </div>
-                    <h3>贪吃蛇</h3>
-                    <p>经典的贪吃蛇小游戏</p>
-                    <a href="http://127.0.0.1:5500/games/snake.html" class="btn">点击前往</a>
-                </div>
+            <h3>贪吃蛇</h3>
+            <p>经典的贪吃蛇小游戏</p>
+            <a href="./games/snake.html" class="btn"
+              >点击前往</a
+            >
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="fas fa-users"></i>
             </div>
-            
-            <div class="card">
-                <div class="card-content">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3>云朵大战</h3>
-                    <p>经典的打飞机的小游戏</p>
-                    <a href="http://127.0.0.1:5500/games/cloud.html" class="btn">点击前往</a>
-                </div>
+            <h3>云朵大战</h3>
+            <p>经典的打飞机的小游戏</p>
+            <a href="./games/cloud.html" class="btn"
+              >点击前往</a
+            >
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="fas fa-concierge-bell"></i>
             </div>
-            
-            <div class="card">
-                <div class="card-content">
-                    <div class="card-icon">
-                        <i class="fas fa-concierge-bell"></i>
-                    </div>
-                    <h3>小游戏1</h3>
-                    <p>探索我们提供的专业服务和解决方案，满足您的需求。</p>
-                    <a href="services.html" class="btn">访问服务页面</a>
-                </div>
+            <h3>小游戏1</h3>
+            <p>探索我们提供的专业服务和解决方案，满足您的需求。</p>
+            <a href="services.html" class="btn">访问服务页面</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="fas fa-blog"></i>
             </div>
-            
-            <div class="card">
-                <div class="card-content">
-                    <div class="card-icon">
-                        <i class="fas fa-blog"></i>
-                    </div>
-                    <h3>小游戏2</h3>
-                    <p>阅读最新行业见解、公司新闻和技术文章。</p>
-                    <a href="blog.html" class="btn">访问博客页面</a>
-                </div>
+            <h3>小游戏2</h3>
+            <p>阅读最新行业见解、公司新闻和技术文章。</p>
+            <a href="blog.html" class="btn">访问博客页面</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="fas fa-bullseye"></i>
             </div>
-            
-            <!-- <div class="card">
+            <h3>弓箭射击</h3>
+            <p>测试你的射箭准度，放松又有趣的小游戏。</p>
+            <a href="./games/arrow.html" class="btn"
+              >点击前往</a
+            >
+          </div>
+        </div>
+
+        <!-- <div class="card">
                 <div class="card-content">
                     <div class="card-icon">
                         <i class="fas fa-address-book"></i>
@@ -74,8 +95,8 @@
                     <a href="contact.html" class="btn">访问联系页面</a>
                 </div>
             </div> -->
-            
-            <!-- <div class="card">
+
+        <!-- <div class="card">
                 <div class="card-content">
                     <div class="card-icon">
                         <i class="fas fa-trophy"></i>
@@ -85,50 +106,57 @@
                     <a href="portfolio.html" class="btn">访问案例页面</a>
                 </div>
             </div> -->
-        </div>
+      </div>
     </div>
-    
+
     <footer>
-        <p>小游戏中心 | 欢迎前来放松游玩！</p>
+      <p>小游戏中心 | 欢迎前来放松游玩！</p>
     </footer>
 
     <script>
-        // 搜索功能
-        document.querySelector('.search-box input').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-            
-            cards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const description = card.querySelector('p').textContent.toLowerCase();
-                
-                if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                    card.style.display = 'block';
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 50);
-                } else {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    setTimeout(() => {
-                        card.style.display = 'none';
-                    }, 300);
-                }
-            });
+      // 搜索功能
+      document
+        .querySelector(".search-box input")
+        .addEventListener("input", function (e) {
+          const searchTerm = e.target.value.toLowerCase();
+          const cards = document.querySelectorAll(".card");
+
+          cards.forEach((card) => {
+            const title = card.querySelector("h3").textContent.toLowerCase();
+            const description = card
+              .querySelector("p")
+              .textContent.toLowerCase();
+
+            if (
+              title.includes(searchTerm) ||
+              description.includes(searchTerm)
+            ) {
+              card.style.display = "block";
+              setTimeout(() => {
+                card.style.opacity = "1";
+                card.style.transform = "translateY(0)";
+              }, 50);
+            } else {
+              card.style.opacity = "0";
+              card.style.transform = "translateY(20px)";
+              setTimeout(() => {
+                card.style.display = "none";
+              }, 300);
+            }
+          });
         });
-        
-        // 添加卡片悬停效果
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-10px)';
-            });
-            
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0)';
-            });
+
+      // 添加卡片悬停效果
+      const cards = document.querySelectorAll(".card");
+      cards.forEach((card) => {
+        card.addEventListener("mouseenter", () => {
+          card.style.transform = "translateY(-10px)";
         });
+
+        card.addEventListener("mouseleave", () => {
+          card.style.transform = "translateY(0)";
+        });
+      });
     </script>
-</body>
+  </body>
 </html>
