@@ -19,20 +19,35 @@ class RecommendationEngine:
         self.difficulty_weights = {'easy': 1, 'medium': 2, 'hard': 3}
         self.type_weights = {'theory': 1, 'multiple_choice': 1, 'practical': 2, 'coding': 3}
     
-    def recommend_questions(self, user_id: int, count: int = 10) -> List[Question]:
+    def recommend_questions(self, user_id: int, count: int = 10, question_bank_mode: str = 'academic') -> List[Question]:
         """为用户推荐个性化题目"""
         
         # 1. 构建用户画像
         user_profile = self._build_user_profile(user_id)
+        print(f"用户 {user_id} 画像: 偏好难度={user_profile.get('preferred_difficulty')}, "
+              f"偏好题型={user_profile.get('preferred_types')}, "
+              f"薄弱知识点={len(user_profile.get('weak_knowledge_points', []))}个")
         
         # 2. 获取候选题目
-        candidate_questions = self._get_candidate_questions(user_id, user_profile)
+        candidate_questions = self._get_candidate_questions(user_id, user_profile, question_bank_mode)
+        print(f"候选题目数量: {len(candidate_questions)}")
+        
+        if not candidate_questions:
+            print("警告: 没有找到候选题目!")
+            return []
         
         # 3. 计算推荐分数
         scored_questions = self._score_questions(user_profile, candidate_questions)
+        print(f"评分完成，前3题分数: {[(q.title, round(score, 2)) for q, score in scored_questions[:3]]}")
         
-        # 4. 多样性调整
-        final_questions = self._diversify_recommendations(scored_questions, count)
+        # 4. 按照用户要求排列：前4道非编程题，后2道编程题
+        if count == 6:  # 每日6道题的特殊处理
+            final_questions = self._arrange_daily_questions(scored_questions, question_bank_mode)
+        else:
+            # 其他情况使用原有的多样性调整
+            final_questions = self._diversify_recommendations(scored_questions, count)
+        
+        print(f"最终推荐 {len(final_questions)} 道题目")
         
         return final_questions
     
@@ -158,26 +173,52 @@ class RecommendationEngine:
         else:
             return 'low'
     
-    def _get_candidate_questions(self, user_id: int, user_profile: Dict) -> List[Question]:
+    def _get_candidate_questions(self, user_id: int, user_profile: Dict, question_bank_mode: str) -> List[Question]:
         """获取候选题目"""
-        # 排除已经做过的题目（最近做过的）
-        recent_question_ids = db.session.query(LearningRecord.question_id)\
+        # 首先尝试获取最近1天内没做过的题目，并根据模式过滤
+        recent_question_ids_1d = db.session.query(LearningRecord.question_id)\
                                       .filter_by(user_id=user_id)\
-                                      .filter(LearningRecord.completed_at >= datetime.utcnow() - timedelta(days=7))\
+                                      .filter(LearningRecord.completed_at >= datetime.utcnow() - timedelta(days=1))\
                                       .subquery()
         
-        query = Question.query.filter(~Question.id.in_(recent_question_ids))
+        query = Question.query.filter(Question.question_bank_mode == question_bank_mode)\
+                              .filter(~Question.id.in_(recent_question_ids_1d))
         
-        # 基于用户偏好过滤
+        # 基于用户偏好过滤（如果有偏好的话）
         preferred_types = user_profile.get('preferred_types', [])
         if preferred_types:
-            query = query.filter(Question.question_type.in_(preferred_types))
+            query_with_preference = query.filter(Question.question_type.in_(preferred_types))
+            candidates = query_with_preference.all()
+            
+            # 如果偏好类型的题目不够，加入其他类型（同一模式下）
+            if len(candidates) < 5:
+                candidates.extend(query.filter(~Question.question_type.in_(preferred_types)).limit(10).all())
+        else:
+            candidates = query.all()
         
-        candidates = query.all()
+        # 如果1天内的过滤结果太少，放宽到3天（同一模式下）
+        if len(candidates) < 10:
+            recent_question_ids_3d = db.session.query(LearningRecord.question_id)\
+                                          .filter_by(user_id=user_id)\
+                                          .filter(LearningRecord.completed_at >= datetime.utcnow() - timedelta(days=3))\
+                                          .subquery()
+            
+            candidates = Question.query.filter(Question.question_bank_mode == question_bank_mode)\
+                                     .filter(~Question.id.in_(recent_question_ids_3d)).all()
         
-        # 如果候选题目太少，放宽限制
-        if len(candidates) < 20:
-            candidates = Question.query.filter(~Question.id.in_(recent_question_ids)).all()
+        # 如果还是太少，只排除今天做过的（同一模式下）
+        if len(candidates) < 5:
+            recent_question_ids_today = db.session.query(LearningRecord.question_id)\
+                                              .filter_by(user_id=user_id)\
+                                              .filter(LearningRecord.completed_at >= datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0))\
+                                              .subquery()
+            
+            candidates = Question.query.filter(Question.question_bank_mode == question_bank_mode)\
+                                     .filter(~Question.id.in_(recent_question_ids_today)).all()
+        
+        # 最后的保底：如果实在没有，返回该模式下的所有题目
+        if len(candidates) < 3:
+            candidates = Question.query.filter(Question.question_bank_mode == question_bank_mode).all()
         
         return candidates
     
@@ -343,6 +384,110 @@ class RecommendationEngine:
                         break
         
         return selected_questions[:count]
+    
+    def _arrange_daily_questions(self, scored_questions: List[Tuple[Question, float]], question_bank_mode: str) -> List[Question]:
+        """安排每日6道题：前4道非编程题，后2道编程题"""
+        
+        # 分离编程题和非编程题
+        coding_questions = []
+        non_coding_questions = []
+        
+        for question, score in scored_questions:
+            if question.question_type == 'coding':
+                coding_questions.append((question, score))
+            else:
+                non_coding_questions.append((question, score))
+        
+        print(f"可用编程题: {len(coding_questions)} 道，非编程题: {len(non_coding_questions)} 道")
+        
+        # 如果编程题不够，从数据库中强制获取
+        if len(coding_questions) < 2:
+            print("编程题不够，从数据库强制获取...")
+            from models import Question as QuestionModel
+            # Ensure we only fetch coding questions from the relevant question_bank_mode
+            all_coding = QuestionModel.query.filter_by(question_type='coding', question_bank_mode=question_bank_mode).limit(4).all()
+            for q in all_coding:
+                if q not in [cq[0] for cq in coding_questions]:
+                    coding_questions.append((q, 0.5))  # Give default score
+        
+        final_questions = []
+        
+        # 1. 选择4道非编程题（尽量多样化）
+        non_coding_selected = self._select_diverse_non_coding(non_coding_questions, 4)
+        final_questions.extend(non_coding_selected)
+        
+        # 2. 选择2道编程题
+        coding_selected = self._select_top_coding(coding_questions, 2)
+        final_questions.extend(coding_selected)
+        
+        # 3. 如果题目不够，用最高分的题目补充
+        if len(final_questions) < 6:
+            remaining_count = 6 - len(final_questions)
+            used_ids = {q.id for q in final_questions}
+            
+            # 从所有剩余题目中选择最高分的，并确保是同一模式
+            remaining_questions = [
+                q for q, _ in scored_questions 
+                if q.id not in used_ids and q.question_bank_mode == question_bank_mode
+            ][:remaining_count]
+            
+            final_questions.extend(remaining_questions)
+        
+        print(f"每日题目安排: {[f'{q.title}({q.question_type})' for q in final_questions]}")
+        return final_questions
+    
+    def _select_diverse_non_coding(self, non_coding_questions: List[Tuple[Question, float]], count: int) -> List[Question]:
+        """选择多样化的非编程题"""
+        if not non_coding_questions:
+            return []
+        
+        selected = []
+        used_types = set()
+        used_knowledge_points = set()
+        
+        # 优先选择不同类型的题目
+        type_priority = ['multiple_choice', 'fill_blank', 'theory']
+        
+        # 按类型分组
+        questions_by_type = {}
+        for question, score in non_coding_questions:
+            q_type = question.question_type
+            if q_type not in questions_by_type:
+                questions_by_type[q_type] = []
+            questions_by_type[q_type].append((question, score))
+        
+        # 每种类型至少选一道（如果有的话）
+        for q_type in type_priority:
+            if q_type in questions_by_type and len(selected) < count:
+                # 选择该类型中分数最高的题目
+                best_question = max(questions_by_type[q_type], key=lambda x: x[1])[0]
+                selected.append(best_question)
+                used_types.add(q_type)
+                used_knowledge_points.add(best_question.knowledge_point_id)
+        
+        # 如果还需要更多题目，选择剩余的高分题目
+        if len(selected) < count:
+            remaining_questions = [
+                q for q, _ in non_coding_questions 
+                if q.id not in {s.id for s in selected}
+            ]
+            remaining_questions.sort(key=lambda q: q.id, reverse=True)  # 按分数排序
+            
+            for question in remaining_questions:
+                if len(selected) >= count:
+                    break
+                selected.append(question)
+        
+        return selected[:count]
+    
+    def _select_top_coding(self, coding_questions: List[Tuple[Question, float]], count: int) -> List[Question]:
+        """选择最佳的编程题"""
+        if not coding_questions:
+            return []
+        
+        # 按分数排序，选择前count道
+        coding_questions.sort(key=lambda x: x[1], reverse=True)
+        return [q for q, _ in coding_questions[:count]]
     
     def update_user_model(self, user_id: int, question_id: int, is_correct: bool, time_spent: int):
         """更新用户模型（实时学习）"""

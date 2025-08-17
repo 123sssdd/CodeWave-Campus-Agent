@@ -18,16 +18,29 @@ class User(db.Model):
     preferred_question_types = db.Column(db.Text)  # JSON字符串存储多个类型
     preferred_interaction_type = db.Column(db.String(50), default='mixed')  # theory, practice, mixed
     
+    # 双模式支持
+    preferred_mode = db.Column(db.String(20), default='academic')  # academic, interview
+    current_preparation_goal = db.Column(db.String(100))  # 当前备考目标
+    
     # 关联
     learning_records = db.relationship('LearningRecord', backref='user', lazy=True)
     
     def to_dict(self):
+        # 安全的JSON解析函数
+        def safe_json_loads(json_str):
+            if not json_str:
+                return None
+            try:
+                return json.loads(json_str)
+            except (json.JSONDecodeError, TypeError):
+                return None
+        
         return {
             'id': self.id,
             'username': self.username,
             'email': self.email,
             'preferred_difficulty': self.preferred_difficulty,
-            'preferred_question_types': json.loads(self.preferred_question_types) if self.preferred_question_types else [],
+            'preferred_question_types': safe_json_loads(self.preferred_question_types) or [],
             'preferred_interaction_type': self.preferred_interaction_type
         }
 
@@ -40,6 +53,9 @@ class KnowledgePoint(db.Model):
     category = db.Column(db.String(50), nullable=False)  # 算法、数据结构、编程语言等
     description = db.Column(db.Text)
     difficulty_level = db.Column(db.Integer, default=1)  # 1-5级难度
+    
+    # 双模式支持
+    question_bank_mode = db.Column(db.String(20), default='academic')  # academic, interview
     
     def to_dict(self):
         return {
@@ -77,9 +93,32 @@ class Question(db.Model):
     external_platform = db.Column(db.String(100))  # 外部平台 (leetcode, hackerrank等)
     external_id = db.Column(db.String(100))  # 外部平台题目ID
     
+    # 新增字段支持外部题库（暂时注释，等数据库迁移完成后启用）
+    # external_source = db.Column(db.String(50))  # 题目来源 (leetcode, codeforces等)
+    # tags = db.Column(db.Text)  # JSON字符串，存储题目标签
+    # acceptance_rate = db.Column(db.Float)  # 通过率
+    # likes_count = db.Column(db.Integer, default=0)  # 点赞数
+    # dislikes_count = db.Column(db.Integer, default=0)  # 点踩数
+    
+    # 双模式支持 
+    question_bank_mode = db.Column(db.String(20), default='academic')  # academic, interview
+    interview_company_type = db.Column(db.String(50))  # 面试公司类型（大厂、中小企业、创业公司）
+    interview_position = db.Column(db.String(100))     # 面试岗位（前端、后端、全栈等）
+    interview_experience_level = db.Column(db.String(20))  # 经验要求（初级、中级、高级）
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def to_dict(self):
+        # 安全的JSON解析函数
+        def safe_json_loads(json_str):
+            if not json_str:
+                return None
+            try:
+                return json.loads(json_str)
+            except (json.JSONDecodeError, TypeError):
+                # 如果JSON解析失败，返回None而不是抛出异常
+                return None
+        
         return {
             'id': self.id,
             'title': self.title,
@@ -88,12 +127,12 @@ class Question(db.Model):
             'difficulty': self.difficulty,
             'estimated_time': self.estimated_time,
             'knowledge_point': self.knowledge_point.to_dict() if self.knowledge_point else None,
-            'options': json.loads(self.options) if self.options else None,
+            'options': safe_json_loads(self.options),
             'correct_answer': self.correct_answer,
             'explanation': self.explanation,
             'programming_language': self.programming_language,
             'starter_code': self.starter_code,
-            'test_cases': json.loads(self.test_cases) if self.test_cases else None,
+            'test_cases': safe_json_loads(self.test_cases),
             'external_platform': self.external_platform,
             'external_id': self.external_id
         }
@@ -108,6 +147,7 @@ class LearningRecord(db.Model):
     
     # 答题结果
     is_correct = db.Column(db.Boolean, nullable=False)
+    partial_score = db.Column(db.Float, default=0.0)  # 部分分数 (0.0-1.0)
     time_spent = db.Column(db.Integer, nullable=False)  # 耗时(秒)
     attempt_count = db.Column(db.Integer, default=1)  # 尝试次数
     
@@ -130,6 +170,7 @@ class LearningRecord(db.Model):
             'user_id': self.user_id,
             'question_id': self.question_id,
             'is_correct': self.is_correct,
+            'partial_score': self.partial_score,
             'time_spent': self.time_spent,
             'attempt_count': self.attempt_count,
             'user_answer': self.user_answer,
@@ -179,4 +220,162 @@ class UserKnowledgeStats(db.Model):
             'average_time': self.average_time,
             'mastery_level': self.mastery_level,
             'last_practice_time': self.last_practice_time.isoformat() if self.last_practice_time else None
+        }
+
+class InterviewPreparationPlan(db.Model):
+    """面试准备计划"""
+    __tablename__ = 'interview_preparation_plans'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # 面试目标
+    target_position = db.Column(db.String(100), nullable=False)  # 目标岗位
+    target_company_type = db.Column(db.String(50))  # 目标公司类型
+    target_experience_level = db.Column(db.String(20))  # 目标经验级别
+    
+    # 计划时间
+    preparation_start_date = db.Column(db.Date, nullable=False)
+    target_interview_date = db.Column(db.Date)
+    
+    # 学习进度
+    total_questions_planned = db.Column(db.Integer, default=0)
+    questions_completed = db.Column(db.Integer, default=0)
+    
+    # 重点技术栈
+    focus_technologies = db.Column(db.Text)  # JSON字符串存储技术栈列表
+    
+    # 状态
+    status = db.Column(db.String(20), default='active')  # active, completed, paused
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # 关联
+    user = db.relationship('User', backref='interview_plans')
+    
+    def to_dict(self):
+        # 安全的JSON解析函数
+        def safe_json_loads(json_str):
+            if not json_str:
+                return None
+            try:
+                return json.loads(json_str)
+            except (json.JSONDecodeError, TypeError):
+                return None
+        
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'target_position': self.target_position,
+            'target_company_type': self.target_company_type,
+            'target_experience_level': self.target_experience_level,
+            'preparation_start_date': self.preparation_start_date.isoformat() if self.preparation_start_date else None,
+            'target_interview_date': self.target_interview_date.isoformat() if self.target_interview_date else None,
+            'total_questions_planned': self.total_questions_planned,
+            'questions_completed': self.questions_completed,
+            'focus_technologies': safe_json_loads(self.focus_technologies) or [],
+            'status': self.status,
+            'progress_percentage': round((self.questions_completed / self.total_questions_planned * 100) if self.total_questions_planned > 0 else 0, 1)
+        }
+
+class WrongQuestion(db.Model):
+    """错题本模型"""
+    __tablename__ = 'wrong_questions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    learning_record_id = db.Column(db.Integer, db.ForeignKey('learning_records.id'))
+    
+    # 错误信息
+    wrong_answer = db.Column(db.Text)  # 用户的错误答案
+    correct_answer = db.Column(db.Text)  # 正确答案
+    mistake_reason = db.Column(db.Text)  # 错误原因分析
+    
+    # 复习状态
+    review_count = db.Column(db.Integer, default=0)  # 复习次数
+    mastery_level = db.Column(db.Integer, default=0)  # 掌握程度 0-5
+    last_review_date = db.Column(db.DateTime)  # 上次复习时间
+    next_review_date = db.Column(db.DateTime)  # 下次复习时间
+    
+    # 模式标识
+    question_bank_mode = db.Column(db.String(20), default='academic')  # academic, interview
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # 关联
+    user = db.relationship('User', backref='wrong_questions')
+    question = db.relationship('Question', backref='wrong_records')
+    learning_record = db.relationship('LearningRecord', backref='wrong_question_record')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'question_id': self.question_id,
+            'question': self.question.to_dict() if self.question else None,
+            'wrong_answer': self.wrong_answer,
+            'correct_answer': self.correct_answer,
+            'mistake_reason': self.mistake_reason,
+            'review_count': self.review_count,
+            'mastery_level': self.mastery_level,
+            'last_review_date': self.last_review_date.isoformat() if self.last_review_date else None,
+            'next_review_date': self.next_review_date.isoformat() if self.next_review_date else None,
+            'question_bank_mode': self.question_bank_mode,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class SimilarQuestion(db.Model):
+    """举一反三题目模型"""
+    __tablename__ = 'similar_questions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    original_question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    wrong_question_id = db.Column(db.Integer, db.ForeignKey('wrong_questions.id'))
+    
+    # 生成的相似题目
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    question_type = db.Column(db.String(50), nullable=False)
+    difficulty = db.Column(db.String(20), nullable=False)
+    estimated_time = db.Column(db.Integer)
+    
+    # 相似性信息
+    similarity_type = db.Column(db.String(50))  # 相似类型：knowledge_point, algorithm, pattern等
+    similarity_score = db.Column(db.Float)  # 相似度评分
+    
+    # AI生成信息
+    generated_by = db.Column(db.String(50))  # 生成方式：ai_model, template等
+    generation_prompt = db.Column(db.Text)  # 生成时使用的提示词
+    
+    # 答案和解析
+    correct_answer = db.Column(db.Text)
+    explanation = db.Column(db.Text)
+    
+    # 模式标识
+    question_bank_mode = db.Column(db.String(20), default='academic')
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # 关联
+    original_question = db.relationship('Question', backref='similar_questions')
+    wrong_question = db.relationship('WrongQuestion', backref='similar_questions')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'original_question_id': self.original_question_id,
+            'title': self.title,
+            'content': self.content,
+            'question_type': self.question_type,
+            'difficulty': self.difficulty,
+            'estimated_time': self.estimated_time,
+            'similarity_type': self.similarity_type,
+            'similarity_score': self.similarity_score,
+            'generated_by': self.generated_by,
+            'correct_answer': self.correct_answer,
+            'explanation': self.explanation,
+            'question_bank_mode': self.question_bank_mode,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }

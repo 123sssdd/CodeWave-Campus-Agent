@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面试错题本测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .stats { display: flex; gap: 20px; margin: 20px 0; }
+        .stat-card { padding: 20px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
+        .question-card { border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 8px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>面试错题本测试</h1>
+    
+    <div id="status">正在加载...</div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <h3 id="total-count">0</h3>
+            <p>总错题数</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="urgent-count">0</h3>
+            <p>急需复习</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="mastered-count">0</h3>
+            <p>已掌握</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="tech-count">0</h3>
+            <p>涉及技术栈</p>
+        </div>
+    </div>
+    
+    <div id="questions-container"></div>
+
+    <script>
+        let wrongQuestions = [];
+
+        async function loadWrongQuestions() {
+            try {
+                console.log('开始加载错题...');
+                const response = await fetch('/api/wrong-questions/1?mode=interview');
+                console.log('API响应状态:', response.status);
+                
+                const data = await response.json();
+                console.log('API响应数据:', data);
+                
+                if (data.success) {
+                    wrongQuestions = data.wrong_questions;
+                    document.getElementById('status').textContent = `成功加载 ${wrongQuestions.length} 道错题`;
+                    document.getElementById('status').className = 'success';
+                    
+                    updateStatistics();
+                    renderQuestions();
+                } else {
+                    document.getElementById('status').textContent = '加载失败: API返回success=false';
+                    document.getElementById('status').className = 'error';
+                }
+            } catch (error) {
+                console.error('加载错题失败:', error);
+                document.getElementById('status').textContent = `加载失败: ${error.message}`;
+                document.getElementById('status').className = 'error';
+            }
+        }
+
+        function updateStatistics() {
+            const total = wrongQuestions.length;
+            const urgent = wrongQuestions.filter(wq => 
+                wq.mastery_level < 2 || 
+                (wq.next_review_date && new Date(wq.next_review_date) <= new Date())
+            ).length;
+            const mastered = wrongQuestions.filter(wq => wq.mastery_level >= 4).length;
+            
+            // 统计技术栈
+            const techCategories = new Set();
+            wrongQuestions.forEach(wq => {
+                if (wq.question && wq.question.knowledge_point && wq.question.knowledge_point.category) {
+                    techCategories.add(wq.question.knowledge_point.category);
+                }
+            });
+            
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('urgent-count').textContent = urgent;
+            document.getElementById('mastered-count').textContent = mastered;
+            document.getElementById('tech-count').textContent = techCategories.size;
+            
+            console.log('统计信息:', { total, urgent, mastered, techCount: techCategories.size });
+            console.log('技术栈分类:', Array.from(techCategories));
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            
+            if (wrongQuestions.length === 0) {
+                container.innerHTML = '<p>没有错题数据</p>';
+                return;
+            }
+            
+            const html = wrongQuestions.map(wq => {
+                const question = wq.question || {};
+                const knowledgePoint = question.knowledge_point || {};
+                
+                return `
+                    <div class="question-card">
+                        <h4>${question.title || '未知题目'}</h4>
+                        <p><strong>技术栈:</strong> ${knowledgePoint.category || '未分类'}</p>
+                        <p><strong>知识点:</strong> ${knowledgePoint.name || '未知'}</p>
+                        <p><strong>难度:</strong> ${question.difficulty || '未知'}</p>
+                        <p><strong>掌握程度:</strong> ${wq.mastery_level}/5</p>
+                        <p><strong>错误答案:</strong> ${wq.wrong_answer || '无'}</p>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始加载错题');
+            loadWrongQuestions();
+        });
+    </script>
+</body>
+</html>

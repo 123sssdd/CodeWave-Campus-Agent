@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+
+{% block title %}面试练习 - 个人题库系统{% endblock %}
+
+{% block extra_head %}
+<style>
+.interview-header {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.tech-filter-btn {
+    margin: 3px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.tech-filter-btn.active {
+    background: #28a745;
+    border-color: #28a745;
+    transform: scale(1.05);
+}
+
+.question-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.question-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.interview-badge {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.company-tag {
+    background: #f8f9fa;
+    color: #495057;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin: 2px;
+    display: inline-block;
+}
+
+.progress-indicator {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 面试练习标题 -->
+    <div class="interview-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="fas fa-laptop-code me-2"></i>面试练习中心</h2>
+                <p class="mb-0">针对性练习面试题目，提升技术面试通过率</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn btn-outline-light btn-sm" onclick="showMyPlans()">
+                        <i class="fas fa-calendar-check me-1"></i>我的计划
+                    </button>
+                    <button class="btn btn-light btn-sm" onclick="startRandomPractice()">
+                        <i class="fas fa-random me-1"></i>随机练习
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选器 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 技术栈筛选 -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3"><i class="fas fa-layer-group me-2"></i>技术栈筛选</h6>
+                            <div id="techFilters">
+                                <button class="btn btn-outline-success btn-sm tech-filter-btn active" data-tech="all">全部</button>
+                                <button class="btn btn-outline-success btn-sm tech-filter-btn" data-tech="vue">Vue.js</button>
+                                <button class="btn btn-outline-success btn-sm tech-filter-btn" data-tech="react">React</button>
+                                <button class="btn btn-outline-success btn-sm tech-filter-btn" data-tech="js">JavaScript</button>
+                                <button class="btn btn-outline-success btn-sm tech-filter-btn" data-tech="golang">Golang</button>
+                                <button class="btn btn-outline-success btn-sm tech-filter-btn" data-tech="engineering">工程化</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 其他筛选 -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3"><i class="fas fa-filter me-2"></i>其他筛选</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <select class="form-select form-select-sm" id="difficultyFilter">
+                                        <option value="">全部难度</option>
+                                        <option value="easy">简单</option>
+                                        <option value="medium">中等</option>
+                                        <option value="hard">困难</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select form-select-sm" id="typeFilter">
+                                        <option value="">全部类型</option>
+                                        <option value="theory">理论题</option>
+                                        <option value="coding">编程题</option>
+                                        <option value="practical">实践题</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 练习模式选择 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-target fa-3x text-success mb-3"></i>
+                    <h5>计划练习</h5>
+                    <p class="text-muted">按照面试计划有序练习</p>
+                    <select class="form-select mb-3" id="planSelector">
+                        <option value="">选择面试计划</option>
+                    </select>
+                    <button class="btn btn-success w-100" onclick="startPlanPractice()">
+                        <i class="fas fa-play me-1"></i>开始计划练习
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-layer-group fa-3x text-primary mb-3"></i>
+                    <h5>技术栈专练</h5>
+                    <p class="text-muted">专注某个技术栈深度练习</p>
+                    <div class="progress-indicator mb-3">
+                        <div class="progress-fill" style="width: 65%"></div>
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="startTechPractice()">
+                        <i class="fas fa-code me-1"></i>开始技术栈练习
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
+                    <h5>快速刷题</h5>
+                    <p class="text-muted">随机题目快速练习</p>
+                    <small class="text-muted d-block mb-3">今日已练习: <span id="todayCount">0</span> 题</small>
+                    <button class="btn btn-warning w-100" onclick="startQuickPractice()">
+                        <i class="fas fa-flash me-1"></i>快速开始
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 题目列表 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>面试题目</h5>
+            <div class="d-flex gap-2">
+                <span class="badge bg-secondary" id="questionCount">加载中...</span>
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshQuestions()">
+                    <i class="fas fa-refresh me-1"></i>刷新
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="questionsList" class="row">
+                <!-- 动态加载题目列表 -->
+            </div>
+            
+            <!-- 分页 -->
+            <nav aria-label="题目分页" class="mt-4">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- 动态生成分页 -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- 题目预览模态框 -->
+<div class="modal fade" id="questionPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">题目预览</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="questionPreviewContent">
+                <!-- 动态加载预览内容 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" id="startPracticeBtn">
+                    <i class="fas fa-play me-1"></i>开始练习
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentQuestions = [];
+let currentPage = 1;
+let currentFilters = {
+    tech: 'all',
+    difficulty: '',
+    type: '',
+    plan: ''
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializePage();
+    setupEventListeners();
+    loadQuestions();
+    loadUserPlans();
+    loadTodayStats();
+});
+
+function initializePage() {
+    // 检查URL参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const tech = urlParams.get('tech');
+    const plan = urlParams.get('plan');
+    const question = urlParams.get('question');
+    
+    if (tech) {
+        currentFilters.tech = tech;
+        document.querySelector(`[data-tech="${tech}"]`)?.classList.add('active');
+        document.querySelector('[data-tech="all"]')?.classList.remove('active');
+    }
+    
+    if (plan) {
+        currentFilters.plan = plan;
+    }
+    
+    if (question) {
+        // 直接开始单题练习
+        startSingleQuestion(question);
+    }
+}
+
+function setupEventListeners() {
+    // 技术栈筛选
+    document.querySelectorAll('.tech-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tech-filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilters.tech = this.dataset.tech;
+            currentPage = 1;
+            loadQuestions();
+        });
+    });
+    
+    // 难度和类型筛选
+    document.getElementById('difficultyFilter').addEventListener('change', function() {
+        currentFilters.difficulty = this.value;
+        currentPage = 1;
+        loadQuestions();
+    });
+    
+    document.getElementById('typeFilter').addEventListener('change', function() {
+        currentFilters.type = this.value;
+        currentPage = 1;
+        loadQuestions();
+    });
+}
+
+function loadQuestions() {
+    showLoading('正在加载题目...');
+    
+    // 构建API请求URL
+    const params = new URLSearchParams({
+        mode: 'interview',
+        page: currentPage,
+        per_page: 12
+    });
+    
+    if (currentFilters.difficulty) params.append('difficulty', currentFilters.difficulty);
+    if (currentFilters.type) params.append('type', currentFilters.type);
+    
+    let apiUrl = `/api/questions?${params.toString()}`;
+    
+    // 如果有技术栈筛选，使用专门的接口
+    if (currentFilters.tech !== 'all') {
+        apiUrl = `/api/interview/hot-questions?category=${currentFilters.tech}&limit=50`;
+    }
+    
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (Array.isArray(data)) {
+                // 热门题目接口返回数组
+                currentQuestions = data;
+                displayQuestions(data);
+                updateQuestionCount(data.length);
+            } else {
+                // 普通题目接口返回对象
+                currentQuestions = data.questions || [];
+                displayQuestions(data.questions || []);
+                updateQuestionCount(data.total || 0);
+                updatePagination(data.pages || 1, data.current_page || 1);
+            }
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('加载题目失败:', error);
+            showToast('加载题目失败', 'error');
+            hideLoading();
+        });
+}
+
+function displayQuestions(questions) {
+    const container = document.getElementById('questionsList');
+    
+    if (questions.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">没有找到匹配的题目</h5>
+                <p class="text-muted">请尝试调整筛选条件</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = questions.map(question => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card question-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="interview-badge">面试题</span>
+                        <span class="badge bg-${getDifficultyColor(question.difficulty)}">${getDifficultyText(question.difficulty)}</span>
+                    </div>
+                    
+                    <h6 class="card-title">${question.title}</h6>
+                    <p class="card-text text-muted">${question.content.substring(0, 80)}...</p>
+                    
+                    <div class="mb-3">
+                        ${question.knowledge_point ? `<span class="company-tag">${question.knowledge_point.name}</span>` : ''}
+                        <span class="company-tag">${getTypeText(question.question_type)}</span>
+                        ${question.estimated_time ? `<span class="company-tag">${question.estimated_time}分钟</span>` : ''}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success btn-sm flex-fill" onclick="previewQuestion(${question.id})">
+                            <i class="fas fa-eye me-1"></i>预览
+                        </button>
+                        <button class="btn btn-success btn-sm flex-fill" onclick="startSingleQuestion(${question.id})">
+                            <i class="fas fa-play me-1"></i>练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadUserPlans() {
+    const userId = 1; // 临时硬编码
+    fetch(`/api/interview/plans/${userId}`)
+        .then(response => response.json())
+        .then(plans => {
+            const selector = document.getElementById('planSelector');
+            selector.innerHTML = '<option value="">选择面试计划</option>' +
+                plans.map(plan => 
+                    `<option value="${plan.id}">${plan.target_position} - ${plan.target_company_type}</option>`
+                ).join('');
+        })
+        .catch(error => {
+            console.error('加载计划失败:', error);
+        });
+}
+
+function loadTodayStats() {
+    // 模拟今日练习统计
+    document.getElementById('todayCount').textContent = Math.floor(Math.random() * 10);
+}
+
+function updateQuestionCount(count) {
+    document.getElementById('questionCount').textContent = `${count} 道题目`;
+}
+
+function updatePagination(totalPages, currentPageNum) {
+    const pagination = document.getElementById('pagination');
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    // 上一页
+    if (currentPageNum > 1) {
+        paginationHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="changePage(${currentPageNum - 1})">上一页</a>
+            </li>
+        `;
+    }
+    
+    // 页码
+    for (let i = Math.max(1, currentPageNum - 2); i <= Math.min(totalPages, currentPageNum + 2); i++) {
+        paginationHTML += `
+            <li class="page-item ${i === currentPageNum ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `;
+    }
+    
+    // 下一页
+    if (currentPageNum < totalPages) {
+        paginationHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="changePage(${currentPageNum + 1})">下一页</a>
+            </li>
+        `;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+function changePage(page) {
+    currentPage = page;
+    loadQuestions();
+}
+
+function previewQuestion(questionId) {
+    const question = currentQuestions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    const previewContent = document.getElementById('questionPreviewContent');
+    previewContent.innerHTML = `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5>${question.title}</h5>
+                <div>
+                    <span class="badge bg-${getDifficultyColor(question.difficulty)} me-2">${getDifficultyText(question.difficulty)}</span>
+                    <span class="badge bg-secondary">${getTypeText(question.question_type)}</span>
+                </div>
+            </div>
+            <p class="text-muted">${question.content}</p>
+        </div>
+        
+        ${question.knowledge_point ? `
+            <div class="mb-3">
+                <strong>知识点:</strong> ${question.knowledge_point.name}
+            </div>
+        ` : ''}
+        
+        ${question.estimated_time ? `
+            <div class="mb-3">
+                <strong>预估时间:</strong> ${question.estimated_time} 分钟
+            </div>
+        ` : ''}
+        
+        ${question.options ? `
+            <div class="mb-3">
+                <strong>选项:</strong>
+                <ul class="list-unstyled mt-2">
+                    ${question.options.map(option => `<li class="mb-1">${option}</li>`).join('')}
+                </ul>
+            </div>
+        ` : ''}
+        
+        ${question.starter_code ? `
+            <div class="mb-3">
+                <strong>初始代码:</strong>
+                <pre class="bg-light p-3 rounded"><code>${question.starter_code}</code></pre>
+            </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('startPracticeBtn').onclick = () => startSingleQuestion(questionId);
+    new bootstrap.Modal(document.getElementById('questionPreviewModal')).show();
+}
+
+function startSingleQuestion(questionId) {
+    const userId = 1; // 这里应该从session中获取，临时硬编码
+    window.location.href = `/practice/${userId}?mode=interview&question=${questionId}`;
+}
+
+function startPlanPractice() {
+    const planId = document.getElementById('planSelector').value;
+    if (!planId) {
+        showToast('请先选择一个面试计划', 'warning');
+        return;
+    }
+    const userId = 1; // 这里应该从session中获取，临时硬编码
+    window.location.href = `/practice/${userId}?mode=interview&plan=${planId}`;
+}
+
+function startTechPractice() {
+    const activeTech = document.querySelector('.tech-filter-btn.active').dataset.tech;
+    if (activeTech === 'all') {
+        showToast('请先选择一个技术栈', 'warning');
+        return;
+    }
+    const userId = 1; // 这里应该从session中获取，临时硬编码
+    window.location.href = `/practice/${userId}?mode=interview&tech=${activeTech}`;
+}
+
+function startQuickPractice() {
+    const userId = 1; // 这里应该从session中获取，临时硬编码
+    window.location.href = `/practice/${userId}?mode=interview&quick=true`;
+}
+
+function startRandomPractice() {
+    const userId = 1; // 这里应该从session中获取，临时硬编码
+    window.location.href = `/practice/${userId}?mode=interview&random=true`;
+}
+
+function refreshQuestions() {
+    loadQuestions();
+}
+
+function showMyPlans() {
+    window.location.href = '/interview/plans';
+}
+
+function getDifficultyColor(difficulty) {
+    const colors = { easy: 'success', medium: 'warning', hard: 'danger' };
+    return colors[difficulty] || 'secondary';
+}
+
+function getDifficultyText(difficulty) {
+    const texts = { easy: '简单', medium: '中等', hard: '困难' };
+    return texts[difficulty] || difficulty;
+}
+
+function getTypeText(type) {
+    const texts = { 
+        theory: '理论题', 
+        coding: '编程题', 
+        practical: '实践题',
+        multiple_choice: '选择题'
+    };
+    return texts[type] || type;
+}
+
+function showLoading(message) {
+    showToast(message, 'info');
+}
+
+function hideLoading() {
+    // 隐藏加载提示
+}
+</script>
+{% endblock %}

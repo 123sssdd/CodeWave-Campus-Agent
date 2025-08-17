@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}面试错题本{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-briefcase text-primary me-2"></i>面试错题本</h2>
+                <div>
+                    <a href="/interview" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>返回面试中心
+                    </a>
+                </div>
+            </div>
+
+            <!-- 统计面板 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h3 id="total-wrong-count">0</h3>
+                            <p class="mb-0">总错题数</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h3 id="need-review-count">0</h3>
+                            <p class="mb-0">待复习</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3 id="mastered-count">0</h3>
+                            <p class="mb-0">已掌握</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3 id="tech-count">0</h3>
+                            <p class="mb-0">技术栈数</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错题列表 -->
+            <div id="wrong-questions-container">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                    <p class="mt-2 text-muted">加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 错题详情模态框 -->
+<div class="modal fade" id="wrongQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">面试错题详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="wrong-question-content">
+                    <!-- 错题内容将在这里动态加载 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-success" onclick="markAsReviewed()">
+                    <i class="fas fa-check me-1"></i>标记复习
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 面试错题详情模态框 -->
+<div class="modal fade" id="interviewWrongQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-briefcase me-2"></i>面试错题详情</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="interview-wrong-question-content">
+                    <!-- 面试错题内容将在这里动态加载 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-danger" onclick="deleteCurrentInterviewWrongQuestion()">
+                    <i class="fas fa-trash me-1"></i>删除错题
+                </button>
+                <button type="button" class="btn btn-warning" onclick="generateInterviewSimilarQuestions()">
+                    <i class="fas fa-lightbulb me-1"></i>面试举一反三
+                </button>
+                <button type="button" class="btn btn-primary" onclick="practiceCurrentInterviewQuestion()">
+                    <i class="fas fa-play me-1"></i>重新练习
+                </button>
+                <button type="button" class="btn btn-success" onclick="markInterviewAsReviewed()">
+                    <i class="fas fa-check me-1"></i>标记复习
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.interview-wrong-question-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #007bff;
+    margin-bottom: 20px;
+}
+
+.interview-wrong-question-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.company-badge {
+    background: linear-gradient(45deg, #007bff, #6610f2);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: bold;
+}
+
+.tech-badge {
+    background: #17a2b8;
+    color: white;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 0.7em;
+    margin: 2px;
+}
+
+.urgency-high { border-left-color: #dc3545 !important; }
+.urgency-medium { border-left-color: #ffc107 !important; }
+.urgency-low { border-left-color: #28a745 !important; }
+</style>
+
+<script>
+let currentMode = 'interview';
+let currentUserId = 1; // 默认用户ID
+let wrongQuestions = [];
+let currentWrongQuestion = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadWrongQuestions();
+});
+
+async function loadWrongQuestions() {
+    try {
+        const response = await fetch(`/api/wrong-questions/${currentUserId}?mode=${currentMode}`);
+        const data = await response.json();
+
+        if (data.success) {
+            wrongQuestions = data.wrong_questions;
+            updateStatistics();
+            renderWrongQuestions();
+        } else {
+            showToast('加载错题失败', 'error');
+        }
+    } catch (error) {
+        console.error('加载错题失败:', error);
+        showToast('加载错题失败', 'error');
+    }
+}
+
+function updateStatistics() {
+    const total = wrongQuestions.length;
+    const needReview = wrongQuestions.filter(wq => wq.mastery_level < 3).length;
+    const mastered = wrongQuestions.filter(wq => wq.mastery_level >= 4).length;
+
+    // 统计技术栈数量
+    const techCategories = new Set();
+    wrongQuestions.forEach(wq => {
+        if (wq.question && wq.question.knowledge_point && wq.question.knowledge_point.category) {
+            techCategories.add(wq.question.knowledge_point.category);
+        }
+    });
+
+    document.getElementById('total-wrong-count').textContent = total;
+    document.getElementById('need-review-count').textContent = needReview;
+    document.getElementById('mastered-count').textContent = mastered;
+    document.getElementById('tech-count').textContent = techCategories.size;
+}
+
+function renderWrongQuestions() {
+    const container = document.getElementById('wrong-questions-container');
+
+    if (wrongQuestions.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-smile fa-3x text-success mb-3"></i>
+                <h4>太棒了！目前没有面试错题</h4>
+                <p class="text-muted">继续保持，在面试中发挥出色！</p>
+            </div>
+        `;
+        return;
+    }
+
+    const html = wrongQuestions.map(wq => `
+        <div class="card wrong-question-card mb-3" onclick="showWrongQuestionDetail(${wq.id})">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title">${wq.question.title}</h6>
+                        <p class="card-text text-muted">${wq.question.content.substring(0, 100)}...</p>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="badge bg-secondary question-type-badge">${getTypeLabel(wq.question.question_type)}</span>
+                            <span class="badge bg-${getDifficultyColor(wq.question.difficulty)}">${getDifficultyLabel(wq.question.difficulty)}</span>
+                            <span class="badge mastery-${wq.mastery_level} mastery-badge">${getMasteryLabel(wq.mastery_level)}</span>
+                            ${wq.question.knowledge_point ? `<span class="badge bg-info">${wq.question.knowledge_point.category}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="review-info">
+                            <small>复习 ${wq.review_count} 次</small><br>
+                            <small>${formatDate(wq.created_at)}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = html;
+}
+
+function showWrongQuestionDetail(wrongQuestionId) {
+    currentWrongQuestion = wrongQuestions.find(wq => wq.id === wrongQuestionId);
+    if (!currentWrongQuestion) return;
+
+    const question = currentWrongQuestion.question;
+    const content = `
+        <div class="mb-4">
+            <h5>${question.title}</h5>
+            <div class="d-flex gap-2 mb-3">
+                <span class="badge bg-secondary">${getTypeLabel(question.question_type)}</span>
+                <span class="badge bg-${getDifficultyColor(question.difficulty)}">${getDifficultyLabel(question.difficulty)}</span>
+                <span class="badge mastery-${currentWrongQuestion.mastery_level} mastery-badge">${getMasteryLabel(currentWrongQuestion.mastery_level)}</span>
+                ${question.knowledge_point ? `<span class="badge bg-info">${question.knowledge_point.category}</span>` : ''}
+            </div>
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong><i class="fas fa-question-circle me-2"></i>题目内容</strong>
+                </div>
+                <div class="card-body">
+                    ${question.content}
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header bg-danger text-white">
+                    <strong><i class="fas fa-times-circle me-2"></i>你的错误回答</strong>
+                </div>
+                <div class="card-body">
+                    ${currentWrongQuestion.wrong_answer || '未记录'}
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <strong><i class="fas fa-check-circle me-2"></i>正确答案</strong>
+                </div>
+                <div class="card-body">
+                    ${currentWrongQuestion.correct_answer || question.correct_answer || '暂无'}
+                </div>
+            </div>
+            ${question.explanation ? `
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <strong><i class="fas fa-lightbulb me-2"></i>解析</strong>
+                    </div>
+                    <div class="card-body">
+                        ${question.explanation}
+                    </div>
+                </div>
+            ` : ''}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <strong>复习进度</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>复习次数：</strong>${currentWrongQuestion.review_count} 次</p>
+                            <p><strong>掌握程度：</strong>
+                                <span class="badge mastery-${currentWrongQuestion.mastery_level} mastery-badge">
+                                    ${getMasteryLabel(currentWrongQuestion.mastery_level)}
+                                </span>
+                            </p>
+                            <p><strong>添加时间：</strong>${formatDate(currentWrongQuestion.created_at)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <strong>更新掌握程度</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group-vertical w-100">
+                                ${[0,1,2,3,4].map(level => `
+                                    <button class="btn ${level === currentWrongQuestion.mastery_level ? 'btn-primary' : 'btn-outline-secondary'} btn-sm mb-1"
+                                            onclick="updateMasteryLevel(${level})">
+                                        ${level} - ${getMasteryLabel(level)}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('wrong-question-content').innerHTML = content;
+    new bootstrap.Modal(document.getElementById('wrongQuestionModal')).show();
+}
+
+// 工具函数
+function getTypeLabel(type) {
+    const labels = {
+        'theory': '理论题',
+        'coding': '编程题',
+        'multiple_choice': '选择题',
+        'practical': '实践题'
+    };
+    return labels[type] || type;
+}
+
+function getDifficultyLabel(difficulty) {
+    const labels = {
+        'easy': '简单',
+        'medium': '中等',
+        'hard': '困难'
+    };
+    return labels[difficulty] || difficulty;
+}
+
+function getDifficultyColor(difficulty) {
+    const colors = {
+        'easy': 'success',
+        'medium': 'warning',
+        'hard': 'danger'
+    };
+    return colors[difficulty] || 'secondary';
+}
+
+function getMasteryLabel(level) {
+    const labels = {
+        0: '未掌握',
+        1: '初步了解',
+        2: '基本掌握',
+        3: '熟练掌握',
+        4: '完全掌握'
+    };
+    return labels[level] || '未知';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+}
+
+function showToast(message, type = 'info') {
+    // 创建toast提示
+    const toast = document.createElement('div');
+    toast.className = `toast-message toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : '#17a2b8'};
+        color: white;
+        border-radius: 5px;
+        z-index: 9999;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+
+</script>
+{% endblock %}

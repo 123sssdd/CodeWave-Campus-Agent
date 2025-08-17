@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}面试计划 - 个人题库系统{% endblock %}
+
+{% block extra_head %}
+<style>
+.plan-card {
+    border-left: 4px solid #28a745;
+    transition: transform 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-2px);
+}
+
+.progress-bar-custom {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.status-active { color: #28a745; }
+.status-completed { color: #6c757d; }
+.status-paused { color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-calendar-check me-2"></i>我的面试计划</h2>
+            <p class="text-muted">制定和管理你的面试准备计划</p>
+        </div>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPlanModal">
+            <i class="fas fa-plus me-2"></i>创建新计划
+        </button>
+    </div>
+
+    <!-- 计划概览 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success" id="totalPlans">0</h3>
+                    <p class="text-muted mb-0">总计划数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary" id="activePlans">0</h3>
+                    <p class="text-muted mb-0">进行中</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning" id="avgProgress">0%</h3>
+                    <p class="text-muted mb-0">平均进度</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info" id="completedQuestions">0</h3>
+                    <p class="text-muted mb-0">已完成题目</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 计划列表 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">我的计划列表</h5>
+        </div>
+        <div class="card-body">
+            <div id="plansList" class="row">
+                <!-- 动态加载计划 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 创建计划模态框 -->
+<div class="modal fade" id="createPlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">创建面试计划</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPlanForm">
+                    <div class="mb-3">
+                        <label class="form-label">计划名称</label>
+                        <input type="text" class="form-control" id="planName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">目标岗位</label>
+                        <select class="form-select" id="targetPosition" required>
+                            <option value="">选择目标岗位</option>
+                            <option value="frontend">前端工程师</option>
+                            <option value="backend">后端工程师</option>
+                            <option value="fullstack">全栈工程师</option>
+                            <option value="go_developer">Go开发工程师</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">公司类型</label>
+                        <select class="form-select" id="companyType" required>
+                            <option value="">选择公司类型</option>
+                            <option value="big_tech">大厂 (BAT, 字节等)</option>
+                            <option value="unicorn">独角兽公司</option>
+                            <option value="startup">创业公司</option>
+                            <option value="traditional">传统企业</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">经验级别</label>
+                        <select class="form-select" id="experienceLevel" required>
+                            <option value="">选择经验级别</option>
+                            <option value="junior">初级 (0-2年)</option>
+                            <option value="middle">中级 (2-5年)</option>
+                            <option value="senior">高级 (5+年)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">目标面试时间</label>
+                        <input type="date" class="form-control" id="interviewDate">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="submit" form="createPlanForm" class="btn btn-success">创建计划</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadPlans();
+    setupEventListeners();
+});
+
+function loadPlans() {
+    const userId = 1; // 临时硬编码
+    fetch(`/api/interview/plans/${userId}`)
+        .then(response => response.json())
+        .then(plans => {
+            displayPlans(plans);
+            updateStatistics(plans);
+        })
+        .catch(error => {
+            console.error('加载计划失败:', error);
+        });
+}
+
+function displayPlans(plans) {
+    const container = document.getElementById('plansList');
+    
+    if (plans.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">还没有面试计划</h5>
+                <p class="text-muted">创建你的第一个面试准备计划吧！</p>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPlanModal">
+                    <i class="fas fa-plus me-2"></i>创建计划
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = plans.map(plan => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card plan-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="card-title">${plan.target_position}</h6>
+                        <span class="badge bg-${getStatusColor(plan.status)} status-${plan.status}">
+                            ${getStatusText(plan.status)}
+                        </span>
+                    </div>
+                    
+                    <p class="card-text">
+                        <small class="text-muted">
+                            <i class="fas fa-building me-1"></i>${plan.target_company_type} · 
+                            <i class="fas fa-user-tie me-1"></i>${plan.target_experience_level}
+                        </small>
+                    </p>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">进度</small>
+                            <small class="text-muted">${plan.progress_percentage}%</small>
+                        </div>
+                        <div class="progress progress-bar-custom">
+                            <div class="progress-bar bg-success" style="width: ${plan.progress_percentage}%"></div>
+                        </div>
+                    </div>
+                    
+                    <p class="card-text">
+                        <small class="text-muted">
+                            已完成: ${plan.questions_completed}/${plan.total_questions_planned} 题
+                        </small>
+                    </p>
+                    
+                    <div class="mb-3">
+                        ${plan.focus_technologies.map(tech => 
+                            `<span class="badge bg-primary me-1">${tech}</span>`
+                        ).join('')}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success flex-fill" onclick="continuePlan(${plan.id})">
+                            <i class="fas fa-play me-1"></i>继续练习
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="viewPlanDetails(${plan.id})">
+                            <i class="fas fa-eye me-1"></i>详情
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateStatistics(plans) {
+    document.getElementById('totalPlans').textContent = plans.length;
+    document.getElementById('activePlans').textContent = 
+        plans.filter(p => p.status === 'active').length;
+    
+    const avgProgress = plans.length > 0 ? 
+        Math.round(plans.reduce((sum, p) => sum + p.progress_percentage, 0) / plans.length) : 0;
+    document.getElementById('avgProgress').textContent = avgProgress + '%';
+    
+    const completedQuestions = plans.reduce((sum, p) => sum + p.questions_completed, 0);
+    document.getElementById('completedQuestions').textContent = completedQuestions;
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'active': 'success',
+        'completed': 'secondary', 
+        'paused': 'warning'
+    };
+    return colors[status] || 'secondary';
+}
+
+function getStatusText(status) {
+    const texts = {
+        'active': '进行中',
+        'completed': '已完成',
+        'paused': '暂停'
+    };
+    return texts[status] || status;
+}
+
+function setupEventListeners() {
+    document.getElementById('createPlanForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            user_id: 1, // 临时硬编码
+            target_position: document.getElementById('targetPosition').value,
+            target_company_type: document.getElementById('companyType').value,
+            target_experience_level: document.getElementById('experienceLevel').value,
+            interview_date: document.getElementById('interviewDate').value
+        };
+        
+        fetch('/api/interview/plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('计划创建成功！', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('createPlanModal')).hide();
+                loadPlans(); // 重新加载计划列表
+                this.reset(); // 重置表单
+            } else {
+                showToast('创建失败：' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('创建计划失败:', error);
+            showToast('创建失败，请稍后重试', 'error');
+        });
+    });
+}
+
+function continuePlan(planId) {
+    // 跳转到练习页面
+    window.location.href = '/interview/practice?plan=' + planId;
+}
+
+function viewPlanDetails(planId) {
+    // 显示计划详情
+    showToast('计划详情功能开发中...', 'warning');
+}
+</script>
+{% endblock %}

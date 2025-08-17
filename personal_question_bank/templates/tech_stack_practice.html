@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category }} - 技术栈专练{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- 页面标题 -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-code"></i> {{ category }} 专练</h2>
+                    <p class="text-muted">针对性练习，快速提升技能</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary me-2" onclick="history.back()">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </button>
+                    <button class="btn btn-primary" onclick="startRandomPractice()">
+                        <i class="fas fa-random"></i> 随机练习
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-primary" id="total-questions">-</h3>
+                            <p class="mb-0">总题目数</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-success" id="completed-questions">0</h3>
+                            <p class="mb-0">已完成</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-warning" id="accuracy-rate">-%</h3>
+                            <p class="mb-0">正确率</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3 class="text-info" id="avg-time">-</h3>
+                            <p class="mb-0">平均用时</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 难度筛选 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter"></i> 筛选条件</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">难度等级</label>
+                            <select class="form-select" id="difficulty-filter">
+                                <option value="all">全部难度</option>
+                                <option value="easy">简单</option>
+                                <option value="medium">中等</option>
+                                <option value="hard">困难</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">题目类型</label>
+                            <select class="form-select" id="type-filter">
+                                <option value="all">全部类型</option>
+                                <option value="theory">理论题</option>
+                                <option value="coding">编程题</option>
+                                <option value="multiple_choice">选择题</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">操作</label><br>
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                <i class="fas fa-search"></i> 应用筛选
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                                <i class="fas fa-undo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 题目列表 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> 题目列表</h5>
+                </div>
+                <div class="card-body">
+                    <div id="questions-loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                        <p class="mt-2">正在加载题目...</p>
+                    </div>
+                    
+                    <div id="questions-list" style="display: none;">
+                        <!-- 题目列表将在这里动态生成 -->
+                    </div>
+                    
+                    <div id="no-questions" style="display: none;" class="text-center py-4">
+                        <i class="fas fa-exclamation-circle text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">暂无符合条件的题目</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 题目详情模态框 -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionModalTitle">题目详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="questionContent">
+                    <!-- 题目内容将在这里显示 -->
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">你的答案：</label>
+                    <textarea class="form-control" id="userAnswer" rows="4" placeholder="请输入你的答案..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="submitAnswer()">提交答案</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCategory = '{{ category }}';
+let allQuestions = [];
+let filteredQuestions = [];
+let currentQuestion = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadQuestions();
+});
+
+function loadQuestions() {
+    console.log(`加载 ${currentCategory} 的题目...`);
+    
+    fetch(`/api/tech-stack/${encodeURIComponent(currentCategory)}/questions`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            allQuestions = data.questions;
+            filteredQuestions = [...allQuestions];
+            
+            updateStatistics();
+            displayQuestions();
+            
+            document.getElementById('questions-loading').style.display = 'none';
+            document.getElementById('questions-list').style.display = 'block';
+            
+            console.log(`成功加载 ${data.total_count} 道题目`);
+        })
+        .catch(error => {
+            console.error('加载题目失败:', error);
+            document.getElementById('questions-loading').style.display = 'none';
+            document.getElementById('no-questions').style.display = 'block';
+            showToast('加载题目失败，请稍后重试', 'error');
+        });
+}
+
+function updateStatistics() {
+    document.getElementById('total-questions').textContent = allQuestions.length;
+    // 这里可以从localStorage或服务器获取用户的练习记录
+    // 暂时使用模拟数据
+    document.getElementById('completed-questions').textContent = '0';
+    document.getElementById('accuracy-rate').textContent = '-%';
+    document.getElementById('avg-time').textContent = '-';
+}
+
+function displayQuestions() {
+    const container = document.getElementById('questions-list');
+    
+    if (filteredQuestions.length === 0) {
+        document.getElementById('questions-list').style.display = 'none';
+        document.getElementById('no-questions').style.display = 'block';
+        return;
+    }
+    
+    document.getElementById('questions-list').style.display = 'block';
+    document.getElementById('no-questions').style.display = 'none';
+    
+    const questionsHtml = filteredQuestions.map((question, index) => `
+        <div class="card mb-3 question-card" data-question-id="${question.id}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title">
+                            <span class="badge bg-secondary me-2">${index + 1}</span>
+                            ${question.title}
+                        </h6>
+                        <p class="card-text text-muted small">${question.content.substring(0, 100)}...</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-${getDifficultyColor(question.difficulty)}">${getDifficultyText(question.difficulty)}</span>
+                            <span class="badge bg-info">${getTypeText(question.question_type)}</span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-clock"></i> ${question.estimated_time}分钟
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="practiceQuestion(${question.id})">
+                            <i class="fas fa-play"></i> 开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = questionsHtml;
+}
+
+function getDifficultyColor(difficulty) {
+    const colors = {
+        'easy': 'success',
+        'medium': 'warning',
+        'hard': 'danger'
+    };
+    return colors[difficulty] || 'secondary';
+}
+
+function getDifficultyText(difficulty) {
+    const texts = {
+        'easy': '简单',
+        'medium': '中等',
+        'hard': '困难'
+    };
+    return texts[difficulty] || difficulty;
+}
+
+function getTypeText(type) {
+    const texts = {
+        'theory': '理论题',
+        'coding': '编程题',
+        'multiple_choice': '选择题',
+        'practical': '实践题'
+    };
+    return texts[type] || type;
+}
+
+function applyFilters() {
+    const difficultyFilter = document.getElementById('difficulty-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+    
+    filteredQuestions = allQuestions.filter(question => {
+        const difficultyMatch = difficultyFilter === 'all' || question.difficulty === difficultyFilter;
+        const typeMatch = typeFilter === 'all' || question.question_type === typeFilter;
+        return difficultyMatch && typeMatch;
+    });
+    
+    displayQuestions();
+    showToast(`筛选完成，共找到 ${filteredQuestions.length} 道题目`, 'success');
+}
+
+function resetFilters() {
+    document.getElementById('difficulty-filter').value = 'all';
+    document.getElementById('type-filter').value = 'all';
+    filteredQuestions = [...allQuestions];
+    displayQuestions();
+    showToast('筛选条件已重置', 'info');
+}
+
+function practiceQuestion(questionId) {
+    currentQuestion = allQuestions.find(q => q.id === questionId);
+    if (!currentQuestion) return;
+    
+    document.getElementById('questionModalTitle').textContent = currentQuestion.title;
+    document.getElementById('questionContent').innerHTML = `
+        <div class="mb-3">
+            <div class="d-flex gap-2 mb-2">
+                <span class="badge bg-${getDifficultyColor(currentQuestion.difficulty)}">${getDifficultyText(currentQuestion.difficulty)}</span>
+                <span class="badge bg-info">${getTypeText(currentQuestion.question_type)}</span>
+                <span class="badge bg-light text-dark">知识点: ${currentQuestion.knowledge_point}</span>
+            </div>
+            <p class="lead">${currentQuestion.content}</p>
+        </div>
+    `;
+    
+    document.getElementById('userAnswer').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('questionModal'));
+    modal.show();
+}
+
+function submitAnswer() {
+    const answer = document.getElementById('userAnswer').value.trim();
+    if (!answer) {
+        showToast('请先输入答案', 'warning');
+        return;
+    }
+    
+    // 这里可以提交答案到服务器进行评判
+    // 暂时只是显示提交成功的消息
+    showToast('答案已提交，继续加油！', 'success');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('questionModal'));
+    modal.hide();
+    
+    // 可以在这里更新统计信息
+    updateStatistics();
+}
+
+function startRandomPractice() {
+    if (filteredQuestions.length === 0) {
+        showToast('没有可练习的题目', 'warning');
+        return;
+    }
+    
+    const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
+    const randomQuestion = filteredQuestions[randomIndex];
+    practiceQuestion(randomQuestion.id);
+}
+
+function showToast(message, type = 'info') {
+    // 创建toast元素
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'primary'} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    // 添加到页面
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // 显示toast
+    const toastElement = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // 自动移除
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+</script>
+
+<style>
+.question-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.card-title {
+    margin-bottom: 0.5rem;
+}
+
+.card-text {
+    margin-bottom: 0.75rem;
+}
+</style>
+{% endblock %}
+

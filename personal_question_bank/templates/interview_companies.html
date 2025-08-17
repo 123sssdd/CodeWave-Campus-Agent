@@ -1,0 +1,1502 @@
+{% extends "base.html" %}
+
+{% block title %}公司题库 - 个人题库系统{% endblock %}
+
+{% block extra_head %}
+<style>
+/* 全局样式优化 */
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container-fluid {
+    background: transparent;
+}
+
+/* 页面标题美化 */
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.page-header h1 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+/* 公司卡片样式升级 */
+.company-card {
+    border: none;
+    border-radius: 25px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.company-card:hover {
+    transform: translateY(-15px) scale(1.03);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.company-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.company-card:hover::before {
+    opacity: 1;
+    height: 8px;
+}
+
+.company-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.company-card:hover::after {
+    opacity: 1;
+}
+
+/* 公司头部样式升级 */
+.company-header {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: white;
+    font-weight: 700;
+    font-size: 1.4rem;
+    text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.company-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
+    z-index: 1;
+}
+
+.company-header h4 {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.company-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+    z-index: 1;
+}
+
+/* 公司特定背景渐变 */
+.company-alibaba {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+}
+
+.company-tencent {
+    background: linear-gradient(135deg, #00d4ff 0%, #090979 100%);
+}
+
+.company-bytedance {
+    background: linear-gradient(135deg, #000000 0%, #434343 100%);
+}
+
+.company-baidu {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+}
+
+.company-meituan {
+    background: linear-gradient(135deg, #ffb300 0%, #ff8f00 100%);
+}
+
+.company-jd {
+    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+}
+
+
+
+.difficulty-chart {
+    height: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.difficulty-bar {
+    height: 100%;
+    float: left;
+}
+
+.difficulty-easy { background: #28a745; }
+.difficulty-medium { background: #ffc107; }
+.difficulty-hard { background: #dc3545; }
+
+/* 统计数据样式升级 */
+.company-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 20px 15px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.stat-item {
+    text-align: center;
+    position: relative;
+    padding: 15px 10px;
+    transition: all 0.4s ease;
+    border-radius: 15px;
+    flex: 1;
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+}
+
+.stat-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover::before {
+    opacity: 1;
+    width: 60px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: block;
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 5px;
+}
+
+/* 标签和描述样式美化 */
+.question-type-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.type-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.type-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.type-theory { background: #6f42c1; }
+.type-coding { background: #28a745; }
+.type-practical { background: #fd7e14; }
+
+/* 页面标题区域美化 */
+.interview-tips {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 25px;
+    padding: 40px 30px;
+    margin-bottom: 40px;
+    color: white;
+    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.interview-tips::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.interview-tips h2 {
+    font-weight: 800;
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.interview-tips p {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    line-height: 1.6;
+}
+
+.interview-tips .btn {
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.interview-tips .btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+/* 筛选器样式升级 */
+.filter-section {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 25px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+    border: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+.filter-section h5 {
+    color: #495057;
+    font-weight: 700;
+    margin-bottom: 25px;
+    font-size: 1.3rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.form-select {
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 15px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    transform: translateY(-2px);
+}
+
+.form-select:hover {
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+/* 按钮样式升级 */
+.practice-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 30px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.practice-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.practice-btn:hover::before {
+    left: 100%;
+}
+
+.practice-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+}
+
+.practice-btn:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+.practice-btn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.practice-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.detail-btn {
+    border: 2px solid #667eea;
+    color: #667eea;
+    border-radius: 30px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.detail-btn:hover::before {
+    opacity: 1;
+}
+
+.detail-btn:hover {
+    color: white;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    border-color: transparent;
+}
+
+.detail-btn span {
+    position: relative;
+    z-index: 1;
+}
+
+/* 额外的美化效果 */
+.company-card .card-body {
+    position: relative;
+}
+
+.company-card .card-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.03) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.company-card:hover .card-body::before {
+    opacity: 1;
+}
+
+/* 难度条美化 */
+.difficulty-chart {
+    height: 10px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    margin: 15px 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.difficulty-bar {
+    height: 100%;
+    float: left;
+    transition: all 0.3s ease;
+}
+
+.difficulty-easy {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.difficulty-medium {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.difficulty-hard {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .company-card {
+        margin-bottom: 20px;
+    }
+
+    .company-header h4 {
+        font-size: 1.2rem;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+    }
+
+    .interview-tips {
+        padding: 25px 20px;
+    }
+
+    .interview-tips h2 {
+        font-size: 1.8rem;
+    }
+
+    .filter-section {
+        padding: 20px;
+    }
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="interview-tips">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="fas fa-building me-2"></i>公司题库</h2>
+                <p class="mb-0">精选各大互联网公司面试真题，了解不同公司的面试风格和重点</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-outline-primary" onclick="showInterviewGuide()">
+                    <i class="fas fa-lightbulb me-1"></i>面试攻略
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选器 -->
+    <div class="filter-section">
+        <div class="row">
+            <div class="col-md-4">
+                <label class="form-label">公司类型</label>
+                <select class="form-select" id="companyTypeFilter">
+                    <option value="">全部类型</option>
+                    <option value="big_tech">大厂 (BAT等)</option>
+                    <option value="unicorn">独角兽</option>
+                    <option value="startup">创业公司</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">岗位方向</label>
+                <select class="form-select" id="positionFilter">
+                    <option value="">全部岗位</option>
+                    <option value="frontend">前端开发</option>
+                    <option value="backend">后端开发</option>
+                    <option value="fullstack">全栈开发</option>
+                    <option value="algorithm">算法工程师</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">面试年份</label>
+                <select class="form-select" id="yearFilter">
+                    <option value="">全部年份</option>
+                    <option value="2024">2024年</option>
+                    <option value="2023">2023年</option>
+                    <option value="2022">2022年</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公司卡片 -->
+    <div class="row" id="companiesList">
+        <!-- 阿里巴巴 -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header company-alibaba">
+                    <h4>阿里巴巴</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="alibaba-questions">12</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">4.2</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">65%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 25%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 50%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 25%"></div>
+                    </div>
+                    
+                    <div class="question-type-badges">
+                        <span class="type-badge type-theory">理论</span>
+                        <span class="type-badge type-coding">算法</span>
+                        <span class="type-badge type-practical">系统设计</span>
+                    </div>
+                    
+                    <p class="text-muted mt-3 small">重点考察：Vue/React框架、算法基础、系统架构</p>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('alibaba')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('alibaba', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 腾讯 -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header company-tencent">
+                    <h4>腾讯</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="tencent-questions">8</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">3.8</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">72%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 30%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 45%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 25%"></div>
+                    </div>
+                    
+                    <div class="question-type-badges">
+                        <span class="type-badge type-theory">基础知识</span>
+                        <span class="type-badge type-coding">编程</span>
+                        <span class="type-badge type-practical">项目经验</span>
+                    </div>
+                    
+                    <p class="text-muted mt-3 small">重点考察：JavaScript基础、React生态、微信小程序</p>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('tencent')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('tencent', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 字节跳动 -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header company-bytedance">
+                    <h4>字节跳动</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="bytedance-questions">15</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">4.5</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">58%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 20%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 40%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 40%"></div>
+                    </div>
+                    
+                    <div class="question-type-badges">
+                        <span class="type-badge type-theory">算法思维</span>
+                        <span class="type-badge type-coding">编程实现</span>
+                        <span class="type-badge type-practical">性能优化</span>
+                    </div>
+                    
+                    <p class="text-muted mt-3 small">重点考察：算法能力、代码质量、性能优化思维</p>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('bytedance')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('bytedance', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 百度 -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header company-baidu">
+                    <h4>百度</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="baidu-questions">6</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">3.5</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">78%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 35%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 50%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 15%"></div>
+                    </div>
+                    
+                    <div class="question-type-badges">
+                        <span class="type-badge type-theory">基础概念</span>
+                        <span class="type-badge type-coding">实际应用</span>
+                    </div>
+                    
+                    <p class="text-muted mt-3 small">重点考察：前端基础、框架应用、工程化思维</p>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('baidu')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('baidu', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 美团 -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header company-meituan">
+                    <h4>美团</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="meituan-questions">7</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">3.9</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">69%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 28%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 57%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 15%"></div>
+                    </div>
+                    
+                    <div class="question-type-badges">
+                        <span class="type-badge type-theory">业务理解</span>
+                        <span class="type-badge type-coding">技术实现</span>
+                        <span class="type-badge type-practical">解决方案</span>
+                    </div>
+                    
+                    <p class="text-muted mt-3 small">重点考察：业务思维、技术方案、实际项目经验</p>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('meituan')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('meituan', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 京东 -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header company-jd">
+                    <h4>京东</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="jd-questions">5</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">3.6</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">75%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 40%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 40%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 20%"></div>
+                    </div>
+                    
+                    <div class="question-type-badges">
+                        <span class="type-badge type-theory">技术深度</span>
+                        <span class="type-badge type-coding">编程能力</span>
+                    </div>
+                    
+                    <p class="text-muted mt-3 small">重点考察：技术深度、编程规范、团队协作</p>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('jd')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('jd', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计信息 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>面试趋势分析</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <canvas id="difficultyTrendChart" width="400" height="200"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="topicDistributionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 公司详情模态框 -->
+<div class="modal fade" id="companyDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="companyModalTitle">公司详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="companyModalContent">
+                <!-- 动态加载公司详情 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="startCompanyPracticeBtn">
+                    <i class="fas fa-play me-1"></i>开始练习
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initCharts();
+    updateQuestionCounts();
+    setupFilters();
+
+    // 页面加载动画
+    animatePageLoad();
+
+    // 更新实时数据
+    setTimeout(updateCompanyStats, 1000);
+});
+
+function animatePageLoad() {
+    // 为公司卡片添加入场动画
+    document.querySelectorAll('.company-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(50px)';
+
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+
+    // 筛选器动画
+    const filterSection = document.querySelector('.filter-section');
+    if (filterSection) {
+        filterSection.style.opacity = '0';
+        filterSection.style.transform = 'translateY(-30px)';
+
+        setTimeout(() => {
+            filterSection.style.transition = 'all 0.5s ease';
+            filterSection.style.opacity = '1';
+            filterSection.style.transform = 'translateY(0)';
+        }, 200);
+    }
+}
+
+function updateCompanyStats() {
+    // 模拟从API获取最新数据并添加动画效果
+    const companies = ['alibaba', 'tencent', 'bytedance', 'baidu', 'meituan', 'jd'];
+
+    companies.forEach((company, index) => {
+        setTimeout(() => {
+            const element = document.getElementById(`${company}-questions`);
+            if (element) {
+                const currentValue = parseInt(element.textContent) || 0;
+                const newValue = Math.floor(Math.random() * 20) + 10;
+                animateNumber(element, currentValue, newValue);
+            }
+        }, index * 200);
+    });
+}
+
+function animateNumber(element, start, end) {
+    const duration = 1000;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const current = Math.floor(start + (end - start) * easeOutCubic(progress));
+        element.textContent = current;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+function showToast(message, type = 'info') {
+    // 创建toast容器（如果不存在）
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 350px;
+        `;
+        document.body.appendChild(toastContainer);
+    }
+
+    // 创建toast元素
+    const toast = document.createElement('div');
+    const toastId = 'toast-' + Date.now();
+    toast.id = toastId;
+
+    const bgColor = {
+        'success': '#28a745',
+        'error': '#dc3545',
+        'warning': '#ffc107',
+        'info': '#17a2b8'
+    }[type] || '#17a2b8';
+
+    const icon = {
+        'success': 'fas fa-check-circle',
+        'error': 'fas fa-exclamation-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'info': 'fas fa-info-circle'
+    }[type] || 'fas fa-info-circle';
+
+    toast.innerHTML = `
+        <div style="
+            background: ${bgColor};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        ">
+            <i class="${icon} me-2"></i>
+            <span>${message}</span>
+            <button onclick="removeToast('${toastId}')" style="
+                background: none;
+                border: none;
+                color: white;
+                margin-left: auto;
+                padding: 0 0 0 10px;
+                cursor: pointer;
+                font-size: 18px;
+            ">&times;</button>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // 显示动画
+    setTimeout(() => {
+        toast.firstElementChild.style.transform = 'translateX(0)';
+    }, 100);
+
+    // 自动隐藏
+    setTimeout(() => {
+        removeToast(toastId);
+    }, 4000);
+}
+
+function removeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.firstElementChild.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }
+}
+
+function updateQuestionCounts() {
+    // 模拟从API获取各公司题目数量
+    const companies = ['alibaba', 'tencent', 'bytedance', 'baidu', 'meituan', 'jd'];
+    companies.forEach(company => {
+        // 这里应该调用实际的API
+        const count = Math.floor(Math.random() * 20) + 5;
+        const element = document.getElementById(`${company}-questions`);
+        if (element) {
+            element.textContent = count;
+        }
+    });
+}
+
+function setupFilters() {
+    const filters = ['companyTypeFilter', 'positionFilter', 'yearFilter'];
+    filters.forEach(filterId => {
+        document.getElementById(filterId).addEventListener('change', applyFilters);
+    });
+}
+
+function applyFilters() {
+    const companyType = document.getElementById('companyTypeFilter').value;
+    const position = document.getElementById('positionFilter').value;
+    const year = document.getElementById('yearFilter').value;
+
+    // 显示加载状态
+    const companiesList = document.getElementById('companiesList');
+    companiesList.style.opacity = '0.5';
+
+    // 模拟筛选过程
+    showToast('正在筛选公司...', 'info');
+
+    setTimeout(() => {
+        // 这里应该根据筛选条件显示/隐藏公司卡片
+        filterCompanyCards(companyType, position, year);
+        companiesList.style.opacity = '1';
+        showToast('筛选完成', 'success');
+    }, 500);
+}
+
+function filterCompanyCards(companyType, position, year) {
+    const cards = document.querySelectorAll('.company-card').forEach(card => {
+        // 简单的显示/隐藏逻辑，实际应用中应该根据真实数据筛选
+        card.closest('.col-md-6').style.display = 'block';
+    });
+
+    // 添加筛选动画
+    document.querySelectorAll('.company-card').forEach((card, index) => {
+        card.style.animation = `fadeInUp 0.6s ease ${index * 0.1}s both`;
+    });
+}
+
+// 添加CSS动画
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+`;
+document.head.appendChild(style);
+
+function viewCompanyDetail(company) {
+    const companyInfo = getCompanyInfo(company);
+
+    // 添加加载动画
+    document.getElementById('companyModalTitle').innerHTML = `
+        <i class="fas fa-building me-2"></i>${companyInfo.name} 面试详情
+    `;
+
+    document.getElementById('companyModalContent').innerHTML = `
+        <div class="company-detail">
+            <!-- 公司头部信息 -->
+            <div class="company-detail-header mb-4 p-4 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-2">${companyInfo.name}</h5>
+                        <p class="mb-0 opacity-90">${companyInfo.description}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="company-stats-mini">
+                            <div class="d-flex justify-content-end gap-3">
+                                <div class="text-center">
+                                    <div class="h4 mb-0">${companyInfo.questionTypes.reduce((sum, type) => sum + type.count, 0)}</div>
+                                    <small>题目总数</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="h4 mb-0">${companyInfo.difficulty || '4.2'}</div>
+                                    <small>平均难度</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="detail-card p-3 border rounded">
+                        <h6 class="text-primary mb-3"><i class="fas fa-star me-2"></i>面试特点</h6>
+                        <ul class="list-unstyled">
+                            ${companyInfo.features.map(feature =>
+                                `<li class="mb-2"><i class="fas fa-check text-success me-2"></i>${feature}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-card p-3 border rounded">
+                        <h6 class="text-primary mb-3"><i class="fas fa-code me-2"></i>技术重点</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            ${companyInfo.techStack.map(tech =>
+                                `<span class="badge bg-gradient-primary px-3 py-2">${tech}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h6 class="text-primary mb-3"><i class="fas fa-chart-pie me-2"></i>题目分布</h6>
+                <div class="row">
+                    ${companyInfo.questionTypes.map((type, index) => {
+                        const colors = ['primary', 'success', 'warning', 'info'];
+                        return `
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center p-3 border rounded">
+                                <div class="h3 text-${colors[index % colors.length]} mb-2">${type.count}</div>
+                                <div class="text-muted">${type.name}</div>
+                                <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-${colors[index % colors.length]}"
+                                         style="width: ${(type.count / Math.max(...companyInfo.questionTypes.map(t => t.count))) * 100}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <div class="alert alert-light border-start border-4 border-primary">
+                <h6 class="text-primary mb-2"><i class="fas fa-lightbulb me-2"></i>面试建议</h6>
+                <p class="mb-0">${companyInfo.advice}</p>
+            </div>
+
+            <!-- 快速开始按钮 -->
+            <div class="text-center mt-4">
+                <button class="btn practice-btn btn-lg px-5" onclick="startCompanyPractice('${company}', this)">
+                    <i class="fas fa-rocket me-2"></i>立即开始练习
+                </button>
+            </div>
+        </div>
+    `;
+
+    // 更新模态框底部按钮
+    document.getElementById('startCompanyPracticeBtn').onclick = () => startCompanyPractice(company);
+
+    // 显示模态框
+    new bootstrap.Modal(document.getElementById('companyDetailModal')).show();
+}
+
+function getCompanyInfo(company) {
+    const companyData = {
+        alibaba: {
+            name: '阿里巴巴',
+            description: '中国最大的电商和云计算公司，注重技术深度和业务理解能力。',
+            features: ['重视基础算法', '考察系统设计', '关注业务思维', '多轮技术面试'],
+            techStack: ['Vue', 'React', 'Node.js', '微服务', '云计算'],
+            questionTypes: [
+                { name: '算法题', count: 5 },
+                { name: '系统设计', count: 4 },
+                { name: '前端基础', count: 3 }
+            ],
+            advice: '准备好算法基础，了解分布式系统，关注阿里的技术栈和业务场景。'
+        },
+        tencent: {
+            name: '腾讯',
+            description: '中国领先的互联网公司，以社交和游戏为核心业务。',
+            features: ['注重基础扎实', '考察项目经验', '重视团队协作', '技术与产品并重'],
+            techStack: ['React', 'Vue', '微信生态', 'Node.js', '小程序'],
+            questionTypes: [
+                { name: '前端基础', count: 4 },
+                { name: '项目经验', count: 3 },
+                { name: '算法思维', count: 1 }
+            ],
+            advice: '重点准备前端基础知识，熟悉微信生态，准备好项目经验的详细介绍。'
+        },
+        bytedance: {
+            name: '字节跳动',
+            description: '全球化的移动互联网公司，以今日头条、抖音等产品闻名。',
+            features: ['算法要求高', '代码质量严格', '重视性能优化', '国际化视野'],
+            techStack: ['React', 'Vue', 'Go', '算法优化', '大数据'],
+            questionTypes: [
+                { name: '算法编程', count: 8 },
+                { name: '系统优化', count: 4 },
+                { name: '技术方案', count: 3 }
+            ],
+            advice: '重点刷算法题，准备代码实现，关注性能优化和用户体验。'
+        },
+        baidu: {
+            name: '百度',
+            description: '中国领先的搜索引擎和AI公司。',
+            features: ['AI技术重点', '搜索算法', '基础扎实', '技术深度'],
+            techStack: ['前端框架', 'AI技术', '搜索算法', 'Python'],
+            questionTypes: [
+                { name: '前端技术', count: 3 },
+                { name: 'AI相关', count: 2 },
+                { name: '算法基础', count: 1 }
+            ],
+            advice: '注重前端基础，了解AI相关技术，准备搜索和推荐算法知识。'
+        },
+        meituan: {
+            name: '美团',
+            description: '中国领先的生活服务电商平台。',
+            features: ['业务导向', '实用技术', '用户体验', '数据驱动'],
+            techStack: ['React', 'Vue', '数据分析', '业务系统'],
+            questionTypes: [
+                { name: '业务理解', count: 3 },
+                { name: '技术实现', count: 3 },
+                { name: '数据处理', count: 1 }
+            ],
+            advice: '了解O2O业务模式，准备实际项目经验，关注用户体验优化。'
+        },
+        jd: {
+            name: '京东',
+            description: '中国领先的电商和零售基础设施服务商。',
+            features: ['电商技术', '供应链系统', '技术稳定性', '团队协作'],
+            techStack: ['前端技术', '电商系统', '供应链', '微服务'],
+            questionTypes: [
+                { name: '电商技术', count: 2 },
+                { name: '系统稳定性', count: 2 },
+                { name: '团队协作', count: 1 }
+            ],
+            advice: '了解电商业务流程，准备高并发处理方案，重视系统稳定性。'
+        }
+    };
+    
+    return companyData[company] || {};
+}
+
+function startCompanyPractice(company, buttonElement) {
+    // 添加加载状态
+    if (buttonElement) {
+        buttonElement.classList.add('loading');
+        const originalText = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span style="opacity: 0;">加载中...</span>';
+
+        // 显示toast提示
+        showToast(`正在进入${getCompanyDisplayName(company)}题库...`, 'info');
+
+        // 模拟加载延迟，增强用户体验
+        setTimeout(() => {
+            window.location.href = `/interview/practice?company=${company}`;
+        }, 800);
+
+        // 如果3秒后还没跳转，恢复按钮状态
+        setTimeout(() => {
+            if (buttonElement) {
+                buttonElement.classList.remove('loading');
+                buttonElement.innerHTML = originalText;
+            }
+        }, 3000);
+    } else {
+        // 直接跳转（兼容旧调用方式）
+        window.location.href = `/interview/practice?company=${company}`;
+    }
+}
+
+function getCompanyDisplayName(company) {
+    const names = {
+        'alibaba': '阿里巴巴',
+        'tencent': '腾讯',
+        'bytedance': '字节跳动',
+        'baidu': '百度',
+        'meituan': '美团',
+        'jd': '京东',
+        'netease': '网易',
+        'xiaomi': '小米'
+    };
+    return names[company] || company;
+}
+
+function showInterviewGuide() {
+    showToast('面试攻略功能开发中...', 'info');
+}
+
+function initCharts() {
+    // 难度趋势图
+    const difficultyCtx = document.getElementById('difficultyTrendChart').getContext('2d');
+    new Chart(difficultyCtx, {
+        type: 'line',
+        data: {
+            labels: ['2022', '2023', '2024'],
+            datasets: [{
+                label: '平均难度',
+                data: [3.5, 3.8, 4.1],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '面试难度趋势'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5
+                }
+            }
+        }
+    });
+    
+    // 主题分布图
+    const topicCtx = document.getElementById('topicDistributionChart').getContext('2d');
+    new Chart(topicCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['前端基础', '算法编程', '系统设计', '项目经验', '其他'],
+            datasets: [{
+                data: [35, 25, 20, 15, 5],
+                backgroundColor: [
+                    '#28a745',
+                    '#dc3545',
+                    '#ffc107',
+                    '#17a2b8',
+                    '#6c757d'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '题目类型分布'
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

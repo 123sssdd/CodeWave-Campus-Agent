@@ -1,0 +1,166 @@
+{
+  "knowledge_points": [
+    {
+      "name": "数据结构与算法",
+      "category": "计算机基础",
+      "description": "包含数组、链表、树、图等基础数据结构和排序、搜索算法",
+      "questions": [
+        {
+          "title": "快速排序算法的时间复杂度分析",
+          "content": "请详细分析快速排序算法的最好、最坏和平均时间复杂度，并解释为什么在实际应用中快速排序通常优于归并排序？",
+          "type": "theory",
+          "difficulty": "medium",
+          "points": 15,
+          "estimated_time": 10,
+          "tags": ["算法", "排序", "复杂度分析"],
+          "reference_answer": "快速排序最好和平均时间复杂度为O(n log n)，最坏情况为O(n²)。实际应用中优势：1)原地排序，空间复杂度O(log n) 2)缓存友好性好 3)常数因子小"
+        },
+        {
+          "title": "二叉搜索树的平衡性问题",
+          "content": "什么是AVL树？请解释AVL树如何通过旋转操作维持平衡，并实现AVL树的插入操作。",
+          "type": "coding",
+          "difficulty": "hard",
+          "points": 25,
+          "estimated_time": 20,
+          "tags": ["数据结构", "树", "平衡树"],
+          "reference_answer": "AVL树是严格平衡的二叉搜索树，任意节点的左右子树高度差不超过1。通过LL、RR、LR、RL四种旋转操作维持平衡。"
+        }
+      ]
+    },
+    {
+      "name": "操作系统原理",
+      "category": "系统基础",
+      "description": "进程管理、内存管理、文件系统等核心概念",
+      "questions": [
+        {
+          "title": "进程和线程的区别与联系",
+          "content": "请详细比较进程和线程的区别，并解释在什么情况下应该使用多进程，什么情况下使用多线程？",
+          "type": "theory",
+          "difficulty": "medium",
+          "points": 15,
+          "estimated_time": 8,
+          "tags": ["操作系统", "并发", "进程线程"],
+          "reference_answer": "进程是资源分配单位，线程是调度单位。进程间独立性强但开销大，线程共享地址空间但需要同步。计算密集型用多进程，IO密集型用多线程。"
+        },
+        {
+          "title": "虚拟内存管理机制",
+          "content": "解释虚拟内存的工作原理，包括页表、TLB、缺页中断等概念。为什么需要虚拟内存？",
+          "type": "theory",
+          "difficulty": "hard",
+          "points": 20,
+          "estimated_time": 12,
+          "tags": ["内存管理", "虚拟内存", "页表"],
+          "reference_answer": "虚拟内存通过页表映射虚拟地址到物理地址，TLB加速地址转换，缺页时触发中断加载页面。提供内存保护、程序独立性和更大地址空间。"
+        }
+      ]
+    },
+    {
+      "name": "计算机网络",
+      "category": "网络技术",
+      "description": "TCP/IP协议栈、HTTP、网络安全等",
+      "questions": [
+        {
+          "title": "TCP三次握手和四次挥手详解",
+          "content": "详细解释TCP建立连接的三次握手过程和断开连接的四次挥手过程。为什么握手需要三次而挥手需要四次？",
+          "type": "theory",
+          "difficulty": "medium",
+          "points": 15,
+          "estimated_time": 10,
+          "tags": ["TCP", "网络协议", "连接管理"],
+          "reference_answer": "三次握手：SYN->SYN+ACK->ACK，确认双方收发能力。四次挥手：FIN->ACK->FIN->ACK，因为TCP全双工，需要分别关闭两个方向的连接。"
+        },
+        {
+          "title": "HTTP与HTTPS的区别及SSL/TLS原理",
+          "content": "比较HTTP和HTTPS的区别，详细解释SSL/TLS握手过程，以及数字证书的作用。",
+          "type": "theory",
+          "difficulty": "hard",
+          "points": 20,
+          "estimated_time": 15,
+          "tags": ["HTTP", "HTTPS", "加密", "SSL/TLS"],
+          "reference_answer": "HTTPS在HTTP基础上加入SSL/TLS加密层。握手过程：客户端Hello->服务器Hello+证书->密钥交换->完成。数字证书提供身份验证和公钥分发。"
+        }
+      ]
+    },
+    {
+      "name": "数据库系统",
+      "category": "数据库",
+      "description": "关系型数据库、SQL优化、事务处理",
+      "questions": [
+        {
+          "title": "数据库事务的ACID特性",
+          "content": "详细解释数据库事务的原子性、一致性、隔离性、持久性，并说明各种隔离级别的区别。",
+          "type": "theory",
+          "difficulty": "medium",
+          "points": 15,
+          "estimated_time": 12,
+          "tags": ["数据库", "事务", "ACID", "隔离级别"],
+          "reference_answer": "原子性：全部成功或失败；一致性：数据完整性约束；隔离性：并发事务互不干扰；持久性：提交后永久保存。隔离级别：读未提交、读已提交、可重复读、串行化。"
+        },
+        {
+          "title": "SQL查询优化策略",
+          "content": "给定一个复杂的SQL查询，请分析其执行计划并提出至少3种优化策略。包括索引使用、查询重写等。",
+          "type": "coding",
+          "difficulty": "hard",
+          "points": 25,
+          "estimated_time": 20,
+          "tags": ["SQL", "查询优化", "索引", "执行计划"],
+          "reference_answer": "优化策略：1)添加合适索引 2)避免SELECT * 3)使用EXISTS替代IN 4)分解复杂查询 5)优化WHERE条件顺序 6)使用分区表"
+        }
+      ]
+    },
+    {
+      "name": "软件工程",
+      "category": "工程实践",
+      "description": "设计模式、软件架构、项目管理",
+      "questions": [
+        {
+          "title": "常用设计模式及其应用场景",
+          "content": "请选择3个你最熟悉的设计模式，详细解释其结构、适用场景，并给出具体的代码实现示例。",
+          "type": "coding",
+          "difficulty": "medium",
+          "points": 20,
+          "estimated_time": 18,
+          "tags": ["设计模式", "面向对象", "软件架构"],
+          "reference_answer": "单例模式：全局唯一实例；观察者模式：一对多依赖关系；策略模式：算法族封装。每个模式都有特定的使用场景和实现方式。"
+        },
+        {
+          "title": "微服务架构设计原则",
+          "content": "解释微服务架构的核心原则和优缺点，如何处理服务间通信、数据一致性和分布式事务？",
+          "type": "theory",
+          "difficulty": "hard",
+          "points": 25,
+          "estimated_time": 15,
+          "tags": ["微服务", "分布式系统", "架构设计"],
+          "reference_answer": "核心原则：单一职责、去中心化、故障隔离。通信方式：同步REST/异步消息。一致性：最终一致性、Saga模式。分布式事务：两阶段提交、TCC模式。"
+        }
+      ]
+    },
+    {
+      "name": "机器学习基础",
+      "category": "人工智能",
+      "description": "监督学习、无监督学习、深度学习基础",
+      "questions": [
+        {
+          "title": "监督学习与无监督学习的区别",
+          "content": "比较监督学习和无监督学习的特点、应用场景和常见算法。举例说明何时使用哪种学习方式。",
+          "type": "theory",
+          "difficulty": "medium",
+          "points": 15,
+          "estimated_time": 10,
+          "tags": ["机器学习", "监督学习", "无监督学习"],
+          "reference_answer": "监督学习有标签数据，用于分类回归；无监督学习无标签，用于聚类降维。监督：线性回归、SVM；无监督：K-means、PCA。根据数据类型和目标选择。"
+        },
+        {
+          "title": "神经网络反向传播算法",
+          "content": "详细推导多层感知机的反向传播算法，包括梯度计算和权重更新过程。",
+          "type": "coding",
+          "difficulty": "hard",
+          "points": 30,
+          "estimated_time": 25,
+          "tags": ["深度学习", "神经网络", "反向传播"],
+          "reference_answer": "反向传播基于链式法则计算梯度。前向传播计算输出，反向传播计算各层梯度，最后更新权重。关键是理解梯度如何从输出层传播到输入层。"
+        }
+      ]
+    }
+  ]
+}

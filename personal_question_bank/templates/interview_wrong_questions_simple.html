@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}面试错题本{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-briefcase text-primary me-2"></i>面试错题本</h2>
+            
+            <!-- 统计面板 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-gradient-danger text-white">
+                        <div class="card-body text-center">
+                            <h3 id="total-count">0</h3>
+                            <p class="mb-0">总面试错题</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-gradient-warning text-white">
+                        <div class="card-body text-center">
+                            <h3 id="urgent-count">0</h3>
+                            <p class="mb-0">急需复习</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-gradient-success text-white">
+                        <div class="card-body text-center">
+                            <h3 id="mastered-count">0</h3>
+                            <p class="mb-0">已掌握</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-gradient-info text-white">
+                        <div class="card-body text-center">
+                            <h3 id="tech-count">0</h3>
+                            <p class="mb-0">涉及技术栈</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 调试信息 -->
+            <div id="debug-info" class="alert alert-info">
+                <h6>调试信息:</h6>
+                <div id="debug-content">正在初始化...</div>
+            </div>
+            
+            <!-- 错题列表 -->
+            <div id="questions-container">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                    <p class="mt-2 text-muted">加载面试错题中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let wrongQuestions = [];
+
+function addDebugInfo(message) {
+    const debugContent = document.getElementById('debug-content');
+    if (debugContent) {
+        debugContent.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+    }
+}
+
+async function loadWrongQuestions() {
+    try {
+        addDebugInfo('开始加载错题...');
+        
+        const response = await fetch('/api/wrong-questions/1?mode=interview');
+        addDebugInfo('API响应状态: ' + response.status);
+        
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        
+        const data = await response.json();
+        addDebugInfo('API返回success: ' + data.success);
+        addDebugInfo('错题数量: ' + (data.wrong_questions ? data.wrong_questions.length : 0));
+        
+        if (data.success && data.wrong_questions) {
+            wrongQuestions = data.wrong_questions;
+            updateStatistics();
+            renderQuestions();
+        } else {
+            addDebugInfo('API返回失败或无数据');
+        }
+    } catch (error) {
+        addDebugInfo('加载失败: ' + error.message);
+    }
+}
+
+function updateStatistics() {
+    addDebugInfo('开始更新统计...');
+    
+    const total = wrongQuestions.length;
+    const urgent = wrongQuestions.filter(wq => wq.mastery_level < 2).length;
+    const mastered = wrongQuestions.filter(wq => wq.mastery_level >= 4).length;
+    
+    const techCategories = new Set();
+    wrongQuestions.forEach(wq => {
+        if (wq.question && wq.question.knowledge_point && wq.question.knowledge_point.category) {
+            techCategories.add(wq.question.knowledge_point.category);
+        }
+    });
+    
+    document.getElementById('total-count').textContent = total;
+    document.getElementById('urgent-count').textContent = urgent;
+    document.getElementById('mastered-count').textContent = mastered;
+    document.getElementById('tech-count').textContent = techCategories.size;
+    
+    addDebugInfo('统计更新完成: 总数=' + total + ', 急需=' + urgent + ', 已掌握=' + mastered + ', 技术栈=' + techCategories.size);
+}
+
+function renderQuestions() {
+    addDebugInfo('开始渲染错题...');
+    
+    const container = document.getElementById('questions-container');
+    
+    if (wrongQuestions.length === 0) {
+        container.innerHTML = '<div class="text-center py-5"><h4>没有面试错题</h4></div>';
+        return;
+    }
+    
+    const html = wrongQuestions.map(wq => {
+        const question = wq.question || {};
+        const kp = question.knowledge_point || {};
+        
+        return `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>${question.title || '未知题目'}</h5>
+                    <p><strong>技术栈:</strong> ${kp.category || '未分类'}</p>
+                    <p><strong>难度:</strong> ${question.difficulty || '未知'}</p>
+                    <p><strong>掌握程度:</strong> ${wq.mastery_level}/5</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = html;
+    addDebugInfo('错题渲染完成');
+}
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    addDebugInfo('页面DOM加载完成');
+    
+    // 检查必要元素
+    const elements = ['total-count', 'urgent-count', 'mastered-count', 'tech-count', 'questions-container'];
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        addDebugInfo('元素 ' + id + ': ' + (element ? '存在' : '不存在'));
+    });
+    
+    loadWrongQuestions();
+});
+</script>
+{% endblock %}

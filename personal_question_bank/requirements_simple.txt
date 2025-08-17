@@ -11,3 +11,4 @@ marshmallow
 flask-marshmallow
 marshmallow-sqlalchemy
 werkzeug
+jieba
