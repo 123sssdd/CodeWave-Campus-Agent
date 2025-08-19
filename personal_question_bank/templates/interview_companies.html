@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}公司题库 - 个人题库系统{% endblock %}
+{% block title %}我的题库 - 个人题库系统{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -42,18 +42,23 @@ body {
 .company-card {
     border: none;
     border-radius: 25px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08), 
+                0 4px 8px rgba(102, 126, 234, 0.05);
     transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
     overflow: hidden;
     position: relative;
     background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    transform-origin: center;
+    transform: perspective(1000px) rotateX(0deg);
 }
 
 .company-card:hover {
-    transform: translateY(-15px) scale(1.03);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    transform: perspective(1000px) rotateX(5deg) translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 
+                0 8px 24px rgba(102, 126, 234, 0.15),
+                0 4px 12px rgba(128, 90, 213, 0.1);
 }
 
 .company-card::before {
@@ -162,6 +167,36 @@ body {
     background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
 }
 
+.company-netease {
+    background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+}
+
+/* 动态添加的公司样式 */
+.company-header:not([class*="company-"]) {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+/* 为新添加的公司提供随机颜色 */
+.company-default {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.company-startup {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.company-unicorn {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+}
+
+.company-foreign {
+    background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%);
+}
+
+.company-traditional {
+    background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+}
+
 
 
 .difficulty-chart {
@@ -187,10 +222,31 @@ body {
     justify-content: space-around;
     margin: 20px 0;
     padding: 20px 15px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.8) 100%);
     border-radius: 20px;
-    border: 1px solid rgba(102, 126, 234, 0.15);
+    border: 1px solid rgba(102, 126, 234, 0.2);
     backdrop-filter: blur(10px);
+    box-shadow: 
+        0 4px 15px rgba(102, 126, 234, 0.05),
+        inset 0 0 20px rgba(102, 126, 234, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.company-stats::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 50%);
+    animation: rotateGradient 8s linear infinite;
+}
+
+@keyframes rotateGradient {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .stat-item {
@@ -200,6 +256,10 @@ body {
     transition: all 0.4s ease;
     border-radius: 15px;
     flex: 1;
+    background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.05);
+    border: 1px solid rgba(255,255,255,0.6);
+    backdrop-filter: blur(5px);
 }
 
 .stat-item:hover {
@@ -266,7 +326,11 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1),
+                0 2px 6px rgba(102, 126, 234, 0.2);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
 .type-badge:hover {
@@ -607,12 +671,12 @@ body {
     <div class="interview-tips">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h2><i class="fas fa-building me-2"></i>公司题库</h2>
-                <p class="mb-0">精选各大互联网公司面试真题，了解不同公司的面试风格和重点</p>
+                <h2><i class="fas fa-database me-2"></i>我的题库</h2>
+                <p class="mb-0">管理和练习你收藏的公司面试题目，建立个人专属题库</p>
             </div>
             <div class="col-md-4 text-end">
-                <button class="btn btn-outline-primary" onclick="showInterviewGuide()">
-                    <i class="fas fa-lightbulb me-1"></i>面试攻略
+                <button class="btn btn-outline-primary" onclick="showAddCompanyModal()">
+                    <i class="fas fa-plus me-1"></i>添加公司
                 </button>
             </div>
         </div>
@@ -654,291 +718,14 @@ body {
 
     <!-- 公司卡片 -->
     <div class="row" id="companiesList">
-        <!-- 阿里巴巴 -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card company-card h-100">
-                <div class="company-header company-alibaba">
-                    <h4>阿里巴巴</h4>
-                </div>
-                <div class="card-body">
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="alibaba-questions">12</div>
-                            <div class="stat-label">题目数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-warning">4.2</div>
-                            <div class="stat-label">难度</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">65%</div>
-                            <div class="stat-label">通过率</div>
-                        </div>
-                    </div>
-                    
-                    <div class="difficulty-chart mb-3">
-                        <div class="difficulty-bar difficulty-easy" style="width: 25%"></div>
-                        <div class="difficulty-bar difficulty-medium" style="width: 50%"></div>
-                        <div class="difficulty-bar difficulty-hard" style="width: 25%"></div>
-                    </div>
-                    
-                    <div class="question-type-badges">
-                        <span class="type-badge type-theory">理论</span>
-                        <span class="type-badge type-coding">算法</span>
-                        <span class="type-badge type-practical">系统设计</span>
-                    </div>
-                    
-                    <p class="text-muted mt-3 small">重点考察：Vue/React框架、算法基础、系统架构</p>
-                    
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('alibaba')">
-                            <i class="fas fa-eye me-1"></i>查看详情
-                        </button>
-                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('alibaba', this)">
-                            <i class="fas fa-play me-1"></i>开始练习
-                        </button>
-                    </div>
-                </div>
+        <!-- 公司卡片将通过JavaScript动态加载 -->
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                <h5 class="text-muted">正在加载公司数据...</h5>
             </div>
         </div>
 
-        <!-- 腾讯 -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card company-card h-100">
-                <div class="company-header company-tencent">
-                    <h4>腾讯</h4>
-                </div>
-                <div class="card-body">
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="tencent-questions">8</div>
-                            <div class="stat-label">题目数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-warning">3.8</div>
-                            <div class="stat-label">难度</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">72%</div>
-                            <div class="stat-label">通过率</div>
-                        </div>
-                    </div>
-                    
-                    <div class="difficulty-chart mb-3">
-                        <div class="difficulty-bar difficulty-easy" style="width: 30%"></div>
-                        <div class="difficulty-bar difficulty-medium" style="width: 45%"></div>
-                        <div class="difficulty-bar difficulty-hard" style="width: 25%"></div>
-                    </div>
-                    
-                    <div class="question-type-badges">
-                        <span class="type-badge type-theory">基础知识</span>
-                        <span class="type-badge type-coding">编程</span>
-                        <span class="type-badge type-practical">项目经验</span>
-                    </div>
-                    
-                    <p class="text-muted mt-3 small">重点考察：JavaScript基础、React生态、微信小程序</p>
-                    
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('tencent')">
-                            <i class="fas fa-eye me-1"></i>查看详情
-                        </button>
-                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('tencent', this)">
-                            <i class="fas fa-play me-1"></i>开始练习
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 字节跳动 -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card company-card h-100">
-                <div class="company-header company-bytedance">
-                    <h4>字节跳动</h4>
-                </div>
-                <div class="card-body">
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="bytedance-questions">15</div>
-                            <div class="stat-label">题目数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-warning">4.5</div>
-                            <div class="stat-label">难度</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">58%</div>
-                            <div class="stat-label">通过率</div>
-                        </div>
-                    </div>
-                    
-                    <div class="difficulty-chart mb-3">
-                        <div class="difficulty-bar difficulty-easy" style="width: 20%"></div>
-                        <div class="difficulty-bar difficulty-medium" style="width: 40%"></div>
-                        <div class="difficulty-bar difficulty-hard" style="width: 40%"></div>
-                    </div>
-                    
-                    <div class="question-type-badges">
-                        <span class="type-badge type-theory">算法思维</span>
-                        <span class="type-badge type-coding">编程实现</span>
-                        <span class="type-badge type-practical">性能优化</span>
-                    </div>
-                    
-                    <p class="text-muted mt-3 small">重点考察：算法能力、代码质量、性能优化思维</p>
-                    
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('bytedance')">
-                            <i class="fas fa-eye me-1"></i>查看详情
-                        </button>
-                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('bytedance', this)">
-                            <i class="fas fa-play me-1"></i>开始练习
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 百度 -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card company-card h-100">
-                <div class="company-header company-baidu">
-                    <h4>百度</h4>
-                </div>
-                <div class="card-body">
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="baidu-questions">6</div>
-                            <div class="stat-label">题目数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-warning">3.5</div>
-                            <div class="stat-label">难度</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">78%</div>
-                            <div class="stat-label">通过率</div>
-                        </div>
-                    </div>
-                    
-                    <div class="difficulty-chart mb-3">
-                        <div class="difficulty-bar difficulty-easy" style="width: 35%"></div>
-                        <div class="difficulty-bar difficulty-medium" style="width: 50%"></div>
-                        <div class="difficulty-bar difficulty-hard" style="width: 15%"></div>
-                    </div>
-                    
-                    <div class="question-type-badges">
-                        <span class="type-badge type-theory">基础概念</span>
-                        <span class="type-badge type-coding">实际应用</span>
-                    </div>
-                    
-                    <p class="text-muted mt-3 small">重点考察：前端基础、框架应用、工程化思维</p>
-                    
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('baidu')">
-                            <i class="fas fa-eye me-1"></i>查看详情
-                        </button>
-                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('baidu', this)">
-                            <i class="fas fa-play me-1"></i>开始练习
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 美团 -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card company-card h-100">
-                <div class="company-header company-meituan">
-                    <h4>美团</h4>
-                </div>
-                <div class="card-body">
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="meituan-questions">7</div>
-                            <div class="stat-label">题目数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-warning">3.9</div>
-                            <div class="stat-label">难度</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">69%</div>
-                            <div class="stat-label">通过率</div>
-                        </div>
-                    </div>
-                    
-                    <div class="difficulty-chart mb-3">
-                        <div class="difficulty-bar difficulty-easy" style="width: 28%"></div>
-                        <div class="difficulty-bar difficulty-medium" style="width: 57%"></div>
-                        <div class="difficulty-bar difficulty-hard" style="width: 15%"></div>
-                    </div>
-                    
-                    <div class="question-type-badges">
-                        <span class="type-badge type-theory">业务理解</span>
-                        <span class="type-badge type-coding">技术实现</span>
-                        <span class="type-badge type-practical">解决方案</span>
-                    </div>
-                    
-                    <p class="text-muted mt-3 small">重点考察：业务思维、技术方案、实际项目经验</p>
-                    
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('meituan')">
-                            <i class="fas fa-eye me-1"></i>查看详情
-                        </button>
-                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('meituan', this)">
-                            <i class="fas fa-play me-1"></i>开始练习
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 京东 -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card company-card h-100">
-                <div class="company-header company-jd">
-                    <h4>京东</h4>
-                </div>
-                <div class="card-body">
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="jd-questions">5</div>
-                            <div class="stat-label">题目数</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-warning">3.6</div>
-                            <div class="stat-label">难度</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number text-info">75%</div>
-                            <div class="stat-label">通过率</div>
-                        </div>
-                    </div>
-                    
-                    <div class="difficulty-chart mb-3">
-                        <div class="difficulty-bar difficulty-easy" style="width: 40%"></div>
-                        <div class="difficulty-bar difficulty-medium" style="width: 40%"></div>
-                        <div class="difficulty-bar difficulty-hard" style="width: 20%"></div>
-                    </div>
-                    
-                    <div class="question-type-badges">
-                        <span class="type-badge type-theory">技术深度</span>
-                        <span class="type-badge type-coding">编程能力</span>
-                    </div>
-                    
-                    <p class="text-muted mt-3 small">重点考察：技术深度、编程规范、团队协作</p>
-                    
-                    <div class="d-flex gap-3 mt-4">
-                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('jd')">
-                            <i class="fas fa-eye me-1"></i>查看详情
-                        </button>
-                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('jd', this)">
-                            <i class="fas fa-play me-1"></i>开始练习
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- 统计信息 -->
@@ -954,6 +741,95 @@ body {
                 <div class="col-md-6">
                     <canvas id="topicDistributionChart" width="400" height="200"></canvas>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加公司模态框 -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>添加新公司
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCompanyForm">
+                    <div class="mb-3">
+                        <label class="form-label">公司名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="companyName" required placeholder="请输入公司名称">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">公司类型</label>
+                        <select class="form-select" id="companyType">
+                            <option value="big_tech">大厂 (BAT等)</option>
+                            <option value="unicorn">独角兽</option>
+                            <option value="startup">创业公司</option>
+                            <option value="foreign">外企</option>
+                            <option value="traditional">传统企业</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">主要技术栈</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Vue" id="tech-vue">
+                                    <label class="form-check-label" for="tech-vue">Vue.js</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="React" id="tech-react">
+                                    <label class="form-check-label" for="tech-react">React</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="JavaScript" id="tech-js">
+                                    <label class="form-check-label" for="tech-js">JavaScript</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Golang" id="tech-go">
+                                    <label class="form-check-label" for="tech-go">Golang</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Python" id="tech-python">
+                                    <label class="form-check-label" for="tech-python">Python</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Java" id="tech-java">
+                                    <label class="form-check-label" for="tech-java">Java</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">面试难度</label>
+                        <select class="form-select" id="companyDifficulty">
+                            <option value="3.0">简单 (3.0)</option>
+                            <option value="3.5">较简单 (3.5)</option>
+                            <option value="4.0" selected>中等 (4.0)</option>
+                            <option value="4.5">较难 (4.5)</option>
+                            <option value="5.0">困难 (5.0)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">公司描述</label>
+                        <textarea class="form-control" id="companyDescription" rows="3" placeholder="简单描述公司特点和面试重点..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addNewCompany()">
+                    <i class="fas fa-save me-1"></i>保存公司
+                </button>
             </div>
         </div>
     </div>
@@ -985,6 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initCharts();
     updateQuestionCounts();
     setupFilters();
+    loadCompaniesFromDatabase();
 
     // 页面加载动画
     animatePageLoad();
@@ -992,6 +869,95 @@ document.addEventListener('DOMContentLoaded', function() {
     // 更新实时数据
     setTimeout(updateCompanyStats, 1000);
 });
+
+// 从数据库加载公司数据
+function loadCompaniesFromDatabase() {
+    console.log('从数据库加载公司数据...');
+
+    fetch('/api/companies')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(companies => {
+            console.log('获取到公司数据:', companies);
+
+            if (Array.isArray(companies) && companies.length > 0) {
+                // 清空现有的公司列表
+                const companiesList = document.getElementById('companiesList');
+                companiesList.innerHTML = '';
+
+                // 动态渲染所有公司卡片
+                companies.forEach(company => {
+                    // 确保公司数据有必要的字段
+                    const companyData = {
+                        id: company.id,
+                        name: company.name,
+                        questionCount: company.question_count || 0,
+                        difficulty: company.difficulty || '4.0',
+                        passRate: company.pass_rate || '70',
+                        techStack: company.tech_stack ? (Array.isArray(company.tech_stack) ? company.tech_stack : JSON.parse(company.tech_stack || '[]')) : [],
+                        description: company.description || '暂无描述',
+                        isDefault: company.is_default || false
+                    };
+
+                    const companyCard = createCompanyCard(companyData);
+                    companiesList.insertAdjacentHTML('beforeend', companyCard);
+                });
+
+                console.log(`成功渲染了 ${companies.length} 个公司卡片`);
+            } else {
+                console.warn('没有获取到公司数据');
+                // 如果没有数据，显示提示信息
+                const companiesList = document.getElementById('companiesList');
+                companiesList.innerHTML = `
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">暂无公司数据</h5>
+                            <p class="text-muted">请添加公司来开始使用</p>
+                        </div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('加载公司数据失败:', error);
+            // 显示错误信息
+            const companiesList = document.getElementById('companiesList');
+            companiesList.innerHTML = `
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5 class="text-warning">加载失败</h5>
+                        <p class="text-muted">无法加载公司数据，请刷新页面重试</p>
+                        <button class="btn btn-primary" onclick="loadCompaniesFromDatabase()">重新加载</button>
+                    </div>
+                </div>
+            `;
+        });
+}
+
+// 更新公司删除按钮状态
+function updateCompanyDeleteButtons(companies) {
+    companies.forEach(company => {
+        // 根据公司ID找到对应的删除按钮并更新状态
+        const deleteButtons = document.querySelectorAll(`[onclick*="deleteCompany(${company.id}"]`);
+        deleteButtons.forEach(button => {
+            if (company.isDefault) {
+                button.disabled = true;
+                button.title = '系统默认公司不能删除';
+                button.classList.add('disabled');
+            } else {
+                button.disabled = false;
+                button.title = '删除公司';
+                button.classList.remove('disabled');
+            }
+        });
+    });
+}
 
 function animatePageLoad() {
     // 为公司卡片添加入场动画
@@ -1386,9 +1352,21 @@ function getCompanyInfo(company) {
                 { name: '团队协作', count: 1 }
             ],
             advice: '了解电商业务流程，准备高并发处理方案，重视系统稳定性。'
+        },
+        netease: {
+            name: '网易',
+            description: '中国领先的互联网技术公司，以游戏、邮箱、音乐等产品著称。',
+            features: ['游戏技术', '前端创新', '用户体验', '技术深度'],
+            techStack: ['游戏引擎', '前端框架', 'Node.js', '图形技术'],
+            questionTypes: [
+                { name: '游戏开发', count: 2 },
+                { name: '前端技术', count: 1 },
+                { name: '用户体验', count: 1 }
+            ],
+            advice: '了解游戏开发技术，准备前端框架知识，关注用户体验设计。'
         }
     };
-    
+
     return companyData[company] || {};
 }
 
@@ -1434,8 +1412,207 @@ function getCompanyDisplayName(company) {
     return names[company] || company;
 }
 
-function showInterviewGuide() {
-    showToast('面试攻略功能开发中...', 'info');
+// 显示添加公司模态框
+function showAddCompanyModal() {
+    new bootstrap.Modal(document.getElementById('addCompanyModal')).show();
+}
+
+// 添加新公司
+function addNewCompany() {
+    const form = document.getElementById('addCompanyForm');
+    const formData = new FormData(form);
+
+    // 获取表单数据
+    const companyData = {
+        name: document.getElementById('companyName').value.trim(),
+        type: document.getElementById('companyType').value,
+        difficulty: parseFloat(document.getElementById('companyDifficulty').value),
+        description: document.getElementById('companyDescription').value.trim(),
+        techStack: []
+    };
+
+    // 获取选中的技术栈
+    const techCheckboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+    techCheckboxes.forEach(checkbox => {
+        companyData.techStack.push(checkbox.value);
+    });
+
+    // 验证必填字段
+    if (!companyData.name) {
+        showToast('请输入公司名称', 'error');
+        return;
+    }
+
+    // 显示加载状态
+    const saveBtn = event.target;
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>保存中...';
+    saveBtn.disabled = true;
+
+    // 发送请求到后端
+    fetch('/api/companies', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(companyData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('公司添加成功！', 'success');
+            // 关闭模态框
+            bootstrap.Modal.getInstance(document.getElementById('addCompanyModal')).hide();
+            // 重置表单
+            form.reset();
+            // 添加新的公司卡片到页面
+            addCompanyCardToPage(data.company);
+            // 通知其他页面刷新公司列表
+            notifyCompanyListUpdate();
+        } else {
+            showToast(data.message || '添加失败', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('添加公司失败:', error);
+        showToast('网络错误，请重试', 'error');
+    })
+    .finally(() => {
+        // 恢复按钮状态
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+// 添加公司卡片到页面
+function addCompanyCardToPage(company) {
+    const companiesList = document.getElementById('companiesList');
+    const companyCard = createCompanyCard(company);
+    companiesList.insertAdjacentHTML('beforeend', companyCard);
+
+    // 添加入场动画
+    const newCard = companiesList.lastElementChild.querySelector('.company-card');
+    if (newCard) {
+        newCard.style.opacity = '0';
+        newCard.style.transform = 'translateY(50px)';
+        setTimeout(() => {
+            newCard.style.transition = 'all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            newCard.style.opacity = '1';
+            newCard.style.transform = 'translateY(0)';
+        }, 100);
+    }
+}
+
+// 创建公司卡片HTML
+function createCompanyCard(company) {
+    const techBadges = company.techStack.map(tech =>
+        `<span class="type-badge type-theory">${tech}</span>`
+    ).join('');
+
+    const companyClass = `company-${company.id || company.name.toLowerCase().replace(/\s+/g, '')}`;
+
+    return `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card company-card h-100">
+                <div class="company-header ${companyClass}">
+                    <h4>${company.name}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="company-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">${company.questionCount || 0}</div>
+                            <div class="stat-label">题目数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">${company.difficulty || '4.0'}</div>
+                            <div class="stat-label">难度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number text-info">${company.passRate || '70'}%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+
+                    <div class="difficulty-chart mb-3">
+                        <div class="difficulty-bar difficulty-easy" style="width: 30%"></div>
+                        <div class="difficulty-bar difficulty-medium" style="width: 50%"></div>
+                        <div class="difficulty-bar difficulty-hard" style="width: 20%"></div>
+                    </div>
+
+                    <div class="question-type-badges">
+                        ${techBadges}
+                    </div>
+
+                    <p class="text-muted mt-3 small">${company.description || '暂无描述'}</p>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn detail-btn btn-sm flex-fill" onclick="viewCompanyDetail('${company.id || company.name}')">
+                            <i class="fas fa-eye me-1"></i>查看详情
+                        </button>
+                        <button class="btn practice-btn btn-sm flex-fill text-white" onclick="startCompanyPractice('${company.id || company.name}', this)">
+                            <i class="fas fa-play me-1"></i>开始练习
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteCompany(${company.id}, '${company.name}', this)" title="删除公司" ${company.isDefault ? 'disabled' : ''}>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 通知其他页面更新公司列表
+function notifyCompanyListUpdate() {
+    console.log('开始通知其他页面更新公司列表...');
+
+    // 方法1: 使用BroadcastChannel API (现代浏览器)
+    if (typeof BroadcastChannel !== 'undefined') {
+        try {
+            const channel = new BroadcastChannel('companyListUpdate');
+            channel.postMessage({
+                type: 'COMPANY_LIST_UPDATED',
+                timestamp: Date.now()
+            });
+            console.log('BroadcastChannel消息已发送');
+            channel.close();
+        } catch (e) {
+            console.error('BroadcastChannel发送失败:', e);
+        }
+    }
+
+    // 方法2: 使用localStorage (兼容性更好)
+    try {
+        const updateData = {
+            type: 'COMPANY_LIST_UPDATED',
+            timestamp: Date.now(),
+            random: Math.random() // 确保每次都是新值
+        };
+        localStorage.setItem('companyListUpdated', JSON.stringify(updateData));
+        console.log('localStorage更新通知已设置');
+
+        // 立即清除，避免累积
+        setTimeout(() => {
+            localStorage.removeItem('companyListUpdated');
+        }, 1000);
+    } catch (e) {
+        console.error('localStorage设置失败:', e);
+    }
+
+    // 方法3: 使用自定义事件 (同页面内)
+    try {
+        window.dispatchEvent(new CustomEvent('companyListUpdated', {
+            detail: { timestamp: Date.now() }
+        }));
+        console.log('自定义事件已触发');
+    } catch (e) {
+        console.error('自定义事件触发失败:', e);
+    }
+
+    // 如果当前页面有公司选择器，也更新它
+    if (typeof loadCompanies === 'function') {
+        loadCompanies();
+    }
 }
 
 function initCharts() {
@@ -1496,6 +1673,63 @@ function initCharts() {
                 }
             }
         }
+    });
+}
+
+// 删除公司
+function deleteCompany(companyId, companyName, buttonElement) {
+    // 确认删除
+    if (!confirm(`确定要删除公司 "${companyName}" 吗？\n\n删除后将无法恢复，请谨慎操作。`)) {
+        return;
+    }
+
+    console.log(`开始删除公司: ${companyName} (ID: ${companyId})`);
+
+    // 显示加载状态
+    const originalText = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    buttonElement.disabled = true;
+
+    // 发送删除请求
+    fetch(`/api/companies/${companyId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`公司 "${companyName}" 删除成功！`, 'success');
+
+            // 移除公司卡片
+            const companyCard = buttonElement.closest('.col-md-6, .col-lg-4');
+            if (companyCard) {
+                // 添加删除动画
+                companyCard.style.transition = 'all 0.5s ease-out';
+                companyCard.style.opacity = '0';
+                companyCard.style.transform = 'scale(0.8) translateY(-50px)';
+
+                setTimeout(() => {
+                    companyCard.remove();
+                }, 500);
+            }
+
+            // 通知其他页面更新公司列表
+            notifyCompanyListUpdate();
+        } else {
+            showToast(data.message || '删除失败', 'error');
+            // 恢复按钮状态
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('删除公司失败:', error);
+        showToast('网络错误，请重试', 'error');
+        // 恢复按钮状态
+        buttonElement.innerHTML = originalText;
+        buttonElement.disabled = false;
     });
 }
 </script>

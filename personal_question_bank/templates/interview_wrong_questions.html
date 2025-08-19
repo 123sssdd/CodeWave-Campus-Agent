@@ -153,8 +153,9 @@
 </style>
 
 <script>
-let currentMode = 'interview';
-let currentUserId = 1; // 默认用户ID
+// 初始化全局变量
+const currentMode = 'interview';
+const currentUserId = 1; // 默认用户ID
 let wrongQuestions = [];
 let currentWrongQuestion = null;
 
@@ -165,15 +166,18 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadWrongQuestions() {
     try {
         const response = await fetch(`/api/wrong-questions/${currentUserId}?mode=${currentMode}`);
-        const data = await response.json();
-
-        if (data.success) {
-            wrongQuestions = data.wrong_questions;
-            updateStatistics();
-            renderWrongQuestions();
-        } else {
-            showToast('加载错题失败', 'error');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        const data = await response.json();
+        
+        if (!data || !Array.isArray(data.wrong_questions)) {
+            throw new Error('Invalid data format received from server');
+        }
+        
+        wrongQuestions = data.wrong_questions || [];
+        updateStatistics();
+        renderWrongQuestions();
     } catch (error) {
         console.error('加载错题失败:', error);
         showToast('加载错题失败', 'error');

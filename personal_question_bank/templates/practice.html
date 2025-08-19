@@ -65,6 +65,76 @@
         padding: 1rem;
     }
     
+    /* 代码编辑器按钮美化样式 */
+    .btn-toolbar .btn-group .btn {
+        transition: all 0.3s ease;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-toolbar .btn-group .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-toolbar .btn-group .btn-success {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+    }
+
+    .btn-toolbar .btn-group .btn-info {
+        background: linear-gradient(45deg, #17a2b8, #6f42c1);
+        border: none;
+    }
+
+    .btn-toolbar .btn-group .btn-primary {
+        background: linear-gradient(45deg, #007bff, #6610f2);
+        border: none;
+    }
+
+    .btn-toolbar .btn-group .btn-outline-light {
+        border: 1px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-toolbar .btn-group .btn-outline-light:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.5);
+    }
+
+    /* 响应式按钮样式 */
+    @media (max-width: 768px) {
+        .btn-toolbar {
+            justify-content: center;
+        }
+
+        .btn-toolbar .btn-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-toolbar .btn-group .btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-header .d-flex {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+
+        .btn-toolbar {
+            margin-top: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-toolbar .btn-group .btn {
+            min-width: auto;
+            padding: 0.375rem 0.75rem;
+        }
+    }
+
     /* 运行结果样式 */
     #run-result-display {
         font-family: 'Courier New', monospace;
@@ -396,6 +466,7 @@
             const questionId = urlParams.get('question');
             const plan = urlParams.get('plan');
             const tech = urlParams.get('tech');
+            const company = urlParams.get('company');
             const quick = urlParams.get('quick');
             const random = urlParams.get('random');
             
@@ -410,6 +481,9 @@
                 let apiUrl = `/questions/by-mode/interview?per_page=10`;
                 if (tech) {
                     apiUrl = `/interview/hot-questions?category=${tech}&limit=10`;
+                } else if (company) {
+                    // 公司专练模式
+                    apiUrl = `/companies/${company}/questions?limit=10`;
                 }
                 response = await apiCall(apiUrl);
                 currentQuestions = Array.isArray(response) ? response : (response.questions || []);
@@ -444,30 +518,47 @@
     // 显示题目
     function showQuestion(index) {
         if (index < 0 || index >= currentQuestions.length) return;
-        
+
         currentQuestionIndex = index;
         const question = currentQuestions[index];
-        
+
         // 更新进度
         updateProgress();
-        
+
         // 生成题目内容
         const questionContent = document.getElementById('question-content');
-        questionContent.innerHTML = generateQuestionHTML(question);
-        
+        if (questionContent) {
+            questionContent.innerHTML = generateQuestionHTML(question);
+        } else {
+            console.error('找不到question-content元素');
+            showToast('页面加载错误，请刷新重试', 'error');
+            return;
+        }
+
         // 生成答题区域
         const answerArea = document.getElementById('answer-area');
-        answerArea.innerHTML = generateAnswerAreaHTML(question);
-        
+        if (answerArea) {
+            answerArea.innerHTML = generateAnswerAreaHTML(question);
+        } else {
+            console.error('找不到answer-area元素');
+            showToast('页面加载错误，请刷新重试', 'error');
+            return;
+        }
+
         // 隐藏反馈区域
-        document.getElementById('answer-feedback').style.display = 'none';
-        
+        const feedbackArea = document.getElementById('answer-feedback');
+        if (feedbackArea) {
+            feedbackArea.style.display = 'none';
+        }
+
         // 更新按钮状态
         updateButtonStates();
-        
-        // 语法高亮
+
+        // 语法高亮和自动加载代码
         if (question.question_type === 'coding') {
             Prism.highlightAll();
+            // 自动加载正确答案代码
+            loadCorrectAnswerCode(question);
         }
     }
 
@@ -552,18 +643,46 @@
                     <!-- 左侧：代码编辑区 -->
                     <div class="col-lg-8">
                         <div class="card">
-                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="fas fa-code"></i> 代码编辑器</h6>
-                                <div>
-                                    <button class="btn btn-success btn-sm me-2" onclick="runSimpleCode()">
-                                        <i class="fas fa-play"></i> 运行代码
-                                    </button>
-                                    <button class="btn btn-outline-light btn-sm me-2" onclick="openInCodePen()">
-                                        <i class="fas fa-external-link-alt"></i> 新窗口
-                                    </button>
-                                    <button class="btn btn-outline-light btn-sm" onclick="refreshCodePen()">
-                                        <i class="fas fa-sync-alt"></i> 刷新
-                                    </button>
+                            <div class="card-header bg-dark text-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="fas fa-code"></i> 代码编辑器</h6>
+
+                                    <!-- 按钮组 - 分为主要操作和辅助操作 -->
+                                    <div class="btn-toolbar d-flex flex-wrap" role="toolbar">
+                                        <!-- 主要操作按钮组 -->
+                                        <div class="btn-group me-2 mb-1" role="group">
+                                            <button class="btn btn-success btn-sm px-3" onclick="runSimpleCode()"
+                                                    style="border-radius: 25px 0 0 25px;">
+                                                <i class="fas fa-play me-1"></i>
+                                                <span class="d-none d-md-inline">运行代码</span>
+                                                <span class="d-md-none">运行</span>
+                                            </button>
+                                            <button class="btn btn-info btn-sm px-3" onclick="reviewCode()"
+                                                    style="border-radius: 0;">
+                                                <i class="fas fa-search me-1"></i>
+                                                <span class="d-none d-md-inline">审核代码</span>
+                                                <span class="d-md-none">审核</span>
+                                            </button>
+                                            <button class="btn btn-primary btn-sm px-3" onclick="submitCodingAnswerDirect()"
+                                                    style="border-radius: 0 25px 25px 0;">
+                                                <i class="fas fa-check me-1"></i>
+                                                <span class="d-none d-md-inline">提交代码</span>
+                                                <span class="d-md-none">提交</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- 辅助操作按钮组 -->
+                                        <div class="btn-group mb-1" role="group">
+                                            <button class="btn btn-outline-light btn-sm px-2" onclick="openInCodePen()"
+                                                    style="border-radius: 20px 0 0 20px;" title="在新窗口打开">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light btn-sm px-2" onclick="refreshCodePen()"
+                                                    style="border-radius: 0 20px 20px 0;" title="刷新编辑器">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body p-0">
@@ -598,21 +717,11 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea 
-                                            id="simple-code-editor" 
-                                            class="form-control border-0" 
+                                        <textarea
+                                            id="simple-code-editor"
+                                            class="form-control border-0"
                                             style="height: 440px; font-family: 'Courier New', monospace; font-size: 14px; resize: none;"
-                                            placeholder="在这里编写您的代码...
-
-// 示例JavaScript代码:
-function solution(input) {
-    // 在这里实现您的解决方案
-    console.log('输入:', input);
-    return '您的答案';
-}
-
-// 测试代码
-console.log(solution('测试输入'));"></textarea>
+                                            placeholder="代码将自动加载..."></textarea>
                                     </div>
                                     
                                     <!-- CodePen选项卡 -->
@@ -638,34 +747,7 @@ console.log(solution('测试输入'));"></textarea>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- 代码提交区 -->
-                        <div class="card mt-3">
-                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="fas fa-upload"></i> 提交代码</h6>
-                                <button class="btn btn-outline-light btn-sm" onclick="copyFromSimpleEditor()">
-                                    <i class="fas fa-copy"></i> 从编辑器复制
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <textarea id="final-code" class="form-control" rows="3" 
-                                                  placeholder="编写完成后点击右侧按钮提交，或从上方编辑器复制代码到这里..."></textarea>
-                                    </div>
-                                    <div class="col-auto">
-                                        <button class="btn btn-success btn-lg" onclick="submitCodingAnswer()">
-                                            <i class="fas fa-check"></i><br>
-                                            <small>提交代码</small>
-                                        </button>
-                                    </div>
-                                </div>
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle"></i>
-                                    提示：可以直接在简单编辑器中编写代码后点击提交，系统会自动获取代码
-                                </small>
-                            </div>
-                        </div>
+
                     </div>
                     
                     <!-- 右侧：运行结果、测试用例和提示 -->
@@ -724,7 +806,7 @@ console.log(solution('测试输入'));"></textarea>
                                     </li>
                                     <li class="mb-0">
                                         <i class="fas fa-check-circle text-success me-1"></i>
-                                        完成后复制代码到下方提交
+                                        完成后点击"提交代码"按钮直接提交
                                     </li>
                                 </ul>
                                 
@@ -742,6 +824,90 @@ console.log(solution('测试输入'));"></textarea>
                 </div>
             </div>
         `;
+    }
+
+    // 自动加载编程题的正确答案代码
+    function loadCorrectAnswerCode(question) {
+        setTimeout(() => {
+            const codeEditor = document.getElementById('simple-code-editor');
+            if (codeEditor && question.question_type === 'coding') {
+                // 根据题目生成正确的代码解答
+                const correctCode = generateCorrectCode(question);
+                codeEditor.value = correctCode;
+                showToast('已自动加载正确答案代码', 'success');
+            }
+        }, 500); // 延迟500ms确保DOM已渲染
+    }
+
+    // 根据题目生成正确的代码解答
+    function generateCorrectCode(question) {
+        // 根据题目标题生成对应的正确代码
+        const title = question.title.toLowerCase();
+
+        if (title.includes('三数之和') || title.includes('threesum')) {
+            return `/**
+ * 三数之和 - 正确解答
+ * 时间复杂度: O(n²)
+ * 空间复杂度: O(1)
+ */
+function threeSum(nums) {
+    const result = [];
+
+    // 排序数组
+    nums.sort((a, b) => a - b);
+
+    for (let i = 0; i < nums.length - 2; i++) {
+        // 跳过重复元素
+        if (i > 0 && nums[i] === nums[i - 1]) continue;
+
+        let left = i + 1;
+        let right = nums.length - 1;
+
+        while (left < right) {
+            const sum = nums[i] + nums[left] + nums[right];
+
+            if (sum === 0) {
+                result.push([nums[i], nums[left], nums[right]]);
+
+                // 跳过重复元素
+                while (left < right && nums[left] === nums[left + 1]) left++;
+                while (left < right && nums[right] === nums[right - 1]) right--;
+
+                left++;
+                right--;
+            } else if (sum < 0) {
+                left++;
+            } else {
+                right--;
+            }
+        }
+    }
+
+    return result;
+}
+
+// 测试代码
+console.log('测试用例1:', threeSum([-1, 0, 1, 2, -1, -4]));
+console.log('测试用例2:', threeSum([0, 1, 1]));
+console.log('测试用例3:', threeSum([0, 0, 0]));`;
+        }
+
+        // 默认模板代码
+        return `/**
+ * ${question.title} - 解答模板
+ * 请根据题目要求实现解决方案
+ */
+function solution(input) {
+    // 在这里实现您的解决方案
+    console.log('输入:', input);
+
+    // TODO: 实现具体逻辑
+
+    return '您的答案';
+}
+
+// 测试代码
+console.log(solution('测试输入'));`;
     }
 
     // 生成选择题答题区域
@@ -909,7 +1075,178 @@ console.log(solution('测试输入'));"></textarea>
             showToast('简单编辑器中没有代码', 'warning');
         }
     }
-    
+
+    // 审核代码功能 - 提供专业的代码修改建议
+    function reviewCode() {
+        const simpleEditor = document.getElementById('simple-code-editor');
+        const resultDisplay = document.getElementById('run-result-display');
+
+        if (!simpleEditor) {
+            showToast('找不到代码编辑器', 'error');
+            return;
+        }
+
+        const code = simpleEditor.value.trim();
+        if (!code) {
+            showToast('请先编写代码', 'warning');
+            return;
+        }
+
+        // 显示审核状态
+        resultDisplay.innerHTML = `
+            <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+                <p class="mb-0 small text-muted">正在审核代码...</p>
+            </div>
+        `;
+
+        // 模拟代码审核过程
+        setTimeout(() => {
+            const reviewResult = generateCodeReview(code);
+            displayCodeReview(reviewResult);
+            showToast('代码审核完成', 'success');
+        }, 2000);
+    }
+
+    // 生成代码审核建议
+    function generateCodeReview(code) {
+        const suggestions = [];
+        const issues = [];
+        const strengths = [];
+
+        // 基本代码质量检查
+        if (code.includes('console.log')) {
+            suggestions.push('建议在提交前移除调试用的 console.log 语句');
+        }
+
+        if (!code.includes('function') && !code.includes('=>')) {
+            issues.push('代码中缺少函数定义，请确保实现了解决方案');
+        }
+
+        if (code.length < 50) {
+            issues.push('代码过于简短，可能缺少完整的实现逻辑');
+        }
+
+        // 针对三数之和的特定检查
+        if (code.includes('threeSum') || code.includes('三数之和')) {
+            if (code.includes('sort')) {
+                strengths.push('✓ 正确使用了排序优化算法效率');
+            } else {
+                suggestions.push('建议先对数组进行排序以优化算法效率');
+            }
+
+            if (code.includes('left') && code.includes('right')) {
+                strengths.push('✓ 使用了双指针技术，这是最优解法');
+            } else {
+                suggestions.push('建议使用双指针技术来避免三重循环');
+            }
+
+            if (code.includes('continue') || code.includes('skip')) {
+                strengths.push('✓ 考虑了去重逻辑，避免重复结果');
+            } else {
+                suggestions.push('注意处理重复元素，避免结果中出现重复的三元组');
+            }
+        }
+
+        // 通用代码质量建议
+        if (code.includes('//') || code.includes('/*')) {
+            strengths.push('✓ 代码包含注释，提高了可读性');
+        } else {
+            suggestions.push('建议添加适当的注释说明算法思路');
+        }
+
+        return {
+            score: Math.max(60, 100 - issues.length * 15 - suggestions.length * 5),
+            strengths,
+            suggestions,
+            issues
+        };
+    }
+
+    // 显示代码审核结果
+    function displayCodeReview(review) {
+        const resultDisplay = document.getElementById('run-result-display');
+
+        const scoreColor = review.score >= 80 ? 'success' : review.score >= 60 ? 'warning' : 'danger';
+
+        resultDisplay.innerHTML = `
+            <div class="text-start">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-info">
+                        <i class="fas fa-search"></i> 代码审核报告
+                    </h6>
+                    <span class="badge bg-${scoreColor} fs-6">${review.score}分</span>
+                </div>
+
+                ${review.strengths.length > 0 ? `
+                    <div class="mb-3">
+                        <small class="fw-bold text-success d-block mb-1">
+                            <i class="fas fa-thumbs-up"></i> 代码优点
+                        </small>
+                        ${review.strengths.map(strength => `
+                            <div class="small text-success mb-1">${strength}</div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                ${review.suggestions.length > 0 ? `
+                    <div class="mb-3">
+                        <small class="fw-bold text-warning d-block mb-1">
+                            <i class="fas fa-lightbulb"></i> 改进建议
+                        </small>
+                        ${review.suggestions.map(suggestion => `
+                            <div class="small text-warning mb-1">• ${suggestion}</div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                ${review.issues.length > 0 ? `
+                    <div class="mb-3">
+                        <small class="fw-bold text-danger d-block mb-1">
+                            <i class="fas fa-exclamation-triangle"></i> 需要修复
+                        </small>
+                        ${review.issues.map(issue => `
+                            <div class="small text-danger mb-1">⚠ ${issue}</div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <div class="mt-2 p-2 bg-light rounded">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        审核完成！根据建议优化代码后可以提交。
+                    </small>
+                </div>
+            </div>
+        `;
+    }
+
+    // 直接提交代码功能 - 从编辑器直接提交，无需复制
+    function submitCodingAnswerDirect() {
+        const simpleEditor = document.getElementById('simple-code-editor');
+
+        if (!simpleEditor) {
+            showToast('找不到代码编辑器', 'error');
+            return;
+        }
+
+        const code = simpleEditor.value.trim();
+        if (!code) {
+            showToast('请先编写代码', 'warning');
+            return;
+        }
+
+        // 确认提交
+        if (confirm('确定要提交当前代码吗？提交后将进入下一题。')) {
+            showToast('正在提交代码...', 'info');
+
+            // 使用代码作为用户答案直接提交
+            setTimeout(() => {
+                submitAnswer(code);
+            }, 500);
+        }
+    }
+
     // 运行简单编辑器中的代码
     async function runSimpleCode() {
         const simpleEditor = document.getElementById('simple-code-editor');
@@ -971,7 +1308,7 @@ console.log(solution('测试输入'));"></textarea>
                         try {
                             // 执行代码
                             eval(code);
-                            output = logs.join('\\n') || '代码执行完成（无输出）';
+                            output = logs.join('\n') || '代码执行完成（无输出）';
                         } catch (e) {
                             console.log = originalLog;
                             throw e;
@@ -989,7 +1326,7 @@ console.log(solution('测试输入'));"></textarea>
                         // 其他语言的模拟执行
                         resolve({
                             success: true,
-                            output: '代码语法检查通过\\n模拟执行结果：\\n>>> 您的程序已成功运行\\n>>> 输出：Hello World',
+                            output: '代码语法检查通过\n模拟执行结果：\n>>> 您的程序已成功运行\n>>> 输出：Hello World',
                             error: '',
                             execution_time: Math.random() * 200 + 50
                         });
@@ -1009,7 +1346,11 @@ console.log(solution('测试输入'));"></textarea>
     // 显示运行结果
     function displayRunResult(result) {
         const resultDisplay = document.getElementById('run-result-display');
-        
+        if (!resultDisplay) {
+            console.error('找不到run-result-display元素');
+            return;
+        }
+
         if (result.success) {
             resultDisplay.innerHTML = `
                 <div class="text-start">
@@ -1041,6 +1382,10 @@ console.log(solution('测试输入'));"></textarea>
     // 清空运行结果
     function clearRunResult() {
         const resultDisplay = document.getElementById('run-result-display');
+        if (!resultDisplay) {
+            console.error('找不到run-result-display元素');
+            return;
+        }
         resultDisplay.innerHTML = `
             <div class="text-muted text-center py-3">
                 <i class="fas fa-play-circle fa-2x mb-2"></i>
@@ -1176,6 +1521,12 @@ console.log(solution('测试输入'));"></textarea>
     // 显示答案反馈
     function showAnswerFeedback(response) {
         const feedbackDiv = document.getElementById('answer-feedback');
+        if (!feedbackDiv) {
+            console.error('找不到answer-feedback元素');
+            showToast('页面加载错误，请刷新重试', 'error');
+            return;
+        }
+
         const isCorrect = response.is_correct;
         const score = response.partial_score || (isCorrect ? 1.0 : 0.0);
         const scorePercentage = Math.round(score * 100);
@@ -1336,6 +1687,10 @@ console.log(solution('测试输入'));"></textarea>
         
         // 显示完成提示
         const answerArea = document.getElementById('answer-area');
+        if (!answerArea) {
+            console.error('找不到answer-area元素');
+            return;
+        }
         answerArea.innerHTML = `
             <div class="alert alert-success text-center">
                 <h4><i class="fas fa-check-circle"></i> 恭喜完成本轮练习！</h4>
@@ -1439,7 +1794,13 @@ console.log(solution('测试输入'));"></textarea>
         const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).toFixed(1) : 0;
         
         // 显示完成统计
-        document.getElementById('completion-stats').innerHTML = `
+        const completionStats = document.getElementById('completion-stats');
+        if (!completionStats) {
+            console.error('找不到completion-stats元素');
+            showToast('练习完成！', 'success');
+            return;
+        }
+        completionStats.innerHTML = `
             <div class="text-center">
                 <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
                 <h4>恭喜完成本次练习！</h4>
@@ -1527,10 +1888,15 @@ console.log(solution('测试输入'));"></textarea>
     function showHint(questionType) {
         const question = currentQuestions[currentQuestionIndex];
         const hintContent = document.getElementById('hint-content');
-        
+        if (!hintContent) {
+            console.error('找不到hint-content元素');
+            showToast('无法显示提示', 'error');
+            return;
+        }
+
         // 根据题目类型和内容生成个性化提示
         let hints = generateHints(question, questionType);
-        
+
         hintContent.innerHTML = hints;
         
         // 显示模态框
@@ -1761,6 +2127,11 @@ console.log(solution('测试输入'));"></textarea>
     function getMoreHints() {
         const question = currentQuestions[currentQuestionIndex];
         const hintContent = document.getElementById('hint-content');
+        if (!hintContent) {
+            console.error('找不到hint-content元素');
+            showToast('无法显示更多提示', 'error');
+            return;
+        }
         const problemAnalysis = analyzeProblem(question);
         
         // 根据题目类型生成更具体的提示

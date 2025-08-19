@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ from recommendation_engine import RecommendationEngine
 from external_platforms import platform_manager
 from data_generator import generate_sample_data
 from theory_grader import grade_theory_answer, grade_fill_blank_answer
-from ai_interview_service import interview_service
+
 
 # 加载环境变量
 load_dotenv()
@@ -436,6 +436,20 @@ def practice_page(user_id):
 @app.route('/dashboard/<int:user_id>')
 def dashboard_page(user_id):
     """用户仪表板"""
+    # 检查用户是否存在
+    user = User.query.get(user_id)
+    if not user:
+        # 如果用户不存在，创建一个默认用户
+        user = User(
+            username="演示用户",
+            email="demo@example.com",
+            preferred_difficulty="medium",
+            preferred_interaction_type="对话式"
+        )
+        db.session.add(user)
+        db.session.commit()
+        user_id = user.id
+    
     return render_template('dashboard.html', user_id=user_id)
 
 @app.route('/knowledge-points/<int:user_id>')
@@ -542,12 +556,18 @@ def get_focus_technologies(position):
 @app.route('/academic')
 def academic_dashboard():
     """学术模式主页"""
-    return render_template('dashboard.html', mode='academic')
+    # 暂时使用默认用户ID 1，实际应用中应该从session中获取
+    return render_template('dashboard.html', mode='academic', user_id=1)
 
 @app.route('/academic/practice')
 def academic_practice():
     """学术模式练习页面"""
     return render_template('practice.html', mode='academic')
+
+@app.route('/interview/ai-intro')
+def interview_ai_intro():
+    """AI模拟面试介绍页面"""
+    return render_template('interview_ai_intro.html')
 
 # 添加面试模式的路由
 @app.route('/interview')
@@ -567,7 +587,7 @@ def interview_plans():
 
 @app.route('/interview/companies')
 def interview_companies():
-    """公司题库页面"""
+    """我的题库页面"""
     return render_template('interview_companies.html')
 
 @app.route('/interview/tech-stack')
@@ -618,10 +638,8 @@ def get_tech_stack_questions(category):
         print(f"获取技术栈题目失败: {e}")
         return jsonify({'error': '获取题目失败'}), 500
 
-@app.route('/interview/mock')
-def interview_mock():
-    """模拟面试页面"""
-    return render_template('interview_mock.html')
+
+
 
 @app.route('/practice')
 def practice_page_default():
@@ -634,11 +652,7 @@ def test_frontend():
     with open('test_frontend.html', 'r', encoding='utf-8') as f:
         return f.read()
 
-@app.route('/test_interview_wrong_questions.html')
-def test_interview_wrong_questions():
-    """面试错题本测试页面"""
-    with open('test_interview_wrong_questions.html', 'r', encoding='utf-8') as f:
-        return f.read()
+
 
 # ==================== 错误处理 ====================
 
@@ -656,39 +670,92 @@ def internal_error(error):
     return jsonify({'error': '服务器内部错误'}), 500
 
 # 公司题库相关API
-@app.route('/api/companies')
-def get_companies():
-    """获取公司列表和统计信息"""
-    companies = [
-        {
-            'id': 'alibaba',
-            'name': '阿里巴巴',
-            'type': 'big_tech',
-            'question_count': 12,
-            'difficulty_avg': 4.2,
-            'pass_rate': 65,
-            'categories': ['前端', '算法', '系统设计']
-        },
-        {
-            'id': 'tencent', 
-            'name': '腾讯',
-            'type': 'big_tech',
-            'question_count': 8,
-            'difficulty_avg': 3.8,
-            'pass_rate': 72,
-            'categories': ['前端', '微信生态', '项目经验']
-        },
-        {
-            'id': 'bytedance',
-            'name': '字节跳动', 
-            'type': 'big_tech',
-            'question_count': 15,
-            'difficulty_avg': 4.5,
-            'pass_rate': 58,
-            'categories': ['算法', '性能优化', '编程实现']
-        }
-    ]
-    return jsonify(companies)
+@app.route('/api/companies', methods=['GET', 'POST'])
+def companies_api():
+    """获取公司列表和添加新公司"""
+    from models import Company
+    import json
+
+    if request.method == 'GET':
+        try:
+            # 从数据库获取所有公司
+            companies = Company.query.order_by(Company.is_default.desc(), Company.created_at.asc()).all()
+            companies_data = [company.to_dict() for company in companies]
+            return jsonify(companies_data)
+        except Exception as e:
+            print(f"获取公司列表失败: {e}")
+            # 如果数据库查询失败，返回空列表
+            return jsonify([])
+
+    elif request.method == 'POST':
+        # 添加新公司
+        try:
+            data = request.get_json()
+
+            # 验证必填字段
+            if not data.get('name'):
+                return jsonify({'success': False, 'message': '公司名称不能为空'}), 400
+
+            # 检查公司名称是否已存在
+            existing_company = Company.query.filter_by(name=data['name']).first()
+            if existing_company:
+                return jsonify({'success': False, 'message': '公司名称已存在'}), 400
+
+            # 创建新公司对象
+            new_company = Company(
+                name=data['name'],
+                company_type=data.get('type', 'startup'),
+                difficulty=float(data.get('difficulty', 4.0)),
+                description=data.get('description', ''),
+                tech_stack=json.dumps(data.get('techStack', [])),
+                question_count=0,  # 新公司初始题目数为0
+                pass_rate=70,  # 默认通过率
+                is_default=False  # 用户添加的公司不是默认公司
+            )
+
+            # 保存到数据库
+            db.session.add(new_company)
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'message': '公司添加成功',
+                'company': new_company.to_dict()
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"添加公司失败: {e}")
+            return jsonify({'success': False, 'message': f'添加失败: {str(e)}'}), 500
+
+@app.route('/api/companies/<int:company_id>', methods=['DELETE'])
+def delete_company(company_id):
+    """删除公司"""
+    from models import Company
+
+    try:
+        company = Company.query.get(company_id)
+        if not company:
+            return jsonify({'success': False, 'message': '公司不存在'}), 404
+
+        # 检查是否为默认公司
+        if company.is_default:
+            return jsonify({'success': False, 'message': '不能删除系统默认公司'}), 400
+
+        # 删除公司
+        company_name = company.name
+        db.session.delete(company)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'公司 "{company_name}" 删除成功'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"删除公司失败: {e}")
+        return jsonify({'success': False, 'message': f'删除失败: {str(e)}'}), 500
 
 @app.route('/api/companies/<company_id>/questions')
 def get_company_questions(company_id):
@@ -838,206 +905,16 @@ def get_tech_stacks():
         ]
         return jsonify(default_tech_stacks)
 
-# 模拟面试相关API
-@app.route('/api/mock-interview/questions', methods=['POST'])
-def get_mock_interview_questions():
-    """根据设置生成模拟面试题目"""
-    try:
-        data = request.json
-        difficulty = data.get('difficulty', 'medium')
-        tech_stack = data.get('technologies', [])
-        question_count = data.get('question_count', 5)
-        
-        # 优先查找interview模式的题目
-        query = Question.query.filter_by(question_bank_mode='interview', difficulty=difficulty)
-        
-        if tech_stack:
-            kp_query = KnowledgePoint.query.filter(
-                KnowledgePoint.category.in_(tech_stack),
-                KnowledgePoint.question_bank_mode == 'interview'
-            )
-            kp_ids = [kp.id for kp in kp_query.all()]
-            if kp_ids:
-                query = query.filter(Question.knowledge_point_id.in_(kp_ids))
-        
-        questions = query.limit(question_count).all()
-        
-        # 如果interview模式题目不够，使用academic模式作为备选
-        if len(questions) < question_count:
-            remaining_count = question_count - len(questions)
-            
-            # 查找academic模式的题目作为补充
-            academic_query = Question.query.filter_by(question_bank_mode='academic', difficulty=difficulty)
-            
-            if tech_stack:
-                academic_kp_query = KnowledgePoint.query.filter(
-                    KnowledgePoint.category.in_(tech_stack),
-                    KnowledgePoint.question_bank_mode == 'academic'
-                )
-                academic_kp_ids = [kp.id for kp in academic_kp_query.all()]
-                if academic_kp_ids:
-                    academic_query = academic_query.filter(Question.knowledge_point_id.in_(academic_kp_ids))
-            
-            additional_questions = academic_query.limit(remaining_count).all()
-            questions.extend(additional_questions)
-        
-        # 如果还是不够，使用所有academic题目
-        if len(questions) < question_count:
-            remaining_count = question_count - len(questions)
-            existing_ids = [q.id for q in questions]
-            
-            fallback_questions = Question.query.filter(
-                Question.question_bank_mode == 'academic',
-                ~Question.id.in_(existing_ids)
-            ).limit(remaining_count).all()
-            questions.extend(fallback_questions)
-        
-        if not questions:
-            return jsonify({'error': '没有找到合适的面试题目，请检查题库设置'}), 404
-        
-        return jsonify([{
-            'id': q.id,
-            'title': q.title,
-            'content': q.content,
-            'question_type': q.question_type,
-            'difficulty': q.difficulty,
-            'estimated_time': q.estimated_time,
-            'knowledge_point': {
-                'id': q.knowledge_point.id,
-                'name': q.knowledge_point.name
-            } if q.knowledge_point else None
-        } for q in questions])
-        
-    except Exception as e:
-        return jsonify({'error': f'生成面试题目失败: {str(e)}'}), 500
 
-@app.route('/api/mock-interview/result', methods=['POST'])
-def save_mock_interview_result():
-    """保存模拟面试结果"""
-    data = request.json
-    
-    return jsonify({
-        'success': True,
-        'message': '面试结果已保存',
-        'overall_score': data.get('overall_score', 75),
-        'feedback': '面试表现良好，建议继续加强算法练习。'
-    })
 
-@app.route('/api/ai-interviewer/speech-to-text', methods=['POST'])
-def speech_to_text():
-    """语音转文字接口"""
-    try:
-        # 检查是否有音频文件
-        if 'audio' not in request.files:
-            return jsonify({'error': '没有音频文件'}), 400
-        
-        audio_file = request.files['audio']
-        audio_data = audio_file.read()
-        
-        # 语音识别功能暂时返回提示信息
-        text = "语音识别功能开发中，请直接输入文字回答"
-        
-        return jsonify({
-            'success': True,
-            'text': text,
-            'message': '语音转文字成功' if text else '语音识别失败，请重试'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/ai-interviewer/start', methods=['POST'])
-def start_ai_interview():
-    """开始AI面试 - 生成开场问题"""
-    try:
-        data = request.json
-        position = data.get('position', '软件工程师')
-        tech_stack = data.get('tech_stack', [])
-        
-        # 生成开场问题
-        opening_question = interview_service.generate_opening_question(position, tech_stack)
-        
-        return jsonify({
-            'success': True,
-            'opening_question': opening_question,
-            'session_id': f"interview_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            'timestamp': datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        print(f"开始面试失败: {e}")
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/ai-interviewer/evaluate', methods=['POST'])
-def ai_interviewer_evaluate():
-    """AI面试官评价接口"""
-    try:
-        data = request.json
-        question = data.get('question', '')
-        user_answer = data.get('user_answer', '')
-        context = data.get('context', [])
-        
-        if not question or not user_answer:
-            return jsonify({'error': '问题和回答不能为空'}), 400
-        
-        # 评估用户回答
-        evaluation = interview_service.evaluate_answer(question, user_answer, context.get('position', '软件工程师'))
-        
-        # 生成下一个问题
-        conversation_history = context.get('conversation_history', [])
-        conversation_history.append({'role': 'interviewer', 'content': question})
-        conversation_history.append({'role': 'candidate', 'content': user_answer})
-        
-        next_question_data = interview_service.generate_followup_question(
-            conversation_history, 
-            context.get('position', '软件工程师'),
-            context.get('difficulty', 'medium')
-        )
-        
-        ai_response = {
-            'evaluation': evaluation,
-            'next_question': next_question_data['question'],
-            'question_type': next_question_data['type'],
-            'tips': next_question_data.get('tips', ''),
-            'feedback': evaluation.get('feedback', ''),
-            'suggestions': evaluation.get('suggestions', '')
-        }
-        
-        return jsonify({
-            'success': True,
-            'ai_response': ai_response,
-            'timestamp': datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/ai-interviewer/analyze', methods=['POST'])
-def analyze_interview_performance():
-    """分析面试表现接口"""
-    try:
-        data = request.json
-        qa_history = data.get('qa_history', [])
-        
-        if not qa_history:
-            return jsonify({'error': '没有面试记录'}), 400
-        
-        # 生成面试总结报告
-        conversation_history = []
-        for qa in qa_history:
-            conversation_history.append({'role': 'interviewer', 'content': qa.get('question', '')})
-            conversation_history.append({'role': 'candidate', 'content': qa.get('answer', '')})
-        
-        analysis = interview_service.generate_interview_summary(
-            conversation_history, 
-            qa_history[0].get('position', '软件工程师') if qa_history else '软件工程师'
-        )
-        
-        return jsonify({
-            'success': True,
-            'analysis': analysis,
-            'timestamp': datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+
+
+
+
+
 
 # ===== 错题本相关API =====
 
@@ -1047,18 +924,67 @@ def get_wrong_questions(user_id):
     try:
         mode = request.args.get('mode', 'academic')  # academic 或 interview
         
+        # 1. 验证用户是否存在
+        user = User.query.get(user_id)
+        if not user:
+            # 如果用户不存在，创建默认用户
+            user = User(
+                id=user_id,
+                username="演示用户",
+                email="demo@example.com",
+                preferred_difficulty="medium",
+                preferred_interaction_type="对话式"
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        # 2. 获取错题
         wrong_questions = WrongQuestion.query.filter_by(
             user_id=user_id,
             question_bank_mode=mode
         ).order_by(WrongQuestion.created_at.desc()).all()
         
+        # 3. 确保所有相关的数据都被加载
+        result_list = []
+        for wq in wrong_questions:
+            try:
+                question_dict = wq.question.to_dict() if wq.question else None
+                if question_dict and wq.question.knowledge_point:
+                    question_dict['knowledge_point'] = wq.question.knowledge_point.to_dict()
+                
+                wq_dict = {
+                    'id': wq.id,
+                    'user_id': wq.user_id,
+                    'question_id': wq.question_id,
+                    'learning_record_id': wq.learning_record_id,
+                    'wrong_answer': wq.wrong_answer,
+                    'correct_answer': wq.correct_answer,
+                    'review_count': wq.review_count,
+                    'mastery_level': wq.mastery_level,
+                    'next_review_date': wq.next_review_date.isoformat() if wq.next_review_date else None,
+                    'created_at': wq.created_at.isoformat() if wq.created_at else None,
+                    'updated_at': wq.updated_at.isoformat() if wq.updated_at else None,
+                    'question': question_dict
+                }
+                result_list.append(wq_dict)
+            except Exception as e:
+                print(f"Error processing wrong question {wq.id}: {str(e)}")
+                continue
+        
         return jsonify({
             'success': True,
-            'wrong_questions': [wq.to_dict() for wq in wrong_questions],
-            'count': len(wrong_questions)
+            'wrong_questions': result_list,
+            'count': len(result_list)
         })
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error in get_wrong_questions: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'wrong_questions': [],
+            'count': 0
+        }), 500
 
 @app.route('/api/wrong-questions', methods=['POST'])
 def add_wrong_question():
@@ -1334,6 +1260,12 @@ def interview_wrong_questions_page():
 def interview_wrong_questions_simple():
     """面试模式错题本页面（简化版）"""
     return render_template('interview_wrong_questions_simple.html')
+
+@app.route('/test-communication')
+def test_communication():
+    """跨页面通信测试页面"""
+    from flask import send_from_directory
+    return send_from_directory('.', 'test_cross_page_communication.html')
 
 # ===== 统计数据API =====
 

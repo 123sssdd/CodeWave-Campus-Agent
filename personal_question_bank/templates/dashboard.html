@@ -338,10 +338,22 @@
 
 {% block extra_js %}
 <script>
-    const userId = {{ user_id }};
+    const userId = '{{ user_id or 1 }}';  // 使用Jinja2的默认值语法
     let progressChart = null;
     let typeChart = null;
     let userStats = null;
+
+    // API调用函数
+    async function apiCall(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('找不到用户数据，请先创建用户或登录');
+            }
+            throw new Error(`API调用失败: ${response.status}`);
+        }
+        return response.json();
+    }
 
     // 初始化仪表板
     async function initDashboard() {
@@ -350,10 +362,20 @@
             
             // 并行加载所有数据
             const [stats, recommendations, learningPath] = await Promise.all([
-                apiCall(`/users/${userId}/stats`),
+                apiCall(`/api/users/${userId}/stats`),
                 apiCall(`/api/recommendations/${userId}?count=5`),
                 // apiCall(`/learning-path/${userId}`) // 如果有学习路径API
-            ]);
+            ]).catch(error => {
+                console.error('数据加载失败:', error);
+                // 显示用户友好的错误信息
+                showToast(error.message || '加载数据失败，请稍后重试', 'error');
+                return [null, null, null];
+            });
+            
+            if (!stats) {
+                hideLoading();
+                return;
+            }
             
             userStats = stats;
             

@@ -379,3 +379,46 @@ class SimilarQuestion(db.Model):
             'question_bank_mode': self.question_bank_mode,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+class Company(db.Model):
+    """公司模型"""
+    __tablename__ = 'companies'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    company_type = db.Column(db.String(50), default='startup')  # big_tech, unicorn, startup, foreign, traditional
+    difficulty = db.Column(db.Float, default=4.0)
+    description = db.Column(db.Text)
+    tech_stack = db.Column(db.Text)  # JSON字符串存储技术栈数组
+    question_count = db.Column(db.Integer, default=0)
+    pass_rate = db.Column(db.Integer, default=70)
+    is_default = db.Column(db.Boolean, default=False)  # 是否为系统默认公司
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        import json
+        tech_stack = []
+        if self.tech_stack:
+            try:
+                tech_stack = json.loads(self.tech_stack)
+            except:
+                tech_stack = []
+
+        return {
+            'id': self.id,
+            'name': self.name,
+            'type': self.company_type,
+            'difficulty': self.difficulty,
+            'description': self.description,
+            'techStack': tech_stack,
+            'questionCount': self.question_count,
+            'passRate': self.pass_rate,
+            'isDefault': self.is_default,
+            'categories': tech_stack,  # 兼容前端
+            'question_count': self.question_count,  # 兼容前端
+            'difficulty_avg': self.difficulty,  # 兼容前端
+            'pass_rate': self.pass_rate,  # 兼容前端
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
