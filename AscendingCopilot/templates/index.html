@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI学习助手 - 错误模式认知学习</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- 头部 -->
+      <header class="header">
+        <div class="header-content">
+          <h1><i class="fas fa-brain"></i> AI学习助手</h1>
+          <p>通过错误模式认知提升学习效果</p>
+        </div>
+      </header>
+
+      <!-- 主要内容区域 -->
+      <main class="main-content">
+        <!-- 左侧：知识库展示 -->
+        <div class="sidebar">
+          <div class="knowledge-base">
+            <h3><i class="fas fa-database"></i> MCP知识库</h3>
+            <div class="knowledge-list" id="knowledgeList">
+              <!-- 知识库内容将通过JavaScript动态加载 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：对话区域 -->
+        <div class="chat-container">
+          <!-- 开始学习区域 -->
+          <div class="start-learning" id="startLearning">
+            <div class="welcome-card">
+              <div class="welcome-icon">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <h2>欢迎使用AI学习助手</h2>
+              <p>通过观察AI的错误思维过程，帮助您更好地理解正确概念</p>
+
+              <div class="learning-form">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    id="knowledgePoint"
+                    placeholder="请输入要学习的知识点，如：代数方程求解、概率计算、微积分..."
+                    class="knowledge-input"
+                  />
+                  <button id="startBtn" class="start-btn">
+                    <i class="fas fa-play"></i> 开始学习
+                  </button>
+                </div>
+              </div>
+
+              <div class="features">
+                <div class="feature">
+                  <i class="fas fa-eye"></i>
+                  <span>观察AI错误思维</span>
+                </div>
+                <div class="feature">
+                  <i class="fas fa-comments"></i>
+                  <span>交互式问答</span>
+                </div>
+                <div class="feature">
+                  <i class="fas fa-chart-line"></i>
+                  <span>智能评估反馈</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 对话区域 -->
+          <div class="chat-area" id="chatArea" style="display: none">
+            <div class="chat-header">
+              <h3><i class="fas fa-comments"></i> 学习对话</h3>
+              <button
+                id="demoBtn"
+                class="restart-btn"
+                title="一键演示代数方程求解"
+              >
+                <i class="fas fa-play"></i> 一键演示
+              </button>
+              <button id="restartBtn" class="restart-btn">
+                <i class="fas fa-redo"></i> 重新开始
+              </button>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+              <!-- 消息内容将在这里动态添加 -->
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-area" id="inputArea">
+              <div class="input-container">
+                <textarea
+                  id="messageInput"
+                  placeholder="请输入您的回答..."
+                  class="message-input"
+                ></textarea>
+                <button id="sendBtn" class="send-btn">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 总结区域 -->
+          <div class="summary-area" id="summaryArea" style="display: none">
+            <div class="summary-card">
+              <h3><i class="fas fa-trophy"></i> 学习总结</h3>
+              <div id="summaryContent">
+                <!-- 总结内容将在这里显示 -->
+              </div>
+              <button id="newSessionBtn" class="new-session-btn">
+                <i class="fas fa-plus"></i> 开始新的学习
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>AI正在思考中...</p>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
