@@ -3,14 +3,11 @@ let currentSession = null;
 let isWaitingForResponse = false;
 
 // DOM元素
-const startLearning = document.getElementById("startLearning");
 const chatArea = document.getElementById("chatArea");
 const summaryArea = document.getElementById("summaryArea");
 const messagesContainer = document.getElementById("messagesContainer");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
-const startBtn = document.getElementById("startBtn");
-const knowledgePointInput = document.getElementById("knowledgePoint");
 const restartBtn = document.getElementById("restartBtn");
 const newSessionBtn = document.getElementById("newSessionBtn");
 const loadingOverlay = document.getElementById("loadingOverlay");
@@ -25,60 +22,87 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // 设置事件监听器
 function setupEventListeners() {
-  startBtn.addEventListener("click", startLearningSession);
-  sendBtn.addEventListener("click", sendMessage);
-  restartBtn.addEventListener("click", restartSession);
-  newSessionBtn.addEventListener("click", showStartLearning);
+  if (sendBtn) sendBtn.addEventListener("click", sendMessage);
+  if (restartBtn) restartBtn.addEventListener("click", restartSession);
+  if (newSessionBtn) newSessionBtn.addEventListener("click", showStartLearning);
 
-  messageInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  knowledgePointInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      startLearningSession();
-    }
-  });
+  if (messageInput) {
+    messageInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
 }
 
 // 设置演示按钮
 function setupDemoButton() {
   const demoBtn = document.getElementById("demoBtn");
-  if (!demoBtn) return;
-  demoBtn.addEventListener("click", playDemoAlgebra);
+  const demoBinarySearchBtn = document.getElementById("demoBinarySearchBtn");
+  
+  if (demoBtn) {
+    demoBtn.addEventListener("click", playDemoAlgebra);
+  }
+  
+  if (demoBinarySearchBtn) {
+    demoBinarySearchBtn.addEventListener("click", playDemoBinarySearch);
+  }
 }
 
 // 播放代数方程求解演示
 async function playDemoAlgebra() {
-  showChatArea();
-  showLoading(true);
+  clearMessages();
   try {
     const res = await fetch("/api/demo_algebra");
     const data = await res.json();
     const script = data.script || [];
     for (let step of script) {
       if (step.action === "message") {
-        await new Promise((r) => setTimeout(r, 700));
+        await new Promise((r) => setTimeout(r, 1500));
         addMessage(step.content, step.type);
       } else if (step.action === "feedback") {
-        await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 1200));
         addFeedbackMessage(step.feedback, step.is_correct);
       } else if (step.action === "confidence") {
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 800));
         addConfidenceMessage(step.confidence, step.threshold);
       } else if (step.action === "summary") {
-        await new Promise((r) => setTimeout(r, 800));
+        await new Promise((r) => setTimeout(r, 1800));
         showSummary(step.summary);
       }
     }
   } catch (e) {
     console.error("加载演示失败", e);
     showError("加载演示失败");
-  } finally {
-    showLoading(false);
+  }
+}
+
+// 播放二分查找演示
+async function playDemoBinarySearch() {
+  clearMessages();
+  try {
+    const res = await fetch("/api/demo_binary_search");
+    const data = await res.json();
+    const script = data.script || [];
+    for (let step of script) {
+      if (step.action === "message") {
+        await new Promise((r) => setTimeout(r, 1500));
+        addMessage(step.content, step.type);
+      } else if (step.action === "feedback") {
+        await new Promise((r) => setTimeout(r, 1200));
+        addFeedbackMessage(step.feedback, step.is_correct);
+      } else if (step.action === "confidence") {
+        await new Promise((r) => setTimeout(r, 800));
+        addConfidenceMessage(step.confidence, step.threshold);
+      } else if (step.action === "summary") {
+        await new Promise((r) => setTimeout(r, 1800));
+        showSummary(step.summary);
+      }
+    }
+  } catch (e) {
+    console.error("加载二分查找演示失败", e);
+    showError("加载二分查找演示失败");
   }
 }
 
@@ -343,9 +367,15 @@ function addConfidenceMessage(confidence, threshold) {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// 清空消息
+function clearMessages() {
+  messagesContainer.innerHTML = "";
+  chatArea.style.display = "flex";
+  summaryArea.style.display = "none";
+}
+
 // 显示聊天区域
 function showChatArea() {
-  startLearning.style.display = "none";
   chatArea.style.display = "flex";
   summaryArea.style.display = "none";
 
@@ -454,10 +484,8 @@ function showSummary(summary) {
 
 // 显示开始学习界面
 function showStartLearning() {
-  startLearning.style.display = "flex";
-  chatArea.style.display = "none";
-  summaryArea.style.display = "none";
-  knowledgePointInput.value = "";
+  // 由于移除了欢迎界面，直接清空消息并显示对话区域
+  clearMessages();
   currentSession = null;
 }
 

@@ -37,57 +37,26 @@
 
         <!-- 右侧：对话区域 -->
         <div class="chat-container">
-          <!-- 开始学习区域 -->
-          <div class="start-learning" id="startLearning">
-            <div class="welcome-card">
-              <div class="welcome-icon">
-                <i class="fas fa-graduation-cap"></i>
-              </div>
-              <h2>欢迎使用AI学习助手</h2>
-              <p>通过观察AI的错误思维过程，帮助您更好地理解正确概念</p>
-
-              <div class="learning-form">
-                <div class="input-group">
-                  <input
-                    type="text"
-                    id="knowledgePoint"
-                    placeholder="请输入要学习的知识点，如：代数方程求解、概率计算、微积分..."
-                    class="knowledge-input"
-                  />
-                  <button id="startBtn" class="start-btn">
-                    <i class="fas fa-play"></i> 开始学习
-                  </button>
-                </div>
-              </div>
-
-              <div class="features">
-                <div class="feature">
-                  <i class="fas fa-eye"></i>
-                  <span>观察AI错误思维</span>
-                </div>
-                <div class="feature">
-                  <i class="fas fa-comments"></i>
-                  <span>交互式问答</span>
-                </div>
-                <div class="feature">
-                  <i class="fas fa-chart-line"></i>
-                  <span>智能评估反馈</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- 对话区域 -->
-          <div class="chat-area" id="chatArea" style="display: none">
+          <div class="chat-area" id="chatArea">
             <div class="chat-header">
               <h3><i class="fas fa-comments"></i> 学习对话</h3>
-              <button
-                id="demoBtn"
-                class="restart-btn"
-                title="一键演示代数方程求解"
-              >
-                <i class="fas fa-play"></i> 一键演示
-              </button>
+              <div class="demo-buttons">
+                <button
+                  id="demoBtn"
+                  class="demo-btn"
+                  title="一键演示代数方程求解"
+                >
+                  <i class="fas fa-rocket"></i> 代数方程演示
+                </button>
+                <button
+                  id="demoBinarySearchBtn"
+                  class="demo-btn"
+                  title="一键演示二分查找"
+                >
+                  <i class="fas fa-rocket"></i> 二分查找演示
+                </button>
+              </div>
               <button id="restartBtn" class="restart-btn">
                 <i class="fas fa-redo"></i> 重新开始
               </button>
