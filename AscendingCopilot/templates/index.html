@@ -23,6 +23,43 @@
         </div>
       </header>
 
+      <!-- 初始对话输入区域 -->
+      <div class="initial-input-section" id="initialInputSection">
+        <div class="initial-input-card">
+          <h3><i class="fas fa-comments"></i> 开始学习对话</h3>
+          <p>请输入您想要学习的知识点，或选择下方的演示模式</p>
+          <div class="initial-input-form">
+            <div class="input-group">
+              <input
+                type="text"
+                id="knowledgePointInput"
+                class="knowledge-input"
+                placeholder="例如：二分查找、代数方程求解..."
+              />
+              <button id="startLearningBtn" class="start-btn">
+                <i class="fas fa-play"></i> 开始学习
+              </button>
+            </div>
+          </div>
+          <div class="demo-buttons-section">
+            <button
+              id="demoAlgebraBtn"
+              class="demo-btn"
+              title="一键演示代数方程求解"
+            >
+              <i class="fas fa-rocket"></i> 练习代数方程
+            </button>
+            <button
+              id="demoBinarySearchInitBtn"
+              class="demo-btn"
+              title="一键演示二分查找"
+            >
+              <i class="fas fa-rocket"></i> 练习二分查找
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 主要内容区域 -->
       <main class="main-content">
         <!-- 左侧：知识库展示 -->
@@ -47,14 +84,14 @@
                   class="demo-btn"
                   title="一键演示代数方程求解"
                 >
-                  <i class="fas fa-rocket"></i> 代数方程演示
+                  <i class="fas fa-rocket"></i> 练习代数方程
                 </button>
                 <button
                   id="demoBinarySearchBtn"
                   class="demo-btn"
                   title="一键演示二分查找"
                 >
-                  <i class="fas fa-rocket"></i> 二分查找演示
+                  <i class="fas fa-rocket"></i> 练习二分查找
                 </button>
               </div>
               <button id="restartBtn" class="restart-btn">
@@ -68,7 +105,29 @@
 
             <!-- 输入区域 -->
             <div class="input-area" id="inputArea">
-              <div class="input-container">
+              <!-- 提示选项区域（演示模式下显示） -->
+              <div
+                class="suggestion-area"
+                id="suggestionArea"
+                style="display: none"
+              >
+                <div class="suggestion-title">
+                  请选择你的回复（或点击下方“自定义输入”）：
+                </div>
+                <div class="suggestion-buttons" id="suggestionButtons"></div>
+                <div class="suggestion-actions">
+                  <button class="custom-input-btn" id="customInputBtn">
+                    <i class="fas fa-keyboard"></i> 自定义输入
+                  </button>
+                </div>
+              </div>
+
+              <!-- 文本输入区域（默认隐藏，演示模式下由“自定义输入”显示） -->
+              <div
+                class="input-container"
+                id="textInputContainer"
+                style="display: none"
+              >
                 <textarea
                   id="messageInput"
                   placeholder="请输入您的回答..."
@@ -76,6 +135,13 @@
                 ></textarea>
                 <button id="sendBtn" class="send-btn">
                   <i class="fas fa-paper-plane"></i>
+                </button>
+                <button
+                  id="backToSuggestionsBtn"
+                  class="back-btn"
+                  style="display: none"
+                >
+                  返回选项
                 </button>
               </div>
             </div>
