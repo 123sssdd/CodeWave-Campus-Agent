@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Layout, Card, Typography, Avatar, Button, Dropdown, Space } from 'antd';
-import { UserOutlined, RobotOutlined, SendOutlined, ExportOutlined, DownloadOutlined, FileTextOutlined, FileOutlined, FilePdfOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { Layout, Card, Typography, Avatar, Button, Dropdown, Space, Select, message } from 'antd';
+import { UserOutlined, RobotOutlined, SendOutlined, ExportOutlined, DownloadOutlined, FileTextOutlined, FileOutlined, FilePdfOutlined, ReloadOutlined } from '@ant-design/icons';
 import ChatInput from './ChatInput';
+import AIService, { Role } from '../services/aiService';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -31,13 +32,16 @@ interface AppState {
   generatedResume?: string;
   showResumeDownload?: boolean;
   lastBotResponseType?: 'career_guidance' | 'resume_request' | 'general';
+  currentRole: string;
+  availableRoles: Role[];
+  isLoading: boolean;
 }
 
 const CareerGuideChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: '🎯 **欢迎使用AI职业发展顾问！**\n\n我可以为您提供：\n\n🎓 **个性化学习路线** - 根据现有技能制定进阶计划\n💻 **大模型编程实践** - AI辅助开发的最佳工作流\n📈 **技术栈分析** - 从现状到理想职位的技能差距\n🚀 **实战项目推荐** - 提升技能的最佳实践路径\n📝 **简历优化服务** - 专业简历制作与优化指导\n\n**简历优化功能：**\n✨ 我还集成了专业的简历优化工具，可以帮您：\n• 分析简历结构和内容\n• 提供个性化优化建议\n• 推荐使用Open Resume在线制作\n• 针对不同岗位定制简历\n\n**快速开始：**\n选择您的情况或直接描述：\n\n👨‍🎓 应届毕业生 | 🔄 想要转行 | 📊 技能提升 | 💼 求职准备 | 📝 简历优化',
+      content: '🎯 **欢迎使用AI职业发展顾问！**\n\n我是您的智能职业助手，可以为您提供：\n\n🎓 **个性化学习路线** - 根据现有技能制定进阶计划\n💻 **大模型编程实践** - AI辅助开发的最佳工作流\n📈 **技术栈分析** - 从现状到理想职位的技能差距\n🚀 **实战项目推荐** - 提升技能的最佳实践路径\n📝 **简历优化服务** - 专业简历制作与优化指导\n🎯 **面试指导** - 技术面试和行为面试准备\n\n**AI角色切换：**\n您可以在右上角选择不同的AI专家角色，获得更专业的建议！\n\n**快速开始：**\n选择您的情况或直接描述：\n\n👨‍🎓 应届毕业生 | 🔄 想要转行 | 📊 技能提升 | 💼 求职准备 | 📝 简历优化',
       sender: 'bot',
       timestamp: new Date()
     }
@@ -48,10 +52,47 @@ const CareerGuideChat: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
     isRedirecting: false,
     awaitingUserConfirmation: false,
-    showResumeDownload: false
+    showResumeDownload: false,
+    currentRole: 'career_advisor',
+    availableRoles: [],
+    isLoading: false
   });
+  
+  const [aiService] = useState(() => new AIService());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = (content: string) => {
+  // 初始化加载角色列表
+  useEffect(() => {
+    loadRoles();
+  }, []);
+
+  // 自动滚动到最新消息
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
+  };
+
+  const loadRoles = async () => {
+    try {
+      const response = await aiService.getRoles();
+      if (response.status === 'success') {
+        setAppState(prev => ({ ...prev, availableRoles: response.roles }));
+      }
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+    }
+  };
+
+  const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -61,24 +102,101 @@ const CareerGuideChat: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setConversationContext(prev => [...prev, content]);
+    setAppState(prev => ({ ...prev, isLoading: true }));
 
     // 分析用户输入并更新用户档案
     updateUserProfile(content);
 
-    // Generate bot response
-    setTimeout(() => {
-      const botResponse = generateBotResponse(content);
-      const isResumeGenerated = botResponse.includes('📝 **专业简历已生成完成！**');
+    try {
+      // 调用AI服务获取回复
+      const response = await aiService.sendMessage(content, appState.currentRole);
+      
+      const isResumeGenerated = response.reply.includes('📝 **专业简历已生成完成！**');
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: botResponse,
+        content: response.reply,
         sender: 'bot',
         timestamp: new Date(),
         hasResumeDownload: isResumeGenerated
       };
+      
       setMessages(prev => [...prev, botMessage]);
-    }, 1000);
+      
+      // 如果生成了简历，保存到状态中
+      if (isResumeGenerated) {
+        const resumeContent = extractResumeContent(response.reply);
+        setAppState(prev => ({ 
+          ...prev, 
+          generatedResume: resumeContent, 
+          showResumeDownload: true 
+        }));
+      }
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: '抱歉，AI服务暂时不可用，请稍后再试。',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setAppState(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  const extractResumeContent = (reply: string): string => {
+    // 从AI回复中提取简历内容
+    const resumeStart = reply.indexOf('# **');
+    if (resumeStart !== -1) {
+      return reply.substring(resumeStart);
+    }
+    return reply;
+  };
+
+  const handleRoleChange = async (newRole: string) => {
+    setAppState(prev => ({ ...prev, currentRole: newRole }));
+    
+    const roleInfo = appState.availableRoles.find(role => role.key === newRole);
+    if (roleInfo) {
+      message.success(`已切换到：${roleInfo.name}`);
+      
+      // 添加角色切换提示消息
+      const switchMessage: Message = {
+        id: Date.now().toString(),
+        content: `🔄 **角色已切换为：${roleInfo.name}**\n\n${roleInfo.description}\n\n现在我将以${roleInfo.name}的身份为您提供专业建议！`,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, switchMessage]);
+    }
+  };
+
+  const handleNewChat = async () => {
+    try {
+      await aiService.startNewChat();
+      setMessages([
+        {
+          id: '1',
+          content: '🎯 **新的对话已开始！**\n\n我是您的智能职业助手，请告诉我您需要什么帮助？',
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
+      setUserProfile({});
+      setConversationContext([]);
+      setAppState(prev => ({ 
+        ...prev, 
+        generatedResume: undefined, 
+        showResumeDownload: false,
+        awaitingUserConfirmation: false,
+        isRedirecting: false
+      }));
+      message.success('已开始新的对话');
+    } catch (error) {
+      message.error('重置对话失败');
+    }
   };
 
   const updateUserProfile = (userInput: string) => {
@@ -313,299 +431,13 @@ ${resumeContent}
 您的选择是？`;
   };
 
-  const generateBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
 
-    if (appState.awaitingUserConfirmation) {
-      return handleRedirectResponse(input);
-    }
 
-    // Check for explicit resume requests first
-    if (input.includes('简历') || input.includes('resume') || input.includes('cv')) {
-      setAppState(prev => ({ ...prev, lastBotResponseType: 'resume_request' }));
-      return generateResumeRedirectConfirmation();
-    }
 
-    // Career guidance responses - set context
-    if (input.includes('应届毕业生')) {
-      setAppState(prev => ({ ...prev, lastBotResponseType: 'career_guidance' }));
-      return generateGraduateAdvice();
-    }
-    if (input.includes('转行')) {
-      setAppState(prev => ({ ...prev, lastBotResponseType: 'career_guidance' }));
-      return generateCareerChangeAdvice();
-    }
-    if (input.includes('技能')) {
-      setAppState(prev => ({ ...prev, lastBotResponseType: 'career_guidance' }));
-      return generateSkillAdvice();
-    }
-    if (input.includes('求职')) {
-      setAppState(prev => ({ ...prev, lastBotResponseType: 'career_guidance' }));
-      return generateJobPrepAdvice();
-    }
-    if (input.includes('大模型') || input.includes('ai')) {
-      setAppState(prev => ({ ...prev, lastBotResponseType: 'career_guidance' }));
-      return generateAIAssistAdvice();
-    }
 
-    // Only generate resume if NOT responding to career guidance AND profile is detected
-    if (appState.lastBotResponseType !== 'career_guidance' && detectPersonalProfile(userInput)) {
-      const newProfile = parsePersonalInfo(userInput);
-      return generateResumeTemplate(newProfile);
-    }
 
-    // If responding to career guidance with personal info, provide targeted advice
-    if (appState.lastBotResponseType === 'career_guidance' && detectPersonalProfile(userInput)) {
-      return generatePersonalizedCareerAdvice(userInput);
-    }
 
-    setAppState(prev => ({ ...prev, lastBotResponseType: 'general' }));
-    return generateSimpleResponse(input);
-  };
 
-  const generateGraduateAdvice = (): string => {
-    return `🎓 **应届毕业生职业发展路线**
-
-📋 **个人情况分析**
-• 技术基础：学校理论知识
-• 实战经验：缺乏项目经验
-• 优势：学习能力强，适应性好
-• 挑战：技能与岗位需求有差距
-
-🎯 **6个月冲刺计划**
-
-**第1-2月：基础强化** 💪
-• 选定主技术栈（推荐：前端React/Vue，后端Spring/Django）
-• 完成3-5个小项目
-• 学习Git、数据库基础
-
-**第3-4月：项目实战** 🚀
-• 开发1个完整全栈项目
-• 学习部署上线
-• 参与开源项目贡献
-
-**第5-6月：求职准备** 📝
-• 刷算法题（LeetCode 200+）
-• 准备项目介绍和技术面试
-• 完善简历和作品集
-
-🛠️ **大模型辅助学习**
-• ChatGPT：代码解释、调试帮助
-• GitHub Copilot：代码自动补全
-• Claude：技术方案设计
-
-您想深入了解哪个阶段的具体内容？`;
-  };
-
-  const generateAIAssistAdvice = (): string => {
-    return `🤖 **大模型辅助编程最佳实践**
-
-🎯 **核心工作流程**
-
-**1. 需求分析阶段** 📋
-• 用AI整理需求文档
-• 生成技术方案草图
-• 评估技术难点
-
-**2. 代码开发阶段** 💻
-• GitHub Copilot：智能代码补全
-• ChatGPT：算法实现指导
-• Claude：代码架构设计
-
-**3. 调试优化阶段** 🔧
-• AI协助错误诊断
-• 性能优化建议
-• 代码重构指导
-
-🛠️ **推荐工具组合**
-
-**编程助手**
-• GitHub Copilot - 代码补全
-• Cursor - AI编程IDE
-• Tabnine - 智能提示
-
-**问题解决**
-• ChatGPT - 技术咨询
-• Claude - 代码审查
-• Perplexity - 技术搜索
-
-**学习提升**
-• AI生成练习题
-• 代码解释和注释
-• 技术文档生成
-
-💡 **最佳实践技巧**
-
-**提示词优化** ✨
-• 明确描述需求和上下文
-• 提供具体的技术栈信息
-• 要求分步骤的详细解释
-
-**代码质量** 📊
-• AI生成后人工审查
-• 添加测试用例
-• 遵循编码规范
-
-您想了解哪个具体工具的使用技巧？`;
-  };
-
-  const generatePersonalizedCareerAdvice = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    // 解析用户信息
-    const profile = parsePersonalInfo(userInput);
-    
-    return `🎯 **基于您的情况，我推荐这样的发展路径：**
-
-**1. 评估现状** 📊
-• 技术基础：${profile.skills?.includes('React') || profile.skills?.includes('Vue') ? 'React/Vue框架熟练，JS基础扎实 ✅' : 'React/Vue框架熟练，JS基础扎实'}
-• 工程能力：${input.includes('webpack') || input.includes('vite') ? 'Webpack配置、Vite构建流程 ✅' : 'Webpack配置、Vite构建流程 ✅'}
-• 项目经验：${input.includes('组件库') || input.includes('低代码') ? '组件库、低代码平台开发 ✅' : '组件库、低代码平台开发 ✅'}
-• 薄弱环节：${input.includes('算法') ? '算法能力、大型项目经验' : '算法能力、大型项目经验'}
-
-**2. 设定目标** 🎯
-• 目标职位：${profile.targetPosition || 'Web前端工程师'}
-• 薪资期望：${profile.expectedSalary || '20k月薪'}
-• 目标城市：${profile.targetCities || '北上广深杭'}
-
-**3. 制定计划** 📋
-**短期目标（3-6个月）：**
-• 算法强化：LeetCode刷题200+，重点数据结构
-• 源码学习：Vue3/React18源码深度解析
-• 项目实战：独立完成1个复杂前端项目
-• 面试准备：整理项目亮点，准备技术面试
-
-**中期目标（6-12个月）：**
-• 技术深度：掌握前端工程化最佳实践
-• 业务理解：参与复杂业务项目，提升解决问题能力
-• 技术影响力：技术分享、开源贡献
-
-**4. 学习资源** 📚
-• 算法：LeetCode + 《剑指Offer》
-• 框架：Vue3/React官方文档 + 源码解析
-• 工程化：Webpack/Vite深入学习
-• 项目：GitHub优秀开源项目学习
-
-需要我为您详细规划某个具体阶段的学习内容吗？`;
-  };
-
-  const generateSimpleResponse = (input: string): string => {
-    if (input.includes('前端')) {
-      return `🎨 **前端发展建议**
-
-基于前端方向，建议重点关注：
-• 框架深度：React/Vue源码理解
-• 工程化：构建优化、性能监控  
-• 新技术：微前端、低代码平台
-• 算法提升：数据结构与算法基础
-
-您可以详细描述一下技术栈和目标，我给您制定具体的学习计划。`;
-    }
-
-    return `💡 **简单描述一下您的情况：**
-
-• 当前技术栈和经验
-• 目标职位和薪资
-• 主要挑战或困惑
-
-我会直接为您制定针对性的发展规划！`;
-  };
-
-  const generateJobPrepAdvice = (): string => {
-    return `💼 **求职准备完整指南**
-
-📋 **个人情况评估**
-• 技能盘点：列出掌握的技术栈
-• 项目整理：准备3-5个代表性项目
-• 优势分析：找出核心竞争力
-• 不足识别：明确需要补强的技能
-
-🎯 **3个月求职冲刺**
-
-**第1月：技能补强** 💪
-• 针对目标岗位补齐关键技能
-• 完善项目作品集
-• 刷算法题（每天2-3题）
-
-**第2月：简历优化** 📝
-• 使用STAR法则描述项目经历
-• 量化工作成果和技术贡献
-• 针对不同公司定制简历
-
-**第3月：面试准备** 🎯
-• 模拟技术面试和行为面试
-• 准备常见问题的标准答案
-• 研究目标公司和岗位
-
-🛠️ **AI辅助求职**
-• 简历优化：ChatGPT帮助润色
-• 面试练习：AI模拟面试官
-• 技术准备：AI解释算法题
-
-您想重点准备哪个方面？`;
-  };
-
-  const generateSkillAdvice = (): string => {
-    return `💡 **技能发展建议**
-
-**核心技能：**
-• 编程语言精通（至少2-3门）
-• 数据结构与算法
-• 系统设计能力
-• 调试和问题解决
-
-**热门技能：**
-• 云计算（AWS/Azure/阿里云）
-• 容器化技术（Docker/K8s）
-• AI/机器学习基础
-• DevOps实践
-
-**软技能：**
-• 沟通表达能力
-• 团队协作
-• 学习能力
-• 时间管理
-
-**学习建议：**
-• 理论学习 + 实际项目
-• 参与开源项目
-• 技术分享和写作
-• 持续关注行业动态
-
-您希望重点发展哪个方向的技能？`;
-  };
-
-  const generateCareerChangeAdvice = (): string => {
-    return `🔄 **转行指导**
-
-**转行准备：**
-1. **自我评估**：技能、兴趣、价值观匹配度
-2. **市场调研**：目标行业需求和薪资水平
-3. **技能转换**：识别可迁移技能
-4. **技能补强**：学习目标岗位核心技能
-
-**转行策略：**
-• **渐进式转行**：在当前工作中逐步接触新领域
-• **项目转行**：通过项目积累目标领域经验
-• **培训转行**：参加专业培训获得认证
-• **内部转岗**：在当前公司内部转换
-
-**时间规划：**
-• 准备期：3-6个月技能学习
-• 过渡期：6-12个月实践积累
-• 稳定期：1-2年深入发展
-
-**风险控制：**
-• 保持财务稳定
-• 建立备选方案
-• 寻求导师指导
-
-💡 **请详细描述您的个人情况，我为您制定针对性的转行方案：**
-• 当前技术栈和工作经验
-• 目标转入的领域或职位
-• 期望薪资和工作城市
-• 主要担忧和挑战`;
-  };
 
   const downloadResumeAsHTML = () => {
     if (!appState.generatedResume) return;
@@ -796,6 +628,25 @@ ${resumeContent}
                 AI 职业发展顾问
               </Title>
               <Space>
+                <Select
+                  value={appState.currentRole}
+                  onChange={handleRoleChange}
+                  style={{ width: 150 }}
+                  size="small"
+                  options={appState.availableRoles.map(role => ({
+                    value: role.key,
+                    label: role.name
+                  }))}
+                  placeholder="选择AI角色"
+                />
+                <Button 
+                  icon={<ReloadOutlined />} 
+                  size="small"
+                  onClick={handleNewChat}
+                  title="开始新对话"
+                >
+                  新对话
+                </Button>
                 {appState.showResumeDownload && (
                   <Dropdown menu={{ items: resumeDownloadItems }} placement="bottomRight">
                     <Button type="primary" icon={<DownloadOutlined />} size="small">
@@ -819,6 +670,7 @@ ${resumeContent}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
             styles={{ body: { padding: '12px 16px', flex: 1, overflowY: 'auto' } }}
           >
+            <div ref={chatContainerRef} style={{ height: '100%', overflowY: 'auto' }}>
             {messages.map((message) => (
               <Card
                 key={message.id}
@@ -888,6 +740,13 @@ ${resumeContent}
                         <Text>{message.content}</Text>
                       </div>
                       
+                      {/* Loading indicator for bot messages */}
+                      {message.sender === 'bot' && appState.isLoading && messages[messages.length - 1].id === message.id && (
+                        <div style={{ marginTop: '8px', color: '#1890ff' }}>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>AI正在思考中...</Text>
+                        </div>
+                      )}
+                      
                       {/* Resume Download Button - Only show on messages with resume */}
                       {message.sender === 'bot' && message.hasResumeDownload && appState.generatedResume && (
                         <div style={{ marginTop: '16px' }}>
@@ -939,8 +798,11 @@ ${resumeContent}
                 </div>
               </Card>
             ))}
+              {/* 用于自动滚动的锚点 */}
+              <div ref={messagesEndRef} style={{ height: '1px' }} />
+            </div>
           </Card>
-          <ChatInput onSend={handleSendMessage} />
+          <ChatInput onSend={handleSendMessage} isLoading={appState.isLoading} />
         </div>
       </Content>
     </Layout>

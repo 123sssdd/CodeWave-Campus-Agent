@@ -4,9 +4,10 @@ import { SendOutlined } from '@ant-design/icons';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  isLoading?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading = false }) => {
   const [message, setMessage] = useState('');
 
   const handleSend = () => {
@@ -51,14 +52,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
       />
       <Button 
         type="primary" 
-        icon={<SendOutlined />}
+        icon={<SendOutlined />} 
         onClick={handleSend}
+        loading={isLoading}
+        disabled={isLoading}
         style={{
           height: '40px',
-          borderRadius: '8px'
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: 'none',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
         }}
       >
-        发送
+        {isLoading ? 'AI思考中...' : '发送'}
       </Button>
     </div>
   );
