@@ -1,0 +1,14 @@
+flask
+flask-cors
+flask-sqlalchemy
+pandas
+numpy
+scikit-learn
+requests
+python-dotenv
+sqlalchemy
+marshmallow
+flask-marshmallow
+marshmallow-sqlalchemy
+werkzeug
+jieba

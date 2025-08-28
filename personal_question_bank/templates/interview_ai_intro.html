@@ -82,18 +82,9 @@
         <div class="card-body text-center py-5">
             <h3 class="mb-4">准备好开始您的模拟面试了吗？</h3>
             <p class="text-muted mb-4">选择您感兴趣的技术方向，开始一次真实的面试体验</p>
-            <a href="/dashboard/1" class="btn btn-success btn-lg px-5" id="start-interview">
+            <a href="https://start.interviewing.io/interview-ai" class="btn btn-success btn-lg px-5" target="_blank" rel="noopener noreferrer">
                 <i class="fas fa-play me-2"></i>开始面试
             </a>
-            
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // 检查localStorage中是否有用户ID
-                const userId = localStorage.getItem('userId') || 1;
-                const startButton = document.getElementById('start-interview');
-                startButton.href = `/dashboard/${userId}`;
-            });
-            </script>
         </div>
     </div>
 
