@@ -23,42 +23,6 @@
         </div>
       </header>
 
-      <!-- 初始对话输入区域 -->
-      <div class="initial-input-section" id="initialInputSection">
-        <div class="initial-input-card">
-          <h3><i class="fas fa-comments"></i> 开始学习对话</h3>
-          <p>请输入您想要学习的知识点，或选择下方的演示模式</p>
-          <div class="initial-input-form">
-            <div class="input-group">
-              <input
-                type="text"
-                id="knowledgePointInput"
-                class="knowledge-input"
-                placeholder="例如：二分查找、代数方程求解..."
-              />
-              <button id="startLearningBtn" class="start-btn">
-                <i class="fas fa-play"></i> 开始学习
-              </button>
-            </div>
-          </div>
-          <div class="demo-buttons-section">
-            <button
-              id="demoAlgebraBtn"
-              class="demo-btn"
-              title="一键演示代数方程求解"
-            >
-              <i class="fas fa-rocket"></i> 练习代数方程
-            </button>
-            <button
-              id="demoBinarySearchInitBtn"
-              class="demo-btn"
-              title="一键演示二分查找"
-            >
-              <i class="fas fa-rocket"></i> 练习二分查找
-            </button>
-          </div>
-        </div>
-      </div>
 
       <!-- 主要内容区域 -->
       <main class="main-content">
@@ -100,6 +64,42 @@
             </div>
 
             <div class="messages-container" id="messagesContainer">
+              <!-- 模态框：初始学习输入 -->
+              <div class="modal-overlay" id="modalOverlay">
+                <div class="initial-input-card modal-card">
+                  <h3><i class="fas fa-comments"></i> 开始学习对话</h3>
+                  <p>请输入您想要学习的知识点，或选择下方的演示模式</p>
+                  <div class="initial-input-form">
+                    <div class="input-group">
+                      <input
+                        type="text"
+                        id="knowledgePointInput"
+                        class="knowledge-input"
+                        placeholder="例如：二分查找、代数方程求解..."
+                      />
+                      <button id="startLearningBtn" class="start-btn">
+                        <i class="fas fa-play"></i> 开始学习
+                      </button>
+                    </div>
+                  </div>
+                  <div class="demo-buttons-section">
+                    <button
+                      id="demoAlgebraBtn"
+                      class="demo-btn"
+                      title="一键演示代数方程求解"
+                    >
+                      <i class="fas fa-rocket"></i> 练习代数方程
+                    </button>
+                    <button
+                      id="demoBinarySearchInitBtn"
+                      class="demo-btn"
+                      title="一键演示二分查找"
+                    >
+                      <i class="fas fa-rocket"></i> 练习二分查找
+                    </button>
+                  </div>
+                </div>
+              </div>
               <!-- 消息内容将在这里动态添加 -->
             </div>
 
