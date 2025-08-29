@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端API测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .loading { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>前端API测试</h1>
+    <button onclick="testAcademicMode()">测试学术模式</button>
+    <button onclick="testInterviewMode()">测试面试模式</button>
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = '/api';
+        const userId = 1;
+
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API调用失败:', error);
+                throw error;
+            }
+        }
+
+        function addResult(message, type) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testAcademicMode() {
+            addResult('开始测试学术模式...', 'loading');
+            
+            try {
+                // 测试推荐API
+                const response = await apiCall(`/recommendations/${userId}?count=6&mode=academic`);
+                
+                if (response.recommendations && response.recommendations.length > 0) {
+                    addResult(`✅ 学术模式推荐成功: 获得${response.recommendations.length}道题目`, 'success');
+                    addResult(`前3道题目: ${response.recommendations.slice(0, 3).map(q => q.title).join(', ')}`, 'success');
+                } else {
+                    addResult('❌ 学术模式推荐失败: 没有返回题目', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 学术模式推荐失败: ${error.message}`, 'error');
+            }
+
+            try {
+                // 测试按模式获取题目API
+                const response = await apiCall('/questions/by-mode/academic?per_page=5');
+                
+                if (response.questions && response.questions.length > 0) {
+                    addResult(`✅ 学术模式题目获取成功: 总共${response.total}道题目`, 'success');
+                } else {
+                    addResult('❌ 学术模式题目获取失败: 没有返回题目', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 学术模式题目获取失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInterviewMode() {
+            addResult('开始测试面试模式...', 'loading');
+            
+            try {
+                // 测试推荐API
+                const response = await apiCall(`/recommendations/${userId}?count=6&mode=interview`);
+                
+                if (response.recommendations && response.recommendations.length > 0) {
+                    addResult(`✅ 面试模式推荐成功: 获得${response.recommendations.length}道题目`, 'success');
+                    addResult(`前3道题目: ${response.recommendations.slice(0, 3).map(q => q.title).join(', ')}`, 'success');
+                } else {
+                    addResult('❌ 面试模式推荐失败: 没有返回题目', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 面试模式推荐失败: ${error.message}`, 'error');
+            }
+
+            try {
+                // 测试按模式获取题目API
+                const response = await apiCall('/questions/by-mode/interview?per_page=5');
+                
+                if (response.questions && response.questions.length > 0) {
+                    addResult(`✅ 面试模式题目获取成功: 总共${response.total}道题目`, 'success');
+                } else {
+                    addResult('❌ 面试模式题目获取失败: 没有返回题目', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 面试模式题目获取失败: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

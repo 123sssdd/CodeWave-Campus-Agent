@@ -1,3 +1,15 @@
+"""
+外部平台接口模块
+
+注意：此模块中的代码执行功能已废弃！
+现在使用CodePen在线编辑器替代本地代码执行。
+
+保留此文件仅用于：
+1. LeetCode题目获取功能
+2. 其他外部平台集成
+3. 向后兼容性
+"""
+
 import requests
 import json
 from typing import Dict, List, Optional

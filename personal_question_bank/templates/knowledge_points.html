@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block title %}知识点掌握情况{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左侧导航 -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user"></i> 用户信息</h5>
+                </div>
+                <div class="card-body" id="user-info">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie"></i> 总体进度</h5>
+                </div>
+                <div class="card-body" id="progress-summary">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-brain"></i> 知识点掌握情况</h4>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary" onclick="filterByCategory('all')">全部</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterByCategory('数据结构')">数据结构</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterByCategory('算法')">算法</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterByCategory('编程语言')">编程语言</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterByCategory('编程思想')">编程思想</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="knowledge-points-container" class="scrollable-container">
+                        <div class="text-center p-4">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">正在加载知识点数据...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 知识点详情模态框 -->
+<div class="modal fade" id="knowledgePointModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 内容将通过JavaScript动态加载 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="goToPractice()">开始练习</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 可滑动容器样式 */
+.scrollable-container {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 5px;
+}
+
+/* 自定义滚动条样式 */
+.scrollable-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Firefox滚动条样式 */
+.scrollable-container {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.knowledge-point-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    border-left: 4px solid #007bff;
+}
+
+.knowledge-point-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.knowledge-point-card.mastered {
+    border-left-color: #28a745;
+}
+
+.knowledge-point-card.learning {
+    border-left-color: #ffc107;
+}
+
+.knowledge-point-card.weak {
+    border-left-color: #dc3545;
+}
+
+.progress-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+}
+
+.progress-circle.high {
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.progress-circle.medium {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+}
+
+.progress-circle.low {
+    background: linear-gradient(45deg, #dc3545, #e83e8c);
+}
+
+.badge-difficulty {
+    font-size: 0.8em;
+}
+
+.difficulty-1 { background-color: #28a745; }
+.difficulty-2 { background-color: #20c997; }
+.difficulty-3 { background-color: #ffc107; }
+.difficulty-4 { background-color: #fd7e14; }
+.difficulty-5 { background-color: #dc3545; }
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .scrollable-container {
+        max-height: 500px;
+    }
+}
+
+@media (max-width: 576px) {
+    .scrollable-container {
+        max-height: 400px;
+    }
+}
+</style>
+
+<script>
+const userId = {{ user_id }};
+let knowledgePointsData = [];
+let userProgressData = {};
+let currentKnowledgePoint = null;
+
+async function loadData() {
+    try {
+        // 加载用户信息和进度
+        const progressResponse = await fetch(`/api/users/${userId}/progress`);
+        userProgressData = await progressResponse.json();
+        
+        // 加载知识点列表
+        const kpResponse = await fetch('/api/knowledge-points');
+        const knowledgePoints = await kpResponse.json();
+        
+        // 合并数据
+        knowledgePointsData = knowledgePoints.map(kp => {
+            const userStat = userProgressData.knowledge_point_details.find(
+                stat => stat.knowledge_point && stat.knowledge_point.id === kp.id
+            );
+            return {
+                ...kp,
+                userStat: userStat || null,
+                masteryLevel: userStat ? userStat.mastery_level : 0,
+                totalAttempts: userStat ? userStat.total_attempts : 0,
+                correctAttempts: userStat ? userStat.correct_attempts : 0,
+                accuracyRate: userStat ? userStat.accuracy_rate : 0
+            };
+        });
+        
+        renderUserInfo();
+        renderProgressSummary();
+        renderKnowledgePoints();
+        
+    } catch (error) {
+        console.error('加载数据失败:', error);
+        showError('加载数据失败，请刷新页面重试');
+    }
+}
+
+function renderUserInfo() {
+    const userInfo = document.getElementById('user-info');
+    const user = userProgressData.user;
+    
+    userInfo.innerHTML = `
+        <div class="text-center">
+            <div class="mb-3">
+                <i class="fas fa-user-circle fa-3x text-primary"></i>
+            </div>
+            <h6>${user.username}</h6>
+            <p class="text-muted small">${user.email}</p>
+            <span class="badge bg-info">${getDifficultyText(user.preferred_difficulty)}</span>
+        </div>
+    `;
+}
+
+function renderProgressSummary() {
+    const container = document.getElementById('progress-summary');
+    const progress = userProgressData;
+    
+    const overallPercent = Math.round(progress.overall_progress * 100);
+    
+    container.innerHTML = `
+        <div class="text-center mb-3">
+            <div class="progress-circle ${getProgressLevel(overallPercent)}">
+                ${overallPercent}%
+            </div>
+        </div>
+        <div class="row text-center">
+            <div class="col-4">
+                <div class="text-success">
+                    <i class="fas fa-check-circle"></i>
+                    <br>
+                    <strong>${progress.mastered_knowledge_points}</strong>
+                    <br>
+                    <small>已掌握</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-warning">
+                    <i class="fas fa-clock"></i>
+                    <br>
+                    <strong>${progress.learning_knowledge_points}</strong>
+                    <br>
+                    <small>学习中</small>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <br>
+                    <strong>${progress.weak_knowledge_points}</strong>
+                    <br>
+                    <small>需提升</small>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderKnowledgePoints(filterCategory = 'all') {
+    const container = document.getElementById('knowledge-points-container');
+    
+    const filteredData = filterCategory === 'all' 
+        ? knowledgePointsData 
+        : knowledgePointsData.filter(kp => kp.category === filterCategory);
+    
+    if (filteredData.length === 0) {
+        container.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-search fa-2x text-muted"></i>
+                <p class="mt-2 text-muted">没有找到相关知识点</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const html = filteredData.map(kp => {
+        const masteryPercent = Math.round(kp.masteryLevel * 100);
+        const statusClass = getStatusClass(kp.masteryLevel);
+        const statusText = getStatusText(kp.masteryLevel);
+        
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card knowledge-point-card ${statusClass}" onclick="showKnowledgePointDetail(${kp.id})">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">${kp.name}</h6>
+                            <span class="badge badge-difficulty difficulty-${kp.difficulty_level}">
+                                ${getDifficultyStars(kp.difficulty_level)}
+                            </span>
+                        </div>
+                        
+                        <p class="card-text text-muted small">${kp.category}</p>
+                        
+                        <div class="row align-items-center">
+                            <div class="col-8">
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-${getProgressColor(kp.masteryLevel)}" 
+                                         style="width: ${masteryPercent}%"></div>
+                                </div>
+                                <small class="text-muted">掌握度: ${masteryPercent}%</small>
+                            </div>
+                            <div class="col-4 text-end">
+                                <span class="badge bg-${getProgressColor(kp.masteryLevel)}">${statusText}</span>
+                            </div>
+                        </div>
+                        
+                        ${kp.totalAttempts > 0 ? `
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    练习 ${kp.totalAttempts} 次 | 正确率 ${Math.round(kp.accuracyRate * 100)}%
+                                </small>
+                            </div>
+                        ` : `
+                            <div class="mt-2">
+                                <small class="text-muted">尚未练习</small>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = `<div class="row">${html}</div>`;
+}
+
+async function showKnowledgePointDetail(knowledgePointId) {
+    try {
+        const response = await fetch(`/api/knowledge-points/${knowledgePointId}/questions`);
+        const data = await response.json();
+        
+        currentKnowledgePoint = data.knowledge_point;
+        const questions = data.questions;
+        
+        const kpData = knowledgePointsData.find(kp => kp.id === knowledgePointId);
+        const masteryPercent = Math.round(kpData.masteryLevel * 100);
+        
+        document.getElementById('modalTitle').innerHTML = `
+            <i class="fas fa-brain"></i> ${currentKnowledgePoint.name}
+            <span class="badge bg-${getProgressColor(kpData.masteryLevel)} ms-2">${getStatusText(kpData.masteryLevel)}</span>
+        `;
+        
+        document.getElementById('modalBody').innerHTML = `
+            <div class="mb-4">
+                <h6>描述</h6>
+                <p>${currentKnowledgePoint.description}</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>基本信息</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>分类:</strong> ${currentKnowledgePoint.category}</li>
+                            <li><strong>难度级别:</strong> ${getDifficultyStars(currentKnowledgePoint.difficulty_level)} (${currentKnowledgePoint.difficulty_level}/5)</li>
+                            <li><strong>题目数量:</strong> ${questions.length} 道</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>学习统计</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>掌握程度:</strong> ${masteryPercent}%</li>
+                            <li><strong>练习次数:</strong> ${kpData.totalAttempts} 次</li>
+                            <li><strong>正确率:</strong> ${Math.round(kpData.accuracyRate * 100)}%</li>
+                            ${kpData.userStat && kpData.userStat.last_practice_time ? 
+                                `<li><strong>最后练习:</strong> ${formatDate(kpData.userStat.last_practice_time)}</li>` : 
+                                '<li><strong>最后练习:</strong> 从未练习</li>'
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h6>相关题目 (${questions.length})</h6>
+                <div class="row">
+                    ${questions.map(q => `
+                        <div class="col-md-6 mb-2">
+                            <div class="card border-light">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title mb-1" style="font-size: 0.9em;">${q.title}</h6>
+                                            <div>
+                                                <span class="badge bg-secondary">${getQuestionTypeText(q.question_type)}</span>
+                                                <span class="badge bg-${getDifficultyColor(q.difficulty)}">${q.difficulty}</span>
+                                                ${q.estimated_time ? `<span class="badge bg-info">${q.estimated_time}分钟</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        new bootstrap.Modal(document.getElementById('knowledgePointModal')).show();
+        
+    } catch (error) {
+        console.error('加载知识点详情失败:', error);
+        showError('加载知识点详情失败');
+    }
+}
+
+function filterByCategory(category) {
+    // 更新按钮状态
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    renderKnowledgePoints(category);
+}
+
+function goToPractice() {
+    if (currentKnowledgePoint) {
+        window.location.href = `/practice/${userId}?knowledge_point=${currentKnowledgePoint.id}`;
+    }
+}
+
+// 工具函数
+function getStatusClass(masteryLevel) {
+    if (masteryLevel >= 0.7) return 'mastered';
+    if (masteryLevel >= 0.3) return 'learning';
+    return 'weak';
+}
+
+function getStatusText(masteryLevel) {
+    if (masteryLevel >= 0.7) return '已掌握';
+    if (masteryLevel >= 0.3) return '学习中';
+    return '需提升';
+}
+
+function getProgressColor(masteryLevel) {
+    if (masteryLevel >= 0.7) return 'success';
+    if (masteryLevel >= 0.3) return 'warning';
+    return 'danger';
+}
+
+function getProgressLevel(percent) {
+    if (percent >= 70) return 'high';
+    if (percent >= 30) return 'medium';
+    return 'low';
+}
+
+function getDifficultyText(difficulty) {
+    const map = { 'easy': '初级', 'medium': '中级', 'hard': '高级' };
+    return map[difficulty] || difficulty;
+}
+
+function getDifficultyStars(level) {
+    return '★'.repeat(level) + '☆'.repeat(5 - level);
+}
+
+function getDifficultyColor(difficulty) {
+    const map = { 'easy': 'success', 'medium': 'warning', 'hard': 'danger' };
+    return map[difficulty] || 'secondary';
+}
+
+function getQuestionTypeText(type) {
+    const map = {
+        'theory': '理论题',
+        'multiple_choice': '选择题', 
+        'coding': '编程题',
+        'practical': '实践题'
+    };
+    return map[type] || type;
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('zh-CN');
+}
+
+function showError(message) {
+    const container = document.getElementById('knowledge-points-container');
+    container.innerHTML = `
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> ${message}
+        </div>
+    `;
+}
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+{% endblock %}

@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tech_name }} 题目详情 - 个人题库系统{% endblock %}
+
+{% block extra_head %}
+<style>
+.tech-detail-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.tech-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.difficulty-filter-tabs {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 30px;
+}
+
+.difficulty-filter-tabs .nav-link {
+    border: none;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 12px 24px;
+    position: relative;
+}
+
+.difficulty-filter-tabs .nav-link.active {
+    color: #28a745;
+    background: none;
+    border: none;
+}
+
+.difficulty-filter-tabs .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #28a745;
+    border-radius: 2px 2px 0 0;
+}
+
+.question-list-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.question-list-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.question-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.meta-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.type-theory { background: #e3f2fd; color: #1976d2; }
+.type-coding { background: #e8f5e9; color: #388e3c; }
+.type-practical { background: #fff3e0; color: #f57c00; }
+
+.difficulty-easy { background: #e8f5e9; color: #2e7d32; }
+.difficulty-medium { background: #fff8e1; color: #f57c00; }
+.difficulty-hard { background: #ffebee; color: #c62828; }
+
+.progress-overview {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.learning-path {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 20px;
+}
+
+.path-step {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #28a745;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.step-completed {
+    background: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 技术栈详情头部 -->
+    <div class="tech-detail-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="tech-icon" id="tech-icon">
+                    <i class="fab fa-vuejs"></i>
+                </div>
+                <h1 id="tech-title">Vue.js</h1>
+                <p class="lead mb-0" id="tech-description">组合式API、响应式原理、SSR等前端核心技术</p>
+            </div>
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <h3 id="total-questions">0</h3>
+                            <p>题目总数</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card">
+                            <h3 id="avg-difficulty">0</h3>
+                            <p>平均难度</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mt-3">
+                        <div class="stat-card">
+                            <h3 id="completion-rate">0%</h3>
+                            <p>完成率</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mt-3">
+                        <div class="stat-card">
+                            <h3 id="study-time">0h</h3>
+                            <p>学习时长</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 左侧：题目列表 -->
+        <div class="col-md-8">
+            <!-- 难度筛选标签 -->
+            <ul class="nav nav-tabs difficulty-filter-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" data-difficulty="" onclick="filterByDifficulty('')">全部</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-difficulty="easy" onclick="filterByDifficulty('easy')">简单</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-difficulty="medium" onclick="filterByDifficulty('medium')">中等</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-difficulty="hard" onclick="filterByDifficulty('hard')">困难</a>
+                </li>
+            </ul>
+
+            <!-- 题目列表 -->
+            <div id="questions-container">
+                <!-- 动态加载题目 -->
+            </div>
+
+            <!-- 分页 -->
+            <nav aria-label="题目分页" class="mt-4">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- 动态生成分页 -->
+                </ul>
+            </nav>
+        </div>
+
+        <!-- 右侧：学习概览和路径 -->
+        <div class="col-md-4">
+            <!-- 学习进度概览 -->
+            <div class="progress-overview">
+                <h5><i class="fas fa-chart-line me-2"></i>学习进度</h5>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small>整体进度</small>
+                        <small id="overall-progress-text">0%</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" id="overall-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small>简单题目</small>
+                        <small id="easy-progress-text">0/0</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" id="easy-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small>中等题目</small>
+                        <small id="medium-progress-text">0/0</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-warning" id="medium-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small>困难题目</small>
+                        <small id="hard-progress-text">0/0</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-danger" id="hard-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-success w-100" onclick="startTechStackPractice()">
+                        <i class="fas fa-play me-2"></i>开始练习
+                    </button>
+                </div>
+            </div>
+
+            <!-- 学习路径建议 -->
+            <div class="learning-path">
+                <h6><i class="fas fa-route me-2"></i>学习路径建议</h6>
+                <div id="learning-steps">
+                    <!-- 动态生成学习步骤 -->
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="generatePersonalizedPath()">
+                        <i class="fas fa-magic me-1"></i>生成个性化路径
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTechStack = '';
+let allQuestions = [];
+let currentDifficulty = '';
+let currentPage = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 从URL获取技术栈参数
+    const urlParams = new URLSearchParams(window.location.search);
+    currentTechStack = urlParams.get('tech') || 'Vue.js';
+    
+    initializePage();
+    loadTechStackQuestions();
+    loadUserProgress();
+    generateLearningPath();
+});
+
+function initializePage() {
+    // 设置技术栈信息
+    const techConfig = getTechStackConfig(currentTechStack);
+    
+    document.getElementById('tech-icon').innerHTML = techConfig.icon;
+    document.getElementById('tech-title').textContent = techConfig.title;
+    document.getElementById('tech-description').textContent = techConfig.description;
+    
+    // 设置页面标题
+    document.title = `${techConfig.title} 题目详情 - 个人题库系统`;
+}
+
+function getTechStackConfig(techName) {
+    const configs = {
+        'Vue.js': {
+            icon: '<i class="fab fa-vuejs"></i>',
+            title: 'Vue.js',
+            description: '组合式API、响应式原理、SSR等前端核心技术'
+        },
+        'React': {
+            icon: '<i class="fab fa-react"></i>',
+            title: 'React',
+            description: 'Fiber架构、Hooks、Server Components等现代React技术'
+        },
+        'JavaScript': {
+            icon: '<i class="fab fa-js-square"></i>',
+            title: 'JavaScript',
+            description: '事件循环、V8引擎、异步编程等JS核心概念'
+        },
+        'Golang': {
+            icon: '<i class="fas fa-code"></i>',
+            title: 'Golang',
+            description: 'G-P-M模型、Channel、GC机制等Go语言特性'
+        },
+        '前端工程化': {
+            icon: '<i class="fas fa-tools"></i>',
+            title: '前端工程化',
+            description: 'Webpack、Vite、性能优化等工程化实践'
+        },
+        '算法与数据结构': {
+            icon: '<i class="fas fa-brain"></i>',
+            title: '算法与数据结构',
+            description: '面试常考算法题目和数据结构应用'
+        }
+    };
+    
+    return configs[techName] || configs['Vue.js'];
+}
+
+function loadTechStackQuestions() {
+    showLoading('正在加载题目...');
+    
+    // 先尝试从API获取
+    const techParam = encodeURIComponent(currentTechStack);
+    fetch(`/api/interview/hot-questions?category=${techParam}&limit=100`)
+        .then(response => response.json())
+        .then(questions => {
+            allQuestions = questions;
+            displayQuestions();
+            updateStatistics();
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('加载题目失败:', error);
+            // 生成模拟数据作为备用方案
+            generateMockQuestions();
+            hideLoading();
+        });
+}
+
+function generateMockQuestions() {
+    // 生成模拟题目数据
+    const questionCount = Math.floor(Math.random() * 15) + 10;
+    allQuestions = [];
+    
+    for (let i = 1; i <= questionCount; i++) {
+        const difficulties = ['easy', 'medium', 'hard'];
+        const types = ['theory', 'coding', 'practical'];
+        const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        allQuestions.push({
+            id: i,
+            title: `${currentTechStack} 面试题 ${i}`,
+            content: `这是一道关于 ${currentTechStack} 的${type === 'theory' ? '理论' : type === 'coding' ? '编程' : '实践'}题目，难度为${difficulty}。`,
+            question_type: type,
+            difficulty: difficulty,
+            estimated_time: Math.floor(Math.random() * 20) + 5,
+            knowledge_point: {
+                id: i,
+                name: `${currentTechStack} 核心概念 ${i}`
+            }
+        });
+    }
+    
+    displayQuestions();
+    updateStatistics();
+}
+
+function displayQuestions() {
+    let questionsToShow = allQuestions;
+    
+    // 按难度筛选
+    if (currentDifficulty) {
+        questionsToShow = allQuestions.filter(q => q.difficulty === currentDifficulty);
+    }
+    
+    const container = document.getElementById('questions-container');
+    
+    if (questionsToShow.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">暂无相关题目</h5>
+                <p class="text-muted">请尝试切换难度筛选条件</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = questionsToShow.map(question => `
+        <div class="card question-list-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="card-title mb-2">${question.title}</h6>
+                    <div class="question-meta">
+                        <span class="meta-badge type-${question.question_type}">${getTypeText(question.question_type)}</span>
+                        <span class="meta-badge difficulty-${question.difficulty}">${getDifficultyText(question.difficulty)}</span>
+                    </div>
+                </div>
+                
+                <p class="card-text text-muted">${question.content.substring(0, 120)}...</p>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="question-meta">
+                        ${question.knowledge_point ? `<span class="meta-badge" style="background: #f8f9fa; color: #6c757d;">${question.knowledge_point.name}</span>` : ''}
+                        ${question.estimated_time ? `<span class="meta-badge" style="background: #e3f2fd; color: #1976d2;"><i class="fas fa-clock me-1"></i>${question.estimated_time}分钟</span>` : ''}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="previewQuestion(${question.id})">
+                            <i class="fas fa-eye me-1"></i>预览
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="startQuestion(${question.id})">
+                            <i class="fas fa-play me-1"></i>开始
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateStatistics() {
+    const total = allQuestions.length;
+    document.getElementById('total-questions').textContent = total;
+    
+    // 计算平均难度
+    const difficultyScores = { easy: 1, medium: 2, hard: 3 };
+    const avgDifficulty = total > 0 ? 
+        (allQuestions.reduce((sum, q) => sum + (difficultyScores[q.difficulty] || 2), 0) / total).toFixed(1) : 0;
+    document.getElementById('avg-difficulty').textContent = avgDifficulty;
+    
+    // 模拟完成率和学习时长
+    const completionRate = Math.floor(Math.random() * 30) + 10;
+    const studyTime = Math.floor(Math.random() * 50) + 5;
+    
+    document.getElementById('completion-rate').textContent = completionRate + '%';
+    document.getElementById('study-time').textContent = studyTime + 'h';
+}
+
+function loadUserProgress() {
+    // 模拟用户进度数据
+    const easyTotal = allQuestions.filter(q => q.difficulty === 'easy').length;
+    const mediumTotal = allQuestions.filter(q => q.difficulty === 'medium').length;
+    const hardTotal = allQuestions.filter(q => q.difficulty === 'hard').length;
+    
+    const easyCompleted = Math.floor(easyTotal * (Math.random() * 0.6 + 0.2));
+    const mediumCompleted = Math.floor(mediumTotal * (Math.random() * 0.4 + 0.1));
+    const hardCompleted = Math.floor(hardTotal * (Math.random() * 0.2));
+    
+    updateProgressBar('easy', easyCompleted, easyTotal);
+    updateProgressBar('medium', mediumCompleted, mediumTotal);
+    updateProgressBar('hard', hardCompleted, hardTotal);
+    
+    const totalCompleted = easyCompleted + mediumCompleted + hardCompleted;
+    const totalQuestions = easyTotal + mediumTotal + hardTotal;
+    const overallProgress = totalQuestions > 0 ? Math.round((totalCompleted / totalQuestions) * 100) : 0;
+    
+    document.getElementById('overall-progress-text').textContent = overallProgress + '%';
+    document.getElementById('overall-progress-bar').style.width = overallProgress + '%';
+}
+
+function updateProgressBar(difficulty, completed, total) {
+    const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    document.getElementById(`${difficulty}-progress-text`).textContent = `${completed}/${total}`;
+    document.getElementById(`${difficulty}-progress-bar`).style.width = progressPercent + '%';
+}
+
+function generateLearningPath() {
+    const steps = [
+        { title: '基础概念掌握', description: '学习核心理论知识', completed: true },
+        { title: '简单题目练习', description: '巩固基础理解', completed: true },
+        { title: '中等难度挑战', description: '提升应用能力', completed: false },
+        { title: '困难题目攻克', description: '深度理解原理', completed: false },
+        { title: '综合项目实践', description: '实际应用技能', completed: false }
+    ];
+    
+    const container = document.getElementById('learning-steps');
+    container.innerHTML = steps.map((step, index) => `
+        <div class="path-step">
+            <div class="step-number ${step.completed ? 'step-completed' : ''}">${index + 1}</div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">${step.title}</h6>
+                <small class="text-muted">${step.description}</small>
+            </div>
+            ${step.completed ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-clock text-muted"></i>'}
+        </div>
+    `).join('');
+}
+
+function filterByDifficulty(difficulty) {
+    currentDifficulty = difficulty;
+    
+    // 更新标签状态
+    document.querySelectorAll('.difficulty-filter-tabs .nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+    
+    // 重新显示题目
+    displayQuestions();
+}
+
+function previewQuestion(questionId) {
+    const question = allQuestions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    showToast(`预览题目: ${question.title}`, 'info');
+}
+
+function startQuestion(questionId) {
+    window.location.href = `/practice/1?mode=interview&question=${questionId}`;
+}
+
+function startTechStackPractice() {
+    const techParam = encodeURIComponent(currentTechStack);
+    window.location.href = `/interview/practice?tech=${techParam}`;
+}
+
+function generatePersonalizedPath() {
+    showToast('个性化学习路径生成功能开发中...', 'info');
+}
+
+function getTypeText(type) {
+    const texts = { 
+        theory: '理论题', 
+        coding: '编程题', 
+        practical: '实践题',
+        multiple_choice: '选择题'
+    };
+    return texts[type] || type;
+}
+
+function getDifficultyText(difficulty) {
+    const texts = { easy: '简单', medium: '中等', hard: '困难' };
+    return texts[difficulty] || difficulty;
+}
+
+function showLoading(message) {
+    showToast(message, 'info');
+}
+
+function hideLoading() {
+    // 隐藏加载提示
+}
+</script>
+{% endblock %}

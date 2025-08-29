@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block title %}AI模拟面试 - 个人题库系统{% endblock %}
+
+{% block extra_head %}
+<style>
+/* 全局样式 */
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+/* 页面标题区域 */
+.mock-interview-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 50px 30px;
+    border-radius: 25px;
+    margin-bottom: 40px;
+    text-align: center;
+    box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.mock-interview-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.mock-interview-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.mock-interview-header p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    margin-bottom: 0;
+}
+
+/* Foloup 平台卡片 */
+.foloup-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: none;
+    border-radius: 25px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.foloup-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.foloup-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.foloup-card:hover::before {
+    opacity: 1;
+}
+
+/* Foloup 平台按钮样式 */
+.foloup-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 18px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 30px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.foloup-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.foloup-btn:hover::before {
+    left: 100%;
+}
+
+.foloup-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+}
+
+/* 功能特色卡片 */
+.feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2rem;
+    color: #667eea;
+}
+
+.feature-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+.feature-description {
+    color: #6c757d;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* 平台介绍区域 */
+.platform-intro {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 25px;
+    padding: 40px;
+    margin: 40px 0;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.platform-intro h3 {
+    color: #495057;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.platform-intro p {
+    color: #6c757d;
+    line-height: 1.8;
+    font-size: 1.05rem;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+/* 优势列表 */
+.advantages-list {
+    list-style: none;
+    padding: 0;
+    margin: 30px 0;
+}
+
+.advantages-list li {
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    font-size: 1.05rem;
+}
+
+.advantages-list li:last-child {
+    border-bottom: none;
+}
+
+.advantages-list li i {
+    color: #28a745;
+    margin-right: 15px;
+    font-size: 1.2rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .mock-interview-header {
+        padding: 30px 20px;
+    }
+    
+    .mock-interview-header h1 {
+        font-size: 2rem;
+    }
+    
+    .foloup-card {
+        margin-bottom: 20px;
+    }
+    
+    .platform-intro {
+        padding: 25px 20px;
+    }
+    
+    .feature-card {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 模拟面试标题 -->
+    <div class="mock-interview-header text-center">
+        <h1><i class="fas fa-video me-3"></i>AI模拟面试</h1>
+        <p class="lead mb-0">接入专业AI面试平台 Foloup，体验真实面试环境</p>
+    </div>
+
+    <!-- Foloup 平台介绍 -->
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- 主要介绍卡片 -->
+            <div class="foloup-card mb-5">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-users-cog" style="font-size: 4rem; color: #667eea;"></i>
+                        </div>
+                        <h2 class="mb-3">专业面试练习平台</h2>
+                        <p class="lead text-muted">接入多个知名面试练习平台，提供真实的面试体验和专业的反馈建议</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+                        <button class="btn foloup-btn" onclick="openInterviewPlatform('pramp')">
+                            <i class="fas fa-video me-2"></i>Pramp 面试练习
+                        </button>
+                        <button class="btn foloup-btn" onclick="openInterviewPlatform('interviewing')">
+                            <i class="fas fa-microphone me-2"></i>Interviewing.io
+                        </button>
+                        <button class="btn foloup-btn" onclick="openInterviewPlatform('leetcode')">
+                            <i class="fas fa-code me-2"></i>LeetCode Mock
+                        </button>
+                    </div>
+                    <div class="text-center mb-3">
+                        <button class="btn btn-outline-secondary" onclick="showPlatformInfo()">
+                            <i class="fas fa-info-circle me-2"></i>了解更多平台信息
+                        </button>
+                    </div>
+                    
+                    <div class="text-muted">
+                        <small><i class="fas fa-shield-alt me-1"></i>完全免费 | <i class="fas fa-globe me-1"></i>无需注册 | <i class="fas fa-lock me-1"></i>隐私安全</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 平台优势介绍 -->
+            <div class="platform-intro">
+                <h3><i class="fas fa-star me-2"></i>为什么选择这些平台？</h3>
+                <p>我们精选了业界知名的面试练习平台，这些平台已帮助数万名求职者提升面试技能，成功获得心仪offer。</p>
+
+                <ul class="advantages-list">
+                    <li><i class="fas fa-check-circle"></i>真人面试官，提供真实面试体验</li>
+                    <li><i class="fas fa-check-circle"></i>免费使用，部分平台提供高级功能</li>
+                    <li><i class="fas fa-check-circle"></i>支持多种面试类型：算法、系统设计、行为面试</li>
+                    <li><i class="fas fa-check-circle"></i>实时代码编辑和白板功能</li>
+                    <li><i class="fas fa-check-circle"></i>专业的面试反馈和改进建议</li>
+                    <li><i class="fas fa-check-circle"></i>支持多种编程语言和技术栈</li>
+                    <li><i class="fas fa-check-circle"></i>面试记录保存，可随时回顾</li>
+                </ul>
+            </div>
+
+            <!-- 使用指南 -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <h4 class="feature-title">快速开始</h4>
+                        <p class="feature-description">点击"立即开始面试"按钮，直接跳转到Foloup平台，选择面试类型即可开始练习</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h4 class="feature-title">设备准备</h4>
+                        <p class="feature-description">确保您的设备有麦克风和摄像头，建议使用Chrome浏览器以获得最佳体验</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 面试平台相关函数
+function openInterviewPlatform(platform) {
+    const platforms = {
+        'pramp': {
+            name: 'Pramp',
+            url: 'https://www.pramp.com',
+            description: '免费的点对点面试练习平台'
+        },
+        'interviewing': {
+            name: 'Interviewing.io',
+            url: 'https://interviewing.io',
+            description: '匿名技术面试练习平台'
+        },
+        'leetcode': {
+            name: 'LeetCode Mock',
+            url: 'https://leetcode.com/interview/',
+            description: 'LeetCode 模拟面试'
+        }
+    };
+
+    const selectedPlatform = platforms[platform];
+    if (!selectedPlatform) {
+        showToast('平台不存在', 'error');
+        return;
+    }
+
+    // 显示加载提示
+    showToast(`正在跳转到 ${selectedPlatform.name} 平台...`, 'info');
+
+    // 添加按钮加载状态
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>跳转中...';
+    btn.disabled = true;
+
+    // 延迟跳转，增强用户体验
+    setTimeout(() => {
+        // 在新窗口打开面试平台
+        window.open(selectedPlatform.url, '_blank');
+
+        // 恢复按钮状态
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        showToast(`已在新窗口打开 ${selectedPlatform.name} 平台`, 'success');
+    }, 1000);
+}
+
+function showPlatformInfo() {
+    // 显示平台详细信息模态框
+    const modalContent = `
+        <div class="modal fade" id="platformInfoModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h5 class="modal-title">
+                            <i class="fas fa-info-circle me-2"></i>面试练习平台介绍
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6 class="text-primary">推荐平台</h6>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="border rounded p-3">
+                                            <h6><i class="fas fa-video text-primary me-2"></i>Pramp</h6>
+                                            <p class="small mb-2">免费的点对点面试练习平台，支持真人面试官</p>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="openInterviewPlatform('pramp')">访问 Pramp</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="border rounded p-3">
+                                            <h6><i class="fas fa-microphone text-success me-2"></i>Interviewing.io</h6>
+                                            <p class="small mb-2">匿名技术面试练习，专业工程师面试官</p>
+                                            <button class="btn btn-sm btn-outline-success" onclick="openInterviewPlatform('interviewing')">访问 Interviewing.io</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="border rounded p-3">
+                                            <h6><i class="fas fa-code text-warning me-2"></i>LeetCode Mock</h6>
+                                            <p class="small mb-2">LeetCode官方模拟面试，算法题目丰富</p>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="openInterviewPlatform('leetcode')">访问 LeetCode</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">平台特色</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>真人面试官互动</li>
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>实时代码编辑</li>
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>专业反馈建议</li>
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>面试记录回放</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">支持的面试类型</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-code text-info me-2"></i>算法与数据结构</li>
+                                    <li class="mb-2"><i class="fas fa-laptop-code text-info me-2"></i>系统设计</li>
+                                    <li class="mb-2"><i class="fas fa-users text-info me-2"></i>行为面试</li>
+                                    <li class="mb-2"><i class="fas fa-chart-line text-info me-2"></i>前端技术面试</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <h6 class="alert-heading">使用提示</h6>
+                            <p class="mb-0">建议使用Chrome浏览器，确保设备有麦克风和摄像头权限，以获得最佳的面试体验。</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                        <button type="button" class="btn foloup-btn" onclick="openInterviewPlatform('pramp')">开始练习</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加模态框到页面
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('platformInfoModal'));
+    modal.show();
+
+    // 模态框关闭后删除DOM
+    document.getElementById('platformInfoModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Toast 提示函数
+function showToast(message, type = 'info') {
+    // 创建toast容器（如果不存在）
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 350px;
+        `;
+        document.body.appendChild(toastContainer);
+    }
+
+    // 创建toast元素
+    const toast = document.createElement('div');
+    const toastId = 'toast-' + Date.now();
+    toast.id = toastId;
+
+    const bgColor = {
+        'success': '#28a745',
+        'error': '#dc3545',
+        'warning': '#ffc107',
+        'info': '#17a2b8'
+    }[type] || '#17a2b8';
+
+    const icon = {
+        'success': 'fas fa-check-circle',
+        'error': 'fas fa-exclamation-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'info': 'fas fa-info-circle'
+    }[type] || 'fas fa-info-circle';
+
+    toast.innerHTML = `
+        <div style="
+            background: ${bgColor};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        ">
+            <i class="${icon} me-2"></i>
+            <span>${message}</span>
+            <button onclick="removeToast('${toastId}')" style="
+                background: none;
+                border: none;
+                color: white;
+                margin-left: auto;
+                padding: 0 0 0 10px;
+                cursor: pointer;
+                font-size: 18px;
+            ">&times;</button>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // 显示动画
+    setTimeout(() => {
+        toast.firstElementChild.style.transform = 'translateX(0)';
+    }, 100);
+
+    // 自动隐藏
+    setTimeout(() => {
+        removeToast(toastId);
+    }, 4000);
+}
+
+function removeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.firstElementChild.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }
+}
+
+// 页面加载完成后的初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 添加页面加载动画
+    const cards = document.querySelectorAll('.foloup-card, .feature-card, .platform-intro');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+});
+</script>
+{% endblock %}
+            
+            <!-- 功能特色 -->
+            <div class="row mb-5">
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h4 class="feature-title">AI智能面试官</h4>
+                        <p class="feature-description">基于GPT技术的AI面试官，能够进行自然对话，提供个性化的面试体验</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-microphone"></i>
+                        </div>
+                        <h4 class="feature-title">语音交互</h4>
+                        <p class="feature-description">支持语音识别和语音合成，模拟真实面试的语音交流环境</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="feature-title">专业反馈</h4>
+                        <p class="feature-description">详细的面试表现分析，包括回答质量、语言表达、逻辑思维等多维度评估</p>
+                    </div>
+                </div>
+            </div>

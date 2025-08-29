@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}AI模拟面试平台 - 个人题库系统{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- 页面标题 -->
+    <div class="mb-4">
+        <h2><i class="fas fa-microphone-alt me-2"></i>AI模拟面试平台</h2>
+        <p class="text-muted">基于先进AI技术的智能面试练习系统，助您轻松通过技术面试</p>
+    </div>
+
+    <!-- 平台特点 -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-brain text-success mb-3" style="font-size: 2.5rem;"></i>
+                    <h4 class="mb-3">智能AI面试官</h4>
+                    <p class="text-muted">采用先进的自然语言处理技术，AI面试官能够进行流畅的对话，提供个性化的面试问题和实时反馈。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-code text-success mb-3" style="font-size: 2.5rem;"></i>
+                    <h4 class="mb-3">真实编程环境</h4>
+                    <p class="text-muted">提供完整的在线编程环境，支持多种编程语言，让您在真实的编码场景中展示技术能力。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line text-success mb-3" style="font-size: 2.5rem;"></i>
+                    <h4 class="mb-3">详细性能分析</h4>
+                    <p class="text-muted">面试结束后获得详细的表现分析报告，包括技术能力、沟通技巧和改进建议。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计数据 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <div class="text-success fw-bold" style="font-size: 2rem;">10,000+</div>
+                    <div class="text-muted">成功面试</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <div class="text-success fw-bold" style="font-size: 2rem;">500+</div>
+                    <div class="text-muted">合作企业</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <div class="text-success fw-bold" style="font-size: 2rem;">95%</div>
+                    <div class="text-muted">用户满意度</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <div class="text-success fw-bold" style="font-size: 2rem;">24/7</div>
+                    <div class="text-muted">随时可用</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 开始面试 -->
+    <div class="card mb-4">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-4">准备好开始您的模拟面试了吗？</h3>
+            <p class="text-muted mb-4">选择您感兴趣的技术方向，开始一次真实的面试体验</p>
+            <a href="https://start.interviewing.io/interview-ai" class="btn btn-success btn-lg px-5" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-play me-2"></i>开始面试
+            </a>
+        </div>
+    </div>
+
+    <!-- 使用步骤 -->
+    <div class="card">
+        <div class="card-header bg-transparent">
+            <h5 class="mb-0"><i class="fas fa-list-ol me-2"></i>如何开始您的AI面试之旅</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                    <div class="text-success mb-3" style="font-size: 2rem;">1</div>
+                    <h5>点击开始面试</h5>
+                    <p class="text-muted">点击上方的"开始面试"按钮进入AI面试平台</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-success mb-3" style="font-size: 2rem;">2</div>
+                    <h5>选择面试类型</h5>
+                    <p class="text-muted">根据您的需求选择技术面试或综合面试</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-success mb-3" style="font-size: 2rem;">3</div>
+                    <h5>开始练习</h5>
+                    <p class="text-muted">与AI面试官进行真实的面试对话和编程练习</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

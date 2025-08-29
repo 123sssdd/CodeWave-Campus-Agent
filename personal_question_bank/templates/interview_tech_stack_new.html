@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}技术栈分类 - 面试题库{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- 页面标题 -->
+            <div class="text-center mb-5">
+                <h1 class="display-6"><i class="fas fa-layer-group"></i> 技术栈分类</h1>
+                <p class="lead text-muted">按技术栈浏览面试题目，针对性提升技能</p>
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="loading-state" class="text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="text-muted">正在加载技术栈数据...</p>
+            </div>
+
+            <!-- 技术栈卡片容器 -->
+            <div id="tech-stacks-container" class="row" style="display: none;">
+                <!-- 动态生成的技术栈卡片将在这里显示 -->
+            </div>
+
+            <!-- 空状态 -->
+            <div id="empty-state" class="text-center py-5" style="display: none;">
+                <i class="fas fa-exclamation-circle text-muted mb-3" style="font-size: 4rem;"></i>
+                <h4 class="text-muted">暂无技术栈数据</h4>
+                <p class="text-muted">请稍后再试或联系管理员</p>
+            </div>
+
+            <!-- 热门面试题 -->
+            <div class="row mt-5" id="hot-questions-section" style="display: none;">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-fire"></i> 最近热门题目</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="hot-questions-list">
+                                <!-- 热门题目将在这里显示 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let techStacksData = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTechStacks();
+});
+
+function loadTechStacks() {
+    console.log('开始加载技术栈数据...');
+    
+    fetch('/api/tech-stacks')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('获取到技术栈数据:', data);
+            techStacksData = data;
+            
+            if (data && data.length > 0) {
+                generateTechStackCards(data);
+                showHotQuestionsSection();
+            } else {
+                showEmptyState();
+            }
+            
+            hideLoadingState();
+        })
+        .catch(error => {
+            console.error('加载技术栈失败:', error);
+            hideLoadingState();
+            showEmptyState();
+            showToast('加载技术栈数据失败，请稍后重试', 'error');
+        });
+}
+
+function generateTechStackCards(techStacks) {
+    const container = document.getElementById('tech-stacks-container');
+    
+    const cardsHtml = techStacks.map(tech => {
+        const topics = tech.topics || [];
+        const topicsHtml = topics.length > 0 
+            ? topics.map(topic => `<span class="badge bg-light text-dark me-1 mb-1">${topic}</span>`).join('')
+            : '<span class="text-muted">暂无详细分类</span>';
+        
+        return `
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card tech-stack-card h-100" data-category="${tech.category}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">
+                                <i class="fas fa-code text-primary me-2"></i>
+                                ${tech.category}
+                            </h5>
+                            <span class="badge bg-primary fs-6">${tech.question_count}</span>
+                        </div>
+                        
+                        <p class="card-text text-muted small">共 ${tech.question_count} 道题目</p>
+                        
+                        <!-- 难度分布 -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>难度分布</span>
+                                <span>简单 ${tech.difficulty_distribution.easy}% | 中等 ${tech.difficulty_distribution.medium}% | 困难 ${tech.difficulty_distribution.hard}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: ${tech.difficulty_distribution.easy}%"></div>
+                                <div class="progress-bar bg-warning" style="width: ${tech.difficulty_distribution.medium}%"></div>
+                                <div class="progress-bar bg-danger" style="width: ${tech.difficulty_distribution.hard}%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 主要知识点 -->
+                        <div class="mb-3">
+                            <h6 class="small text-muted mb-2">主要知识点:</h6>
+                            <div class="topics-container">
+                                ${topicsHtml}
+                            </div>
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="startPractice('${tech.category}')">
+                                <i class="fas fa-play"></i> 开始专练
+                            </button>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="viewQuestions('${tech.category}')">
+                                    <i class="fas fa-list"></i> 查看题目
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="randomPractice('${tech.category}')">
+                                    <i class="fas fa-random"></i> 随机练习
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = cardsHtml;
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+}
+
+function hideLoadingState() {
+    document.getElementById('loading-state').style.display = 'none';
+}
+
+function showEmptyState() {
+    document.getElementById('empty-state').style.display = 'block';
+}
+
+function showHotQuestionsSection() {
+    document.getElementById('hot-questions-section').style.display = 'block';
+    loadHotQuestions();
+}
+
+function loadHotQuestions() {
+    // 这里可以从API加载热门题目
+    // 暂时使用模拟数据
+    const hotQuestions = [
+        { title: "Vue 3 组合式 API 的优势", category: "Vue", difficulty: "medium" },
+        { title: "React Hooks 的实现原理", category: "React", difficulty: "hard" },
+        { title: "JavaScript 事件循环机制", category: "JS", difficulty: "hard" },
+        { title: "Golang 并发编程最佳实践", category: "Golang", difficulty: "hard" }
+    ];
+    
+    const hotQuestionsHtml = hotQuestions.map(q => `
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div>
+                <h6 class="mb-1">${q.title}</h6>
+                <small class="text-muted">
+                    <span class="badge bg-secondary me-2">${q.category}</span>
+                    <span class="badge bg-${getDifficultyColor(q.difficulty)}">${getDifficultyText(q.difficulty)}</span>
+                </small>
+            </div>
+            <button class="btn btn-outline-primary btn-sm">练习</button>
+        </div>
+    `).join('');
+    
+    document.getElementById('hot-questions-list').innerHTML = hotQuestionsHtml;
+}
+
+function startPractice(category) {
+    console.log(`开始 ${category} 专练`);
+    window.location.href = `/interview/tech-stack/${encodeURIComponent(category)}/practice`;
+}
+
+function viewQuestions(category) {
+    console.log(`查看 ${category} 题目列表`);
+    window.location.href = `/interview/tech-stack/${encodeURIComponent(category)}/practice`;
+}
+
+function randomPractice(category) {
+    console.log(`${category} 随机练习`);
+    // 可以直接跳转到练习页面并开始随机题目
+    window.location.href = `/interview/tech-stack/${encodeURIComponent(category)}/practice?mode=random`;
+}
+
+function getDifficultyColor(difficulty) {
+    const colors = {
+        'easy': 'success',
+        'medium': 'warning', 
+        'hard': 'danger'
+    };
+    return colors[difficulty] || 'secondary';
+}
+
+function getDifficultyText(difficulty) {
+    const texts = {
+        'easy': '简单',
+        'medium': '中等',
+        'hard': '困难'
+    };
+    return texts[difficulty] || difficulty;
+}
+
+function showToast(message, type = 'info') {
+    // 创建toast元素
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'primary'} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    // 添加到页面
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // 显示toast
+    const toastElement = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // 自动移除
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+</script>
+
+<style>
+.tech-stack-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.tech-stack-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.tech-stack-card .card-title {
+    color: #333;
+    font-weight: 600;
+}
+
+.progress {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.topics-container {
+    max-height: 60px;
+    overflow: hidden;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group .btn {
+    flex: 1;
+}
+
+#tech-stacks-container {
+    min-height: 200px;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body > *:last-child {
+    margin-top: auto;
+}
+</style>
+{% endblock %}
+

@@ -17,6 +17,11 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: white;
+            transition: background 0.3s ease;
+        }
+        
+        .sidebar.interview-mode {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         }
         
         .nav-link {
@@ -138,30 +143,94 @@
                         <small>个性化学习助手</small>
                     </div>
                     
-                    <ul class="nav flex-column px-3">
+                    <!-- 模式切换器 -->
+                    <div class="px-3 mb-3">
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="questionBankMode" id="academicMode" value="academic" checked>
+                            <label class="btn btn-outline-light btn-sm" for="academicMode">
+                                <i class="fas fa-graduation-cap"></i> 学术
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="questionBankMode" id="interviewMode" value="interview">
+                            <label class="btn btn-outline-light btn-sm" for="interviewMode">
+                                <i class="fas fa-briefcase"></i> 面试
+                            </label>
+                        </div>
+                        <small class="text-white-50 d-block mt-1" id="modeDescription">
+                            学术应试模式
+                        </small>
+                    </div>
+                    
+                    <!-- 学术模式导航 -->
+                    <ul class="nav flex-column px-3" id="academicNav">
                         <li class="nav-item">
                             <a class="nav-link" href="/">
                                 <i class="fas fa-home"></i> 首页
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/practice/1">
+                            <a class="nav-link" href="#" onclick="navigateToPage('practice')">
                                 <i class="fas fa-code"></i> 开始练习
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/dashboard/1">
+                            <a class="nav-link" href="/academic/wrong-questions">
+                                <i class="fas fa-exclamation-triangle"></i> 错题本
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="navigateToPage('dashboard')">
                                 <i class="fas fa-chart-line"></i> 学习统计
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="showKnowledgePoints()">
-                                <i class="fas fa-book"></i> 知识点
+                            <a class="nav-link" href="#" onclick="navigateToPage('knowledge-points')">
+                                <i class="fas fa-brain"></i> 知识点
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="showLearningPath()">
+                            <a class="nav-link" href="#" onclick="navigateToPage('learning-path')">
                                 <i class="fas fa-route"></i> 学习路径
+                            </a>
+                        </li>
+
+                    </ul>
+                    
+                    <!-- 面试模式导航 -->
+                    <ul class="nav flex-column px-3" id="interviewNav" style="display: none;">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/interview">
+                                <i class="fas fa-briefcase"></i> 面试中心
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/interview/practice">
+                                <i class="fas fa-laptop-code"></i> 面试练习
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="navigateToInterviewPage('wrong-questions')">
+                                <i class="fas fa-exclamation-triangle"></i> 错题本
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="navigateToInterviewPage('plans')">
+                                <i class="fas fa-calendar-check"></i> 面试计划
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="navigateToInterviewPage('companies')">
+                                <i class="fas fa-database"></i> 我的题库
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="navigateToInterviewPage('tech-stack')">
+                                <i class="fas fa-layer-group"></i> 技术栈
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="navigateToInterviewPage('mock')">
+                                <i class="fas fa-microphone-alt"></i> 模拟面试
                             </a>
                         </li>
                     </ul>
@@ -293,20 +362,134 @@
             }
         }
         
-        // 显示知识点
-        function showKnowledgePoints() {
-            // 实现知识点展示
-            showToast('知识点功能开发中...', 'info');
+        // 导航到指定页面
+        function navigateToPage(page) {
+            if (!currentUser) {
+                showToast('请先选择用户', 'warning');
+                return;
+            }
+            
+            window.location.href = `/${page}/${currentUser}`;
         }
         
-        // 显示学习路径
-        function showLearningPath() {
-            // 实现学习路径展示
-            showToast('学习路径功能开发中...', 'info');
+        // 面试模式专用导航
+        function navigateToInterviewPage(page) {
+            const routes = {
+                'plans': '/interview/plans',
+                'companies': '/interview/companies',
+                'tech-stack': '/interview/tech-stack',
+                'mock': '/interview/ai-intro',
+                'wrong-questions': '/interview/wrong-questions'
+            };
+            
+            if (routes[page]) {
+                window.location.href = routes[page];
+            } else {
+                showToast('页面正在开发中...', 'warning');
+            }
+        }
+        
+        // 更新导航链接的活动状态
+        function updateNavActiveState() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const href = link.getAttribute('href');
+                if (href && currentPath.includes(href.split('/')[1])) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // 模式切换相关函数
+        function getCurrentMode() {
+            return localStorage.getItem('questionBankMode') || 'academic';
+        }
+        
+        function setCurrentMode(mode) {
+            localStorage.setItem('questionBankMode', mode);
+            updateModeUI(mode);
+        }
+        
+        function updateModeUI(mode) {
+            const academicRadio = document.getElementById('academicMode');
+            const interviewRadio = document.getElementById('interviewMode');
+            const modeDescription = document.getElementById('modeDescription');
+            const sidebar = document.querySelector('.sidebar');
+            const academicNav = document.getElementById('academicNav');
+            const interviewNav = document.getElementById('interviewNav');
+            
+            if (mode === 'interview') {
+                interviewRadio.checked = true;
+                academicRadio.checked = false;
+                modeDescription.textContent = '面试就业模式';
+                sidebar.classList.add('interview-mode');
+                academicNav.style.display = 'none';
+                interviewNav.style.display = 'block';
+            } else {
+                academicRadio.checked = true;
+                interviewRadio.checked = false;
+                modeDescription.textContent = '学术应试模式';
+                sidebar.classList.remove('interview-mode');
+                academicNav.style.display = 'block';
+                interviewNav.style.display = 'none';
+            }
+        }
+        
+        function switchToMode(mode) {
+            setCurrentMode(mode);
+            
+            // 根据模式跳转到对应页面
+            if (mode === 'interview') {
+                if (window.location.pathname === '/' || window.location.pathname.includes('dashboard')) {
+                    window.location.href = '/interview';
+                }
+            } else {
+                if (window.location.pathname.includes('interview')) {
+                    window.location.href = '/';
+                }
+            }
+            
+            // 通知其他组件模式已改变
+            if (typeof onModeChanged === 'function') {
+                onModeChanged(mode);
+            }
+        }
+        
+        // 检测当前页面的模式
+        function detectCurrentMode() {
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('/interview')) {
+                return 'interview';
+            }
+            return 'academic';
         }
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 优先使用页面检测的模式，其次是存储的模式
+            const detectedMode = detectCurrentMode();
+            const storedMode = getCurrentMode();
+            const currentMode = detectedMode === 'interview' ? 'interview' : storedMode;
+            
+            // 更新存储的模式
+            if (currentMode !== storedMode) {
+                setCurrentMode(currentMode);
+            } else {
+                updateModeUI(currentMode);
+            }
+            
+            // 添加模式切换事件监听器
+            document.querySelectorAll('input[name="questionBankMode"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        switchToMode(this.value);
+                    }
+                });
+            });
+            
             loadQuickStats();
         });
     </script>

@@ -32,13 +32,23 @@
     
     .knowledge-point-card {
         border-left: 4px solid #667eea;
-        margin-bottom: 15px;
+        margin-bottom: 0;
+        border-radius: 0;
+        border-bottom: 1px solid #e9ecef;
         transition: all 0.3s ease;
     }
     
     .knowledge-point-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background-color: #f8f9fa;
+        border-left-color: #764ba2;
+    }
+    
+    .knowledge-point-card:last-child {
+        border-bottom: none;
+    }
+    
+    .knowledge-point-compact {
+        padding: 15px 20px;
     }
     
     .mastery-progress {
@@ -59,26 +69,67 @@
     .mastery-average { background: linear-gradient(90deg, #ffc107, #fd7e14); }
     .mastery-poor { background: linear-gradient(90deg, #dc3545, #e83e8c); }
     
+    .scrollable-content {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 0;
+    }
+    
+    /* 滚动条美化 */
+    .scrollable-content::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
     .recent-activity {
         max-height: 400px;
         overflow-y: auto;
     }
     
     .activity-item {
-        padding: 15px;
+        padding: 15px 20px;
         border-left: 4px solid #dee2e6;
-        margin-bottom: 10px;
+        margin-bottom: 0;
+        background: white;
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .activity-item:hover {
         background: #f8f9fa;
-        border-radius: 0 8px 8px 0;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
     }
     
     .activity-correct {
         border-left-color: #28a745;
-        background: linear-gradient(45deg, #d4edda, #c3e6cb);
     }
     
     .activity-incorrect {
         border-left-color: #dc3545;
+    }
+    
+    .activity-correct:hover {
+        background: linear-gradient(45deg, #d4edda, #c3e6cb);
+    }
+    
+    .activity-incorrect:hover {
         background: linear-gradient(45deg, #f8d7da, #f1b0b7);
     }
     
@@ -215,35 +266,44 @@
                 <h5><i class="fas fa-chart-pie"></i> 题型分布</h5>
             </div>
             <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="typeChart"></canvas>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="chart-container">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="type-stats-data">
+                            <!-- 题型数据将动态显示 -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 知识点掌握情况 -->
+<!-- 知识点掌握情况和最近活动 -->
 <div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
+    <div class="col-md-6">
+        <div class="card h-100">
             <div class="card-header">
                 <h5><i class="fas fa-brain"></i> 知识点掌握情况</h5>
             </div>
-            <div class="card-body">
-                <div id="knowledge-points-list">
+            <div class="card-body p-0">
+                <div class="scrollable-content" id="knowledge-points-list">
                     <!-- 知识点列表将动态加载 -->
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
+    <div class="col-md-6">
+        <div class="card h-100">
             <div class="card-header">
                 <h5><i class="fas fa-history"></i> 最近活动</h5>
             </div>
-            <div class="card-body">
-                <div class="recent-activity" id="recent-activity">
+            <div class="card-body p-0">
+                <div class="scrollable-content" id="recent-activity">
                     <!-- 最近活动将动态加载 -->
                 </div>
             </div>
@@ -278,10 +338,22 @@
 
 {% block extra_js %}
 <script>
-    const userId = {{ user_id }};
+    const userId = '{{ user_id or 1 }}';  // 使用Jinja2的默认值语法
     let progressChart = null;
     let typeChart = null;
     let userStats = null;
+
+    // API调用函数
+    async function apiCall(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('找不到用户数据，请先创建用户或登录');
+            }
+            throw new Error(`API调用失败: ${response.status}`);
+        }
+        return response.json();
+    }
 
     // 初始化仪表板
     async function initDashboard() {
@@ -290,10 +362,20 @@
             
             // 并行加载所有数据
             const [stats, recommendations, learningPath] = await Promise.all([
-                apiCall(`/users/${userId}/stats`),
-                apiCall(`/recommendations/${userId}?count=5`),
+                apiCall(`/api/users/${userId}/stats`),
+                apiCall(`/api/recommendations/${userId}?count=5`),
                 // apiCall(`/learning-path/${userId}`) // 如果有学习路径API
-            ]);
+            ]).catch(error => {
+                console.error('数据加载失败:', error);
+                // 显示用户友好的错误信息
+                showToast(error.message || '加载数据失败，请稍后重试', 'error');
+                return [null, null, null];
+            });
+            
+            if (!stats) {
+                hideLoading();
+                return;
+            }
             
             userStats = stats;
             
@@ -367,25 +449,23 @@
             const masteryClass = getMasteryClass(ks.mastery_level);
             
             return `
-                <div class="knowledge-point-card card">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h6 class="mb-1">${ks.knowledge_point?.name || '未知知识点'}</h6>
+                <div class="knowledge-point-card">
+                    <div class="knowledge-point-compact">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-truncate">${ks.knowledge_point?.name || '未知知识点'}</h6>
                                 <small class="text-muted">${ks.knowledge_point?.category || ''}</small>
                             </div>
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <div class="h6 mb-0">${ks.correct_attempts}/${ks.total_attempts}</div>
-                                    <small>正确率: ${Math.round(ks.accuracy_rate * 100)}%</small>
-                                </div>
+                            <div class="text-end ms-3">
+                                <div class="badge bg-secondary">${ks.correct_attempts}/${ks.total_attempts}</div>
+                                <div class="small text-muted">${Math.round(ks.accuracy_rate * 100)}%</div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="mastery-progress">
-                                    <div class="mastery-bar ${masteryClass}" style="width: ${masteryPercent}%"></div>
-                                </div>
-                                <small class="text-muted">掌握度: ${masteryPercent}%</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="mastery-progress flex-grow-1 me-2">
+                                <div class="mastery-bar ${masteryClass}" style="width: ${masteryPercent}%"></div>
                             </div>
+                            <small class="text-muted">${masteryPercent}%</small>
                         </div>
                     </div>
                 </div>
@@ -536,18 +616,20 @@
             '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'
         ];
         
+        const typeNames = {
+            'theory': '理论题',
+            'coding': '编程题',
+            'multiple_choice': '选择题',
+            'practical': '实践题'
+        };
+        
+        // 更新题型数据显示
+        updateTypeStatsData(typeCounts, typeNames, colors);
+        
         typeChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: labels.map(type => {
-                    const typeNames = {
-                        'theory': '理论题',
-                        'coding': '编程题',
-                        'multiple_choice': '选择题',
-                        'practical': '实践题'
-                    };
-                    return typeNames[type] || type;
-                }),
+                labels: labels.map(type => typeNames[type] || type),
                 datasets: [{
                     data: data,
                     backgroundColor: colors.slice(0, labels.length),
@@ -560,11 +642,64 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        display: false  // 隐藏默认图例，使用自定义数据显示
                     }
                 }
             }
         });
+    }
+    
+    // 更新题型统计数据显示
+    function updateTypeStatsData(typeCounts, typeNames, colors) {
+        const container = document.getElementById('type-stats-data');
+        const totalQuestions = Object.values(typeCounts).reduce((a, b) => a + b, 0);
+        
+        if (totalQuestions === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    <p class="small mt-2">暂无数据</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const typeData = Object.entries(typeCounts).map(([type, count], index) => {
+            const percentage = ((count / totalQuestions) * 100).toFixed(1);
+            return {
+                type: typeNames[type] || type,
+                count,
+                percentage,
+                color: colors[index]
+            };
+        }).sort((a, b) => b.count - a.count);  // 按数量排序
+        
+        container.innerHTML = `
+            <h6 class="mb-3 text-muted">详细数据</h6>
+            ${typeData.map(item => `
+                <div class="mb-2 d-flex align-items-center">
+                    <div class="flex-shrink-0 me-2">
+                        <div style="width: 12px; height: 12px; background-color: ${item.color}; border-radius: 2px;"></div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <span class="small">${item.type}</span>
+                            <strong class="small">${item.count}</strong>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar" style="width: ${item.percentage}%; background-color: ${item.color};"></div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">${item.percentage}%</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+            <hr class="my-2">
+            <div class="text-center">
+                <small class="text-muted">总计: ${totalQuestions} 道题</small>
+            </div>
+        `;
     }
 
     // 更新学习建议
@@ -713,6 +848,30 @@
         // 隐藏加载提示
     }
 
+    // 实时更新统计数据的全局函数
+    window.updateDashboardStats = async function() {
+        if (userId) {
+            try {
+                const stats = await apiCall(`/users/${userId}/stats`);
+                userStats = stats;
+                updateStatsCards(stats);
+                
+                // 重新创建图表
+                if (typeChart) {
+                    typeChart.destroy();
+                }
+                createTypeChart(stats);
+                
+                updateKnowledgePoints(stats.knowledge_stats || []);
+                updateRecentActivity(stats.recent_records || []);
+                
+                console.log('统计数据已更新');
+            } catch (error) {
+                console.error('更新统计数据失败:', error);
+            }
+        }
+    };
+    
     // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', function() {
         initDashboard();

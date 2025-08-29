@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+
+{% block title %}错题本{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-exclamation-triangle text-warning me-2"></i>错题本</h2>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="switchMode('academic')">
+                        学术模式
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="switchMode('interview')">
+                        面试模式
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计面板 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h3 id="total-wrong-count">0</h3>
+                            <p class="mb-0">总错题数</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h3 id="need-review-count">0</h3>
+                            <p class="mb-0">待复习</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3 id="mastered-count">0</h3>
+                            <p class="mb-0">已掌握</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3 id="similar-count">0</h3>
+                            <p class="mb-0">举一反三</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筛选和排序 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">掌握程度</label>
+                            <select class="form-select" id="mastery-filter" onchange="filterWrongQuestions()">
+                                <option value="">全部</option>
+                                <option value="0">未掌握</option>
+                                <option value="1">初步了解</option>
+                                <option value="2">基本掌握</option>
+                                <option value="3">熟练掌握</option>
+                                <option value="4">完全掌握</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">题目类型</label>
+                            <select class="form-select" id="type-filter" onchange="filterWrongQuestions()">
+                                <option value="">全部类型</option>
+                                <option value="theory">理论题</option>
+                                <option value="coding">编程题</option>
+                                <option value="multiple_choice">选择题</option>
+                                <option value="practical">实践题</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">难度</label>
+                            <select class="form-select" id="difficulty-filter" onchange="filterWrongQuestions()">
+                                <option value="">全部难度</option>
+                                <option value="easy">简单</option>
+                                <option value="medium">中等</option>
+                                <option value="hard">困难</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">排序方式</label>
+                            <select class="form-select" id="sort-by" onchange="sortWrongQuestions()">
+                                <option value="created_desc">最新添加</option>
+                                <option value="created_asc">最早添加</option>
+                                <option value="review_desc">复习次数多</option>
+                                <option value="review_asc">复习次数少</option>
+                                <option value="mastery_asc">掌握程度低</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错题列表 -->
+            <div id="wrong-questions-container">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                    <p class="mt-2 text-muted">加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 错题详情模态框 -->
+<div class="modal fade" id="wrongQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">错题详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="wrong-question-content">
+                    <!-- 错题内容将在这里动态加载 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-danger" onclick="deleteCurrentWrongQuestion()">
+                    <i class="fas fa-trash me-1"></i>删除错题
+                </button>
+                <button type="button" class="btn btn-warning" onclick="generateSimilarQuestions()">
+                    <i class="fas fa-lightbulb me-1"></i>举一反三
+                </button>
+                <button type="button" class="btn btn-primary" onclick="practiceCurrentQuestion()">
+                    <i class="fas fa-play me-1"></i>重新练习
+                </button>
+                <button type="button" class="btn btn-success" onclick="markAsReviewed()">
+                    <i class="fas fa-check me-1"></i>标记复习
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 相似题目模态框 -->
+<div class="modal fade" id="similarQuestionsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">举一反三题目</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="similar-questions-content">
+                    <!-- 相似题目将在这里动态加载 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.wrong-question-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #dc3545;
+}
+
+.wrong-question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.mastery-badge {
+    font-size: 0.8em;
+}
+
+.mastery-0 { background-color: #dc3545; }
+.mastery-1 { background-color: #fd7e14; }
+.mastery-2 { background-color: #ffc107; }
+.mastery-3 { background-color: #20c997; }
+.mastery-4 { background-color: #198754; }
+
+.question-type-badge {
+    font-size: 0.75em;
+}
+
+.review-info {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+</style>
+
+<script>
+let currentMode = 'academic';
+let currentUserId = 1; // 默认用户ID，实际应用中从登录状态获取
+let wrongQuestions = [];
+let currentWrongQuestion = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadWrongQuestions();
+});
+
+function switchMode(mode) {
+    currentMode = mode;
+    
+    // 更新按钮状态
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // 重新加载错题
+    loadWrongQuestions();
+}
+
+async function loadWrongQuestions() {
+    try {
+        const response = await fetch(`/api/wrong-questions/${currentUserId}?mode=${currentMode}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            wrongQuestions = data.wrong_questions;
+            updateStatistics();
+            renderWrongQuestions();
+        } else {
+            showToast('加载错题失败', 'error');
+        }
+    } catch (error) {
+        console.error('加载错题失败:', error);
+        showToast('加载错题失败', 'error');
+    }
+}
+
+async function updateStatistics() {
+    const total = wrongQuestions.length;
+    const needReview = wrongQuestions.filter(wq => wq.mastery_level < 3).length;
+    const mastered = wrongQuestions.filter(wq => wq.mastery_level >= 4).length;
+    
+    document.getElementById('total-wrong-count').textContent = total;
+    document.getElementById('need-review-count').textContent = needReview;
+    document.getElementById('mastered-count').textContent = mastered;
+    
+    // 统计相似题目数量
+    let similarCount = 0;
+    for (const wq of wrongQuestions) {
+        try {
+            const response = await fetch(`/api/similar-questions/${wq.question.id}`);
+            const data = await response.json();
+            if (data.success) {
+                similarCount += data.similar_questions.length;
+            }
+        } catch (error) {
+            console.warn('获取相似题目统计失败:', error);
+        }
+    }
+    document.getElementById('similar-count').textContent = similarCount;
+}
+
+function renderWrongQuestions() {
+    const container = document.getElementById('wrong-questions-container');
+    
+    if (wrongQuestions.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-smile fa-3x text-success mb-3"></i>
+                <h4>太棒了！目前没有错题</h4>
+                <p class="text-muted">继续保持，加油学习！</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const html = wrongQuestions.map(wq => `
+        <div class="card wrong-question-card mb-3" onclick="showWrongQuestionDetail(${wq.id})">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title">${wq.question.title}</h6>
+                        <p class="card-text text-muted">${wq.question.content.substring(0, 100)}...</p>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="badge bg-secondary question-type-badge">${getTypeLabel(wq.question.question_type)}</span>
+                            <span class="badge bg-${getDifficultyColor(wq.question.difficulty)}">${getDifficultyLabel(wq.question.difficulty)}</span>
+                            <span class="badge mastery-${wq.mastery_level} mastery-badge">${getMasteryLabel(wq.mastery_level)}</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="review-info">
+                            <small>复习 ${wq.review_count} 次</small><br>
+                            <small>${formatDate(wq.created_at)}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+function showWrongQuestionDetail(wrongQuestionId) {
+    currentWrongQuestion = wrongQuestions.find(wq => wq.id === wrongQuestionId);
+    if (!currentWrongQuestion) return;
+    
+    const question = currentWrongQuestion.question;
+    const content = `
+        <div class="mb-4">
+            <h5>${question.title}</h5>
+            <div class="d-flex gap-2 mb-3">
+                <span class="badge bg-secondary">${getTypeLabel(question.question_type)}</span>
+                <span class="badge bg-${getDifficultyColor(question.difficulty)}">${getDifficultyLabel(question.difficulty)}</span>
+                <span class="badge mastery-${currentWrongQuestion.mastery_level} mastery-badge">${getMasteryLabel(currentWrongQuestion.mastery_level)}</span>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong>题目内容</strong>
+                </div>
+                <div class="card-body">
+                    ${question.content}
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header bg-danger text-white">
+                    <strong>你的错误答案</strong>
+                </div>
+                <div class="card-body">
+                    ${currentWrongQuestion.wrong_answer || '未记录'}
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <strong>正确答案</strong>
+                </div>
+                <div class="card-body">
+                    ${currentWrongQuestion.correct_answer || question.correct_answer || '暂无'}
+                </div>
+            </div>
+            
+            ${question.explanation ? `
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <strong>答案解析</strong>
+                    </div>
+                    <div class="card-body">
+                        ${question.explanation}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>复习记录：</strong>
+                    <p class="text-muted">
+                        复习次数：${currentWrongQuestion.review_count} 次<br>
+                        上次复习：${currentWrongQuestion.last_review_date ? formatDate(currentWrongQuestion.last_review_date) : '未复习'}<br>
+                        下次复习：${currentWrongQuestion.next_review_date ? formatDate(currentWrongQuestion.next_review_date) : '未安排'}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <strong>掌握程度：</strong>
+                    <div class="mt-2">
+                        ${[0,1,2,3,4].map(level => `
+                            <button class="btn btn-sm ${level === currentWrongQuestion.mastery_level ? 'btn-primary' : 'btn-outline-secondary'} me-1" 
+                                    onclick="updateMasteryLevel(${level})">
+                                ${level}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('wrong-question-content').innerHTML = content;
+    new bootstrap.Modal(document.getElementById('wrongQuestionModal')).show();
+}
+
+function updateMasteryLevel(level) {
+    // 更新当前错题的掌握程度
+    currentWrongQuestion.mastery_level = level;
+    
+    // 重新渲染内容
+    showWrongQuestionDetail(currentWrongQuestion.id);
+}
+
+async function markAsReviewed() {
+    if (!currentWrongQuestion) return;
+    
+    try {
+        const response = await fetch(`/api/wrong-questions/${currentWrongQuestion.id}/review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mastery_level: currentWrongQuestion.mastery_level
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('复习记录已更新', 'success');
+            loadWrongQuestions(); // 重新加载数据
+            bootstrap.Modal.getInstance(document.getElementById('wrongQuestionModal')).hide();
+        } else {
+            showToast('更新失败', 'error');
+        }
+    } catch (error) {
+        console.error('标记复习失败:', error);
+        showToast('标记复习失败', 'error');
+    }
+}
+
+async function generateSimilarQuestions() {
+    if (!currentWrongQuestion) return;
+    
+    try {
+        showToast('正在生成举一反三题目...', 'info');
+        
+        const response = await fetch(`/api/wrong-questions/${currentWrongQuestion.id}/similar`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            showSimilarQuestions(data.similar_questions);
+        } else {
+            showToast('生成失败', 'error');
+        }
+    } catch (error) {
+        console.error('生成相似题目失败:', error);
+        showToast('生成相似题目失败', 'error');
+    }
+}
+
+function showSimilarQuestions(similarQuestions) {
+    const content = `
+        <div class="alert alert-info">
+            <i class="fas fa-lightbulb me-2"></i>
+            基于你的错题，我们为你生成了 ${similarQuestions.length} 道相似题目，帮助你举一反三！
+        </div>
+        
+        ${similarQuestions.map((sq, index) => `
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>相似题目 ${index + 1}</strong>
+                    <span class="badge bg-info">${sq.similarity_type}</span>
+                </div>
+                <div class="card-body">
+                    <h6>${sq.title}</h6>
+                    <p>${sq.content}</p>
+                    
+                    <div class="accordion" id="accordion${sq.id}">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#collapse${sq.id}">
+                                    查看答案和解析
+                                </button>
+                            </h2>
+                            <div id="collapse${sq.id}" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <strong>正确答案：</strong><br>
+                                    ${sq.correct_answer}<br><br>
+                                    <strong>解析：</strong><br>
+                                    ${sq.explanation}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('')}
+    `;
+    
+    document.getElementById('similar-questions-content').innerHTML = content;
+    new bootstrap.Modal(document.getElementById('similarQuestionsModal')).show();
+}
+
+function filterWrongQuestions() {
+    const masteryFilter = document.getElementById('mastery-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+    const difficultyFilter = document.getElementById('difficulty-filter').value;
+    
+    let filteredQuestions = [...wrongQuestions];
+    
+    if (masteryFilter !== '') {
+        filteredQuestions = filteredQuestions.filter(wq => wq.mastery_level == masteryFilter);
+    }
+    
+    if (typeFilter !== '') {
+        filteredQuestions = filteredQuestions.filter(wq => wq.question.question_type === typeFilter);
+    }
+    
+    if (difficultyFilter !== '') {
+        filteredQuestions = filteredQuestions.filter(wq => wq.question.difficulty === difficultyFilter);
+    }
+    
+    renderFilteredQuestions(filteredQuestions);
+}
+
+function sortWrongQuestions() {
+    const sortBy = document.getElementById('sort-by').value;
+    let sortedQuestions = [...wrongQuestions];
+    
+    switch (sortBy) {
+        case 'created_desc':
+            sortedQuestions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            break;
+        case 'created_asc':
+            sortedQuestions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            break;
+        case 'review_desc':
+            sortedQuestions.sort((a, b) => b.review_count - a.review_count);
+            break;
+        case 'review_asc':
+            sortedQuestions.sort((a, b) => a.review_count - b.review_count);
+            break;
+        case 'mastery_asc':
+            sortedQuestions.sort((a, b) => a.mastery_level - b.mastery_level);
+            break;
+        default:
+            break;
+    }
+    
+    renderFilteredQuestions(sortedQuestions);
+}
+
+function renderFilteredQuestions(questions) {
+    const container = document.getElementById('wrong-questions-container');
+    
+    if (questions.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4>没有找到匹配的错题</h4>
+                <p class="text-muted">请尝试调整筛选条件</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const html = questions.map(wq => `
+        <div class="card wrong-question-card mb-3" onclick="showWrongQuestionDetail(${wq.id})">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title">${wq.question.title}</h6>
+                        <p class="card-text text-muted">${wq.question.content.substring(0, 100)}...</p>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="badge bg-secondary question-type-badge">${getTypeLabel(wq.question.question_type)}</span>
+                            <span class="badge bg-${getDifficultyColor(wq.question.difficulty)}">${getDifficultyLabel(wq.question.difficulty)}</span>
+                            <span class="badge mastery-${wq.mastery_level} mastery-badge">${getMasteryLabel(wq.mastery_level)}</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="review-info">
+                            <small>复习 ${wq.review_count} 次</small><br>
+                            <small>${formatDate(wq.created_at)}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+async function deleteCurrentWrongQuestion() {
+    if (!currentWrongQuestion) return;
+    
+    if (!confirm('确定要删除这道错题吗？删除后将无法恢复。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/wrong-questions/${currentWrongQuestion.id}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('错题已删除', 'success');
+            loadWrongQuestions(); // 重新加载数据
+            bootstrap.Modal.getInstance(document.getElementById('wrongQuestionModal')).hide();
+        } else {
+            showToast('删除失败', 'error');
+        }
+    } catch (error) {
+        console.error('删除错题失败:', error);
+        showToast('删除错题失败', 'error');
+    }
+}
+
+function practiceCurrentQuestion() {
+    if (!currentWrongQuestion) return;
+    
+    const questionId = currentWrongQuestion.question.id;
+    const mode = currentWrongQuestion.question_bank_mode;
+    
+    // 跳转到练习页面
+    window.location.href = `/practice/${currentUserId}?mode=${mode}&question=${questionId}`;
+}
+
+// 工具函数
+function getTypeLabel(type) {
+    const labels = {
+        'theory': '理论题',
+        'coding': '编程题',
+        'multiple_choice': '选择题',
+        'practical': '实践题'
+    };
+    return labels[type] || type;
+}
+
+function getDifficultyLabel(difficulty) {
+    const labels = {
+        'easy': '简单',
+        'medium': '中等',
+        'hard': '困难'
+    };
+    return labels[difficulty] || difficulty;
+}
+
+function getDifficultyColor(difficulty) {
+    const colors = {
+        'easy': 'success',
+        'medium': 'warning',
+        'hard': 'danger'
+    };
+    return colors[difficulty] || 'secondary';
+}
+
+function getMasteryLabel(level) {
+    const labels = {
+        0: '未掌握',
+        1: '初步了解',
+        2: '基本掌握',
+        3: '熟练掌握',
+        4: '完全掌握'
+    };
+    return labels[level] || '未知';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+function showToast(message, type = 'info') {
+    // 创建toast提示
+    const toast = document.createElement('div');
+    toast.className = `toast-message toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'warning' ? '#ffc107' : '#17a2b8'};
+        color: white;
+        border-radius: 5px;
+        z-index: 9999;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
