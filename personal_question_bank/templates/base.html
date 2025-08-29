@@ -13,44 +13,113 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet">
     
     <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            min-height: 100vh;
+            color: #e0e6ed;
+        }
+        
         .sidebar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 50%, rgba(102, 126, 234, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 0 20px 20px 0;
             min-height: 100vh;
             color: white;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         
         .sidebar.interview-mode {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, rgba(42, 82, 152, 0.95) 0%, rgba(67, 233, 123, 0.95) 50%, rgba(56, 249, 215, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(67, 233, 123, 0.3);
         }
         
         .nav-link {
-            color: rgba(255,255,255,0.8) !important;
-            border-radius: 10px;
-            margin: 5px 0;
+            color: rgba(255,255,255,0.9) !important;
+            border-radius: 15px;
+            margin: 8px 0;
+            padding: 12px 20px;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
         
         .nav-link:hover, .nav-link.active {
             background: rgba(255,255,255,0.2);
             color: white !important;
-            transform: translateX(5px);
+            transform: translateX(8px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
         
         .main-content {
-            background: #f8f9fa;
+            background: transparent;
             min-height: 100vh;
+            padding: 20px;
         }
         
         .card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            color: #2d3748;
         }
         
         .card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card-header {
+            color: #2d3748 !important;
+        }
+        
+        .card-body {
+            color: #2d3748 !important;
+        }
+        
+        .card-title {
+            color: #2d3748 !important;
+        }
+        
+        .card-text {
+            color: #4a5568 !important;
+        }
+        
+        /* 确保所有文本内容在卡片中都是深色 */
+        .card h1, .card h2, .card h3, .card h4, .card h5, .card h6 {
+            color: #2d3748 !important;
+        }
+        
+        .card p, .card div, .card span, .card li {
+            color: #4a5568 !important;
+        }
+        
+        .card .text-muted {
+            color: #718096 !important;
+        }
+        
+        .card .small {
+            color: #718096 !important;
+        }
+        
+        /* 修复提示框和弹窗文字颜色 */
+        .toast, .modal, .alert {
+            color: #2d3748 !important;
+        }
+        
+        .toast-body, .modal-body, .alert {
+            color: #2d3748 !important;
+        }
+        
+        .toast-header, .modal-header {
+            color: #2d3748 !important;
+        }
+        
+        .toast .toast-header strong, .modal .modal-title {
+            color: #2d3748 !important;
         }
         
         .question-card {
@@ -78,16 +147,18 @@
         }
         
         .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             border: none;
             border-radius: 25px;
-            padding: 10px 30px;
+            padding: 12px 30px;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            background: linear-gradient(135deg, #764ba2, #667eea);
         }
         
         .code-editor {
