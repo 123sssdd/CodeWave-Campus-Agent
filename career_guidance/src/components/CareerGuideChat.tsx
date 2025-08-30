@@ -109,20 +109,39 @@ const CareerGuideChat: React.FC = () => {
     updateUserProfile(content);
 
     try {
-      // 调用AI服务获取回复
-      const response = await aiService.sendMessage(content, appState.currentRole);
-      
-      const isResumeGenerated = response.reply.includes('📝 **专业简历已生成完成！**');
-      
-      const botMessage: Message = {
+      // 创建临时消息用于显示流式响应
+      const tempBotMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: response.reply,
+        content: '',
         sender: 'bot',
-        timestamp: new Date(),
-        hasResumeDownload: isResumeGenerated
+        timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => [...prev, tempBotMessage]);
+      
+      // 调用流式AI服务获取回复
+      const response = await aiService.sendMessageStream(content, appState.currentRole, (chunk: string) => {
+        // 实时更新消息内容
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === tempBotMessage.id 
+              ? { ...msg, content: msg.content + chunk }
+              : msg
+          )
+        );
+      });
+      
+      // 检查是否生成了简历
+      const isResumeGenerated = response.reply.includes('📝 **专业简历已生成完成！**');
+      
+      // 更新最终消息
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempBotMessage.id 
+            ? { ...msg, content: response.reply, hasResumeDownload: isResumeGenerated }
+            : msg
+        )
+      );
       
       // 如果生成了简历，保存到状态中
       if (isResumeGenerated) {

@@ -1,5 +1,5 @@
 // AI服务接口
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'http://localhost:5000';
 
 export interface ChatResponse {
   status: string;
@@ -21,11 +21,86 @@ export class AIService {
   }
 
   /**
-   * 发送消息给AI
+   * 发送消息给AI (流式响应)
+   */
+  async sendMessageStream(message: string, role?: string, onChunk?: (content: string) => void): Promise<ChatResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: this.userId,
+          message: message,
+          role: role
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('无法获取响应流');
+      }
+
+      let fullResponse = '';
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.content) {
+                fullResponse += data.content;
+                if (onChunk) {
+                  onChunk(data.content);
+                }
+              }
+              if (data.finished) {
+                return {
+                  status: 'success',
+                  reply: fullResponse,
+                  role: data.role || role || 'career_advisor'
+                };
+              }
+            } catch (e) {
+              // 忽略解析错误
+            }
+          }
+        }
+      }
+
+      return {
+        status: 'success',
+        reply: fullResponse,
+        role: role || 'career_advisor'
+      };
+    } catch (error) {
+      console.error('AI服务调用失败:', error);
+      return {
+        status: 'error',
+        reply: '抱歉，AI服务暂时不可用，请检查网络连接或稍后再试。',
+        role: role || 'career_advisor'
+      };
+    }
+  }
+
+  /**
+   * 发送消息给AI (非流式响应，备用)
    */
   async sendMessage(message: string, role?: string): Promise<ChatResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/chat`, {
+      const response = await fetch(`${API_BASE_URL}/chat_non_stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

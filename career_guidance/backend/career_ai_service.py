@@ -1,8 +1,9 @@
 # encoding:UTF-8
 import json
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+import re
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域请求
@@ -78,11 +79,27 @@ ROLE_PROMPTS = {
 - 给出实用的面试技巧和注意事项
 - 帮助用户准备项目介绍和技术展示
 
-你会根据用户的目标职位和公司，提供针对性的面试准备建议。"""
+你会根据用户的目标职位和公司，提供针对性的面试准备建议。""",
+
+    "ai_whiteboard_assistant": """你是一位创新思维的白板AI助手，专注于创意思考和项目规划。你的核心能力：
+
+1. **创意思维**：帮助用户进行头脑风暴和创意发散
+2. **项目规划**：制定详细的项目计划和时间安排
+3. **问题分析**：多角度分析复杂问题并提供解决方案
+4. **知识整合**：将不同领域的知识进行有机结合
+5. **可视化思维**：用结构化的方式组织和呈现信息
+
+工作特色：
+- 善于用图表、流程图等方式展示思路
+- 提供多种解决方案供用户选择
+- 注重实用性和可操作性
+- 鼓励创新思维和跨界思考
+
+你会帮助用户理清思路，制定可行的行动计划，并提供创新的解决方案。"""
 }
 
-def get_answer(messages, role="career_advisor"):
-    """调用星火API获取回答"""
+def get_answer_stream(messages, role="career_advisor"):
+    """流式响应函数"""
     headers = {
         'Authorization': api_key,
         'content-type': "application/json"
@@ -107,29 +124,78 @@ def get_answer(messages, role="career_advisor"):
             }
         ]
     }
+
+    response = requests.post(url=url, json=body, headers=headers, stream=True)
+
+    for chunk in response.iter_lines():
+        if chunk:
+            # 解码字节数据
+            decoded_chunk = chunk.decode('utf-8')
+
+            # 跳过SSE格式的注释和空行
+            if decoded_chunk.startswith(':') or decoded_chunk == '':
+                continue
+
+            # 检查是否为结束标记
+            if decoded_chunk == 'data: [DONE]':
+                yield f"data: {json.dumps({'finished': True})}\n\n"
+                break
+
+            # 提取JSON数据
+            if decoded_chunk.startswith('data:'):
+                json_str = decoded_chunk[5:].strip()
+                try:
+                    data = json.loads(json_str)
+                    if 'choices' in data and len(data['choices']) > 0:
+                        delta = data['choices'][0].get('delta', {})
+                        if 'content' in delta and delta['content']:
+                            # 发送内容给客户端
+                            yield f"data: {json.dumps({'content': delta['content'], 'finished': False, 'role': role})}\n\n"
+                except json.JSONDecodeError:
+                    continue
+
+def get_answer(messages, role="career_advisor"):
+    """非流式响应函数（备用）"""
+    headers = {
+        'Authorization': api_key,
+        'content-type': "application/json"
+    }
     
-    full_response = ""
-    isFirstContent = True
-
+    # 添加角色提示词到消息开头
+    system_message = {"role": "system", "content": ROLE_PROMPTS.get(role, ROLE_PROMPTS["career_advisor"])}
+    full_messages = [system_message] + messages
+    
+    body = {
+        "model": "4.0Ultra",
+        "user": "career_guidance_user",
+        "messages": full_messages,
+        "stream": False,
+        "tools": [
+            {
+                "type": "web_search",
+                "web_search": {
+                    "enable": True,
+                    "search_mode": "deep"
+                }
+            }
+        ]
+    }
+    
     try:
-        response = requests.post(url=url, json=body, headers=headers, stream=True)
-        for chunks in response.iter_lines():
-            if (chunks and '[DONE]' not in str(chunks)):
-                data_org = chunks[6:]
-                chunk = json.loads(data_org)
-                text = chunk['choices'][0]['delta']
-
-                if ('content' in text and '' != text['content']):
-                    content = text["content"]
-                    if (True == isFirstContent):
-                        isFirstContent = False
-                    print(content, end="")
-                    full_response += content
+        response = requests.post(url=url, json=body, headers=headers)
+        response_data = response.json()
+        
+        if 'choices' in response_data and len(response_data['choices']) > 0:
+            content = response_data['choices'][0]['message']['content']
+            print(f"AI回复: {content}")
+            return content
+        else:
+            print("API响应格式异常")
+            return "抱歉，AI服务返回了异常响应，请稍后再试。"
+            
     except Exception as e:
         print(f"API调用错误: {e}")
-        full_response = "抱歉，AI服务暂时不可用，请稍后再试。"
-    
-    return full_response
+        return "抱歉，AI服务暂时不可用，请稍后再试。"
 
 def getText(text, role, content):
     """添加消息到对话历史"""
@@ -158,6 +224,11 @@ def detect_user_intent(message):
     """检测用户意图，返回对应的角色"""
     message_lower = message.lower()
     
+    # 白板助手相关关键词
+    whiteboard_keywords = ['白板', 'whiteboard', '创意', '头脑风暴', '规划', '思维导图', '项目计划', '创新']
+    if any(keyword in message_lower for keyword in whiteboard_keywords):
+        return "ai_whiteboard_assistant"
+    
     # 简历相关关键词
     resume_keywords = ['简历', 'resume', 'cv', '个人情况', '求职', '应聘']
     if any(keyword in message_lower for keyword in resume_keywords):
@@ -178,7 +249,7 @@ def detect_user_intent(message):
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """处理聊天请求"""
+    """处理聊天请求（流式响应）"""
     data = request.get_json()
     user_id = data.get('user_id', 'default_user')
     message = data.get('message', '')
@@ -195,12 +266,49 @@ def chat():
     # 添加用户消息到历史
     chat_history = checklen(getText(chat_histories[user_id], "user", message))
 
-    # 获取模型回复
     print(f"用户 {user_id} ({role}): {message}")
-    print("AI回复:", end="")
-    assistant_reply = get_answer(chat_history, role)
+    print("AI流式回复开始...")
 
-    # 添加助手回复到历史
+    # 创建流式响应
+    def generate():
+        full_response = ""
+        for chunk in get_answer_stream(chat_history, role):
+            # 将数据发送给客户端
+            yield chunk
+
+            # 提取内容并构建完整响应
+            try:
+                chunk_data = json.loads(chunk[5:].strip())  # 去掉 "data: " 前缀
+                if 'content' in chunk_data:
+                    full_response += chunk_data['content']
+            except:
+                pass
+
+        # 流结束后，将完整回复添加到历史记录
+        if full_response:
+            getText(chat_histories[user_id], "assistant", full_response)
+
+    return Response(generate(), mimetype='text/event-stream')
+
+@app.route('/chat_non_stream', methods=['POST'])
+def chat_non_stream():
+    """非流式聊天接口（备用）"""
+    data = request.get_json()
+    user_id = data.get('user_id', 'default_user')
+    message = data.get('message', '')
+    role = data.get('role', None)
+
+    if user_id not in chat_histories:
+        chat_histories[user_id] = []
+
+    if not role:
+        role = detect_user_intent(message)
+
+    chat_history = checklen(getText(chat_histories[user_id], "user", message))
+    
+    print(f"用户 {user_id} ({role}): {message}")
+    assistant_reply = get_answer(chat_history, role)
+    
     getText(chat_histories[user_id], "assistant", assistant_reply)
 
     return jsonify({
@@ -267,6 +375,11 @@ def get_roles():
             'key': 'interview_coach',
             'name': '面试指导专家',
             'description': '提供面试准备和技巧指导'
+        },
+        {
+            'key': 'ai_whiteboard_assistant',
+            'name': '白板AI助手',
+            'description': '创意思考和项目规划专家'
         }
     ]
     
@@ -279,6 +392,7 @@ if __name__ == '__main__':
     print("职业发展AI服务启动中...")
     print("支持的角色:")
     for key, name in [('career_advisor', '职业发展顾问'), ('resume_expert', '简历优化专家'), 
-                      ('skill_mentor', '技能发展导师'), ('interview_coach', '面试指导专家')]:
+                      ('skill_mentor', '技能发展导师'), ('interview_coach', '面试指导专家'),
+                      ('ai_whiteboard_assistant', '白板AI助手')]:
         print(f"  - {name} ({key})")
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
