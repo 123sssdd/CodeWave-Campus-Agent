@@ -829,51 +829,110 @@
         }
         
         // 测试API连接
+        // async function testApiConnection() {
+        //   const service = apiServiceSelect.value;
+        //   const endpoint = apiEndpointInput.value;
+          
+        //   if (!endpoint) {
+        //     updateApiResponse("错误: 请输入API端点URL");
+        //     return;
+        //   }
+          
+        //   updateApiResponse("测试连接中...");
+        //   setApiStatus("connecting");
+          
+        //   try {
+        //     let testUrl = endpoint;
+        //     let options = {
+        //       method: 'GET',
+        //       headers: {
+        //         'Content-Type': 'application/json',
+        //       },
+        //     };
+            
+        //     // 根据不同服务调整测试URL
+        //     if (service === 'chat') {
+        //       testUrl = endpoint.replace('/chat', '/status');
+        //     } else if (service === 'ocr') {
+        //       testUrl = endpoint.replace('/ocr', '/status');
+        //     } else if (service === 'voice') {
+        //       testUrl = endpoint.replace('/chat', '/status');
+        //     }
+            
+        //     const response = await fetch(testUrl, options);
+            
+        //     if (response.ok) {
+        //       const data = await response.json();
+        //       updateApiResponse(`连接成功: ${JSON.stringify(data, null, 2)}`);
+        //       setApiStatus("connected");
+        //     } else {
+        //       updateApiResponse(`连接失败: 状态码 ${response.status}`);
+        //       setApiStatus("disconnected");
+        //     }
+        //   } catch (error) {
+        //     updateApiResponse(`连接错误: ${error.message}`);
+        //     setApiStatus("disconnected");
+        //   }
+        // }
         async function testApiConnection() {
-          const service = apiServiceSelect.value;
-          const endpoint = apiEndpointInput.value;
-          
-          if (!endpoint) {
-            updateApiResponse("错误: 请输入API端点URL");
-            return;
-          }
-          
-          updateApiResponse("测试连接中...");
-          setApiStatus("connecting");
-          
-          try {
-            let testUrl = endpoint;
-            let options = {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            };
-            
-            // 根据不同服务调整测试URL
-            if (service === 'chat') {
-              testUrl = endpoint.replace('/chat', '/status');
-            } else if (service === 'ocr') {
-              testUrl = endpoint.replace('/ocr', '/status');
-            } else if (service === 'voice') {
-              testUrl = endpoint.replace('/chat', '/status');
-            }
-            
-            const response = await fetch(testUrl, options);
-            
-            if (response.ok) {
-              const data = await response.json();
-              updateApiResponse(`连接成功: ${JSON.stringify(data, null, 2)}`);
-              setApiStatus("connected");
-            } else {
-              updateApiResponse(`连接失败: 状态码 ${response.status}`);
-              setApiStatus("disconnected");
-            }
-          } catch (error) {
-            updateApiResponse(`连接错误: ${error.message}`);
-            setApiStatus("disconnected");
-          }
-        }
+  const service = apiServiceSelect.value;
+  const endpoint = apiEndpointInput.value;
+  
+  if (!endpoint) {
+    updateApiResponse("错误: 请输入API端点URL");
+    return;
+  }
+  
+  updateApiResponse("测试连接中...");
+  setApiStatus("connecting");
+  
+  try {
+    // 构建健康检查URL
+    let healthCheckUrl;
+    if (service === 'chat') {
+      healthCheckUrl = endpoint.replace('/chat', '/health');
+    } else if (service === 'ocr') {
+      healthCheckUrl = endpoint.replace('/ocr', '/health');
+    } else if (service === 'voice') {
+      healthCheckUrl = endpoint.replace('/chat', '/health');
+    } else {
+      throw new Error("未知的服务类型");
+    }
+    
+    const response = await fetch(healthCheckUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      updateApiResponse(`连接成功: ${JSON.stringify(data)}`);
+      setApiStatus("connected");
+      
+      // 更新API端点配置
+      state.apiEndpoints[service] = endpoint;
+    } else {
+      updateApiResponse(`连接失败: 状态码 ${response.status} - ${response.statusText}`);
+      setApiStatus("disconnected");
+    }
+  } catch (error) {
+    let errorMsg = `连接错误: ${error.message}`;
+    
+    // 提供更具体的错误诊断
+    if (error.message.includes('Failed to fetch')) {
+      errorMsg += "\n可能的原因:\n- 服务未启动\n- 端口被占用\n- CORS问题\n- 网络连接问题";
+    } else if (error.message.includes('net::ERR_CONNECTION_REFUSED')) {
+      errorMsg += "\n服务可能未启动或端口不正确";
+    } else if (error.message.includes('CORS')) {
+      errorMsg += "\nCORS配置问题，请检查后端CORS设置";
+    }
+    
+    updateApiResponse(errorMsg);
+    setApiStatus("disconnected");
+  }
+}
         
         // 执行API操作
         async function executeApiAction() {
