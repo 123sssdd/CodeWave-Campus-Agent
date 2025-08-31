@@ -10,77 +10,126 @@
       rel="stylesheet"
     />
     <style>
-      /* 保持原有的所有CSS样式不变 */
-      /* ... 原有样式 ... */
+      /* 新的全局样式 */
       body {
         font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
-        color: #e5e7eb; /* text-gray-200 */
+        background: linear-gradient(to right, #2c3e50, #4ca1af);
+        color: #fff;
+        margin: 0;
+        padding: 0;
       }
+      
+      .container {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+      }
+      
+      /* 侧边栏样式 */
       .sidebar {
         width: 300px;
-        background-color: #1f2937; /* gray-800 */
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 0 10px 10px 0;
+        margin-right: 0;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
       }
+      
+      /* 编辑区域样式 */
       .editor-pane {
         flex-grow: 1;
-        background-color: #374151; /* gray-700 */
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px 0 0 10px;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
       }
+      
+      /* 工具栏样式 */
+      .editor-pane > .bg-gray-800 {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px 10px 0 0;
+      }
+      
+      /* 控件组样式 */
+      .flex.items-center.bg-gray-600 {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 5px;
+        color: #fff;
+      }
+      
+      /* 按钮样式 */
+      .tool-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      
+      .tool-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      
+      .tool-btn.active {
+        background: rgba(238, 130, 238, 0.7);
+      }
+      
+      /* 画布容器样式 */
       .canvas-container {
         position: relative;
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background-image: linear-gradient(45deg, #4b5563 25%, transparent 25%),
-          linear-gradient(-45deg, #4b5563 25%, transparent 25%),
-          linear-gradient(45deg, transparent 75%, #4b5563 75%),
-          linear-gradient(-45deg, transparent 75%, #4b5563 75%);
+        background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
         background-size: 20px 20px;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-        touch-action: none; /* 禁用触摸的默认行为，如滚动 */
+        touch-action: none;
+        border-radius: 0 0 10px 10px;
       }
+      
       #baseCanvas,
       #drawingCanvas,
       #maskCanvas {
         position: absolute;
         top: 0;
         left: 0;
-        transform-origin: top left; /* 确保缩放和变换的原点是左上角 */
+        transform-origin: top left;
+        border-radius: 0 0 10px 10px;
       }
+      
       #maskCanvas {
         opacity: 0.5;
         mix-blend-mode: multiply;
         pointer-events: none;
       }
+      
+      /* 文件列表样式 */
       .file-item,
       .folder-item {
         cursor: pointer;
         padding: 8px 16px;
         border-radius: 6px;
         transition: background-color 0.2s;
+        color: #fff;
       }
+      
       .file-item:hover,
       .folder-item:hover {
-        background-color: #4b5563; /* gray-600 */
+        background: rgba(255, 255, 255, 0.2);
       }
+      
       .file-item.active {
-        background-color: #3b82f6; /* blue-500 */
+        background: rgba(238, 130, 238, 0.7);
         color: white;
       }
-      .folder-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .folder-content {
-        padding-left: 20px;
-      }
-      .tool-btn {
-        background-color: #4b5563; /* gray-600 */
-        color: #d1d5db; /* gray-300 */
-      }
-      .tool-btn.active {
-        background-color: #3b82f6; /* blue-500 */
-        color: white;
-      }
+      
+      /* 模态框样式 */
       .modal-backdrop {
         position: fixed;
         top: 0;
@@ -93,40 +142,15 @@
         align-items: center;
         z-index: 1000;
       }
+      
       .modal-content {
-        background-color: #1f2937; /* gray-800 */
+        background: linear-gradient(to right, rgba(76, 161, 175, 0.9), rgba(238, 130, 238, 0.9));
         padding: 2rem;
-        border-radius: 0.5rem;
+        border-radius: 10px;
         max-width: 500px;
         text-align: center;
-      }
-      
-      /* 橡皮擦预览圆 */
-      .eraser-preview {
-        position: absolute;
-        border: 2px solid #ef4444; /* red-500 */
-        border-radius: 50%;
-        pointer-events: none;
-        background-color: rgba(239, 68, 68, 0.1);
-        display: none;
-        z-index: 10;
-      }
-      
-      /* 画笔预览圆 */
-      .brush-preview {
-        position: absolute;
-        border: 2px solid #22c55e; /* green-500 */
-        border-radius: 50%;
-        pointer-events: none;
-        background-color: rgba(34, 197, 94, 0.1);
-        display: none;
-        z-index: 10;
-      }
-      
-      /* 禁用状态的控件样式 */
-      input:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
       
       /* 汉堡菜单按钮样式 */
@@ -136,120 +160,19 @@
         left: 300px;
         z-index: 1001;
         display: none;
-        background-color: #374151;
-        border: 1px solid #4b5563;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 8px;
         padding: 9px;
-        color: #e5e7eb;
+        color: #fff;
         cursor: pointer;
         transition: all 0.3s ease;
       }
       
       .hamburger-menu:hover {
-        background-color: #4b5563;
+        background: rgba(255, 255, 255, 0.3);
       }
       
-      /* 蒙版模式下的暗化效果 */
-      .mask-mode .editor-pane {
-        background-color: #1f2937;
-      }
-      .mask-mode .canvas-container {
-        background-image: linear-gradient(45deg, #1f2937 25%, transparent 25%),
-          linear-gradient(-45deg, #1f2937 25%, transparent 25%),
-          linear-gradient(45deg, transparent 75%, #1f2937 75%),
-          linear-gradient(-45deg, transparent 75%, #1f2937 75%);
-      }
-      .mask-mode #baseCanvas {
-        filter: brightness(0.5);
-      }
-      
-      /* 移动端适配 */
-      @media (max-width: 2290px) {
-        /* 显示汉堡菜单按钮 */
-        .hamburger-menu {
-          display: block;
-        }
-        
-        /* 侧边栏默认隐藏 */
-        .sidebar {
-          position: fixed;
-          top: 0;
-          left: -320px; /* 隐藏到屏幕外 */
-          width: 300px;
-          height: 150vh;
-          z-index: 1000;
-          transition: left 0.3s ease;
-          border-right: 1px solid #4b5563;
-        }
-        
-        /* 侧边栏显示状态 */
-        .sidebar.show {
-          left: 0;
-        }
-        
-        /* 主编辑区占据全屏 */
-        .editor-pane {
-          width: 100vw;
-          margin-left: 0;
-        }
-        
-        /* 工具栏适配 */
-        .editor-pane > .bg-gray-800 {
-          flex-wrap: wrap;
-          gap: 4px;
-          padding: 8px;
-        }
-        
-        /* 工具按钮适配 */
-        .tool-btn {
-          padding: 8px;
-          min-width: 36px;
-          min-height: 36px;
-        }
-        
-        /* 控件组适配 */
-        .flex.items-center.bg-gray-600 {
-          padding: 4px 8px;
-        }
-        
-        /* 缩放控件适配 */
-        .editor-pane > .bg-gray-800 > .flex.items-center:nth-child(2) {
-          order: 3;
-          width: 100%;
-          justify-content: center;
-          margin-top: 8px;
-        }
-        
-        /* 按钮组适配 */
-        .editor-pane > .bg-gray-800 > .flex.items-center:nth-child(3) {
-          order: 2;
-        }
-        
-        /* 画布容器适配 */
-        .canvas-container {
-          height: calc(100vh - 100px); /* 减去工具栏高度 */
-        }
-      }
-      
-      /* iPad 横屏适配 */
-      @media (min-width: 1491px) and (max-width: 2290px) and (orientation: landscape) {
-        .sidebar {
-          width: 250px;
-        }
-        
-        .tool-btn {
-          padding: 6px;
-        }
-        
-        .flex.items-center.bg-gray-600 {
-          padding: 4px 6px;
-        }
-        
-        .flex.items-center.bg-gray-600 label {
-          font-size: 12px;
-        }
-      }
-
       /* Python接口悬浮按钮 */
       .python-interface-btn {
         position: fixed;
@@ -258,7 +181,7 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background-color: #3b82f6;
+        background: rgba(238, 130, 238, 0.7);
         color: white;
         display: flex;
         align-items: center;
@@ -270,187 +193,502 @@
       }
 
       .python-interface-btn:hover {
-        background-color: #2563eb;
+        background: rgba(238, 130, 238, 0.9);
         transform: translateY(-2px);
         box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
       }
 
-      .python-interface-btn i {
-        font-size: 24px;
+      /* 表单控件样式 */
+      select, input[type="range"], input[type="color"] {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        color: #fff;
+        padding: 5px;
       }
-
-      /* Python接口对话框 */
-      .python-modal {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 90%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
-        background-color: #1f2937;
-        border-radius: 8px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        z-index: 1002;
-        display: none;
-        padding: 24px;
-      }
-
-      .python-modal.open {
-        display: block;
-      }
-
-      .python-modal h2 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        color: white;
-        border-bottom: 1px solid #374151;
-        padding-bottom: 0.5rem;
-      }
-
-      .python-modal .form-group {
-        margin-bottom: 1rem;
-      }
-
-      .python-modal label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #d1d5db;
-      }
-
-      .python-modal select,
-      .python-modal input,
-      .python-modal textarea {
-        width: 100%;
-        padding: 0.5rem;
-        border-radius: 0.375rem;
-        border: 1px solid #4b5563;
-        background-color: #374151;
-        color: white;
-      }
-
-      .python-modal .button-group {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        margin-top: 1.5rem;
-      }
-
-      .python-modal button {
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
+      
+      /* 大按钮样式 */
+      button:not(.tool-btn) {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 5px;
+        color: #fff;
         cursor: pointer;
-        font-weight: 500;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+      }
+      
+      button:not(.tool-btn):hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      
+      /* 标题样式 */
+      h1, h2, h3 {
+        color: #fff;
+      }
+      
+      /* 移动端适配 */
+      @media (max-width: 2290px) {
+        .hamburger-menu {
+          display: block;
+        }
+        
+        .sidebar {
+          position: fixed;
+          top: 0;
+          left: -320px;
+          width: 300px;
+          height: 150vh;
+          z-index: 1000;
+          transition: left 0.3s ease;
+          border-right: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 0 10px 10px 0;
+        }
+        
+        .sidebar.show {
+          left: 0;
+        }
+        
+        .editor-pane {
+          width: 100vw;
+          margin-left: 0;
+          border-radius: 0;
+        }
+        
+        .editor-pane > .bg-gray-800 {
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 8px;
+          border-radius: 0;
+        }
+        
+        .tool-btn {
+          padding: 8px;
+          min-width: 36px;
+          min-height: 36px;
+        }
+        
+        .flex.items-center.bg-gray-600 {
+          padding: 4px 8px;
+        }
+        
+        .canvas-container {
+          height: calc(100vh - 100px);
+          border-radius: 0;
+        }
+        
+        #baseCanvas,
+        #drawingCanvas,
+        #maskCanvas {
+          border-radius: 0;
+        }
       }
 
-      .python-modal .btn-primary {
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-      }
-
-      .python-modal .btn-primary:hover {
-        background-color: #2563eb;
-      }
-
-      .python-modal .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-        border: none;
-      }
-
-      .python-modal .btn-secondary:hover {
-        background-color: #4b5563;
-      }
-
-      .python-modal .response-area {
-        margin-top: 1.5rem;
-        padding: 1rem;
-        background-color: #111827;
-        border-radius: 0.375rem;
-        max-height: 200px;
-        overflow-y: auto;
-      }
-
-      .python-modal .response-area pre {
-        color: #10b981;
-        font-size: 0.875rem;
-        margin: 0;
-      }
-
-      /* API调用状态指示器 */
-      .api-status {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
+      /* 保留原有的功能样式 */
+      .eraser-preview {
+        position: absolute;
+        border: 2px solid #ef4444;
         border-radius: 50%;
-        margin-right: 8px;
-      }
-
-      .api-status.connected {
-        background-color: #10b981;
-      }
-
-      .api-status.disconnected {
-        background-color: #ef4444;
-      }
-
-      .api-status.connecting {
-        background-color: #f59e0b;
-        animation: pulse 1.5s infinite;
-      }
-
-      @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+        pointer-events: none;
+        background-color: rgba(239, 68, 68, 0.1);
+        display: none;
+        z-index: 10;
       }
       
-      /* 文件上传区域 */
-      .file-upload-area {
-        border: 2px dashed #4b5563;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        margin-bottom: 1rem;
+      .brush-preview {
+        position: absolute;
+        border: 2px solid #22c55e;
+        border-radius: 50%;
+        pointer-events: none;
+        background-color: rgba(34, 197, 94, 0.1);
+        display: none;
+        z-index: 10;
       }
       
-      .file-upload-area:hover {
-        border-color: #3b82f6;
+      input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       
-      .file-upload-area i {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-        color: #9ca3af;
+      .mask-mode .editor-pane {
+        background-color: rgba(31, 41, 55, 0.8);
       }
       
-      .file-upload-area p {
-        margin: 0;
-        color: #9ca3af;
+      .mask-mode .canvas-container {
+        background-image: linear-gradient(45deg, rgba(31, 41, 55, 0.8) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(31, 41, 55, 0.8) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(31, 41, 55, 0.8) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(31, 41, 55, 0.8) 75%);
       }
+      
+      .mask-mode #baseCanvas {
+        filter: brightness(0.5);
+      }
+
+  /* Python接口悬浮按钮 - 修改为类似test.html的样式 */
+  .python-interface-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .python-interface-btn:hover {
+    background: linear-gradient(45deg, #5599ee, #8855ee);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Python接口对话框 - 修改为类似test.html的样式 */
+  .python-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1002;
+    display: none;
+    padding: 20px;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+
+  .python-modal.open {
+    display: block;
+  }
+
+  .python-modal h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    color: #333;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+  }
+
+  .python-modal .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .python-modal label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .python-modal select,
+  .python-modal input,
+  .python-modal textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #333;
+    font-family: "Microsoft Yahei", sans-serif;
+    box-sizing: border-box;
+  }
+
+  .python-modal select:focus,
+  .python-modal input:focus,
+  .python-modal textarea:focus {
+    outline: none;
+    border-color: #66b3ff;
+    box-shadow: 0 0 0 2px rgba(102, 179, 255, 0.2);
+  }
+
+  .python-modal .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 1.5rem;
+  }
+
+  .python-modal button {
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    transition: all 0.3s ease;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+
+  .python-modal button:hover {
+    background: #e0e0e0;
+  }
+
+  .python-modal .btn-primary {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+  }
+
+  .python-modal .btn-primary:hover {
+    background: linear-gradient(45deg, #5599ee, #8855ee);
+  }
+
+  .python-modal .response-area {
+    margin-top: 1.5rem;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+  }
+
+  .python-modal .response-area pre {
+    color: #333;
+    font-size: 0.875rem;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* 新增聊天样式 */
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .chat-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  
+  .api-status-indicator {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+  }
+  
+  .chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f5f7fa;
+  }
+  
+  .message {
+    display: flex;
+    margin-bottom: 15px;
+  }
+  
+  .user-message {
+    flex-direction: row-reverse;
+  }
+  
+  .message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin: 0 10px;
+    flex-shrink: 0;
+  }
+  
+  .user-message .message-avatar {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+  }
+  
+  .message-content {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+  }
+  
+  .bot-message .message-content {
+    background: white;
+    border-top-left-radius: 4px;
+  }
+  
+  .user-message .message-content {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+    border-top-right-radius: 4px;
+  }
+  
+  .message-content p {
+    margin: 0;
+    line-height: 1.4;
+  }
+  
+  .message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 5px;
+    text-align: right;
+  }
+  
+  .chat-input-area {
+    padding: 15px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .service-selector {
+    margin-bottom: 10px;
+  }
+  
+  .service-dropdown {
+    width: 100%;
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+  
+  .input-container {
+    display: flex;
+    align-items: flex-end;
+  }
+  
+  #chat-input {
+    flex-grow: 1;
+    padding: 12px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    resize: none;
+    min-height: 40px;
+    max-height: 120px;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+  
+  #chat-input:focus {
+    outline: none;
+    border-color: #66b3ff;
+  }
+  
+  .input-buttons {
+    display: flex;
+    margin-left: 10px;
+  }
+  
+  .input-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #f0f0f0;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    transition: all 0.2s;
+  }
+  
+  .input-button:hover {
+    background: #e0e0e0;
+  }
+  
+  .send-button {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+  }
+  
+  .send-button:hover {
+    background: linear-gradient(45deg, #5599ee, #8855ee);
+  }
+  
+  /* 文件上传区域样式调整 */
+  .file-upload-area {
+    margin-top: 10px;
+    border: 2px dashed #ddd;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+  }
+  
+  .file-upload-area:hover {
+    border-color: #66b3ff;
+    background: #f0f7ff;
+  }
+
+  /* 调整API状态指示器 */
+  .api-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  .api-status.connected {
+    background-color: #22c55e;
+  }
+
+  .api-status.disconnected {
+    background-color: #ef4444;
+  }
+
+  .api-status.connecting {
+    background-color: #f59e0b;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
     </style>
   </head>
-  <body class="bg-gray-900 flex h-screen overflow-hidden">
+  <body class="flex h-screen overflow-hidden">
     <!-- 汉堡菜单按钮 (仅在移动端显示) -->
     <button id="hamburger-menu" class="hamburger-menu" title="显示/隐藏侧边栏">
       <i class="fas fa-bars"></i>
     </button>
     
     <!-- Sidebar -->
-    <aside class="sidebar flex flex-col p-4 space-y-4 border-r border-gray-700">
-      <h1 class="text-xl font-bold text-white">图形标注工具</h1>
+    <aside class="sidebar flex flex-col p-4 space-y-4">
+      <h1 class="text-xl font-bold">图形标注工具</h1>
       <div class="flex flex-col space-y-2">
         <div class="flex flex-col space-y-2">
-          <label for="wrinkleTypeSelect" class="text-sm text-gray-300"
+          <label for="wrinkleTypeSelect" class="text-sm"
             >皱纹类型：</label
           >
           <select
             id="wrinkleTypeSelect"
-            class="w-full bg-gray-600 text-white py-2 px-3 rounded-lg border border-gray-500 focus:border-blue-500 focus:outline-none"
+            class="w-full py-2 px-3 rounded-lg border focus:outline-none"
           >
             <option value="">请选择皱纹类型</option>
           </select>
@@ -458,19 +696,19 @@
       </div>
 
       <div id="file-tree" class="flex-grow overflow-y-auto pr-2">
-        <p class="text-gray-400">请选择皱纹类型以加载数据。</p>
+        <p class="text-gray-200">请选择皱纹类型以加载数据。</p>
       </div>
-      <div class="text-xs text-gray-500">
+      <div class="text-xs text-gray-300">
         <p>状态: <span id="status-text">就绪</span></p>
-        <p id="source-info" class="mt-1 text-gray-400"></p>
+        <p id="source-info" class="mt-1"></p>
       </div>
     </aside>
 
     <!-- Editor Pane -->
-    <main class="editor-pane flex flex-col">
+    <main class="editor-pane">
       <!-- Toolbar -->
       <div
-        class="bg-gray-800 p-2 flex items-center justify-between border-b border-gray-700"
+        class="p-2 flex items-center justify-between border-b"
       >
         <!-- 工具栏 -->
         <div class="flex items-center gap-2">
@@ -516,7 +754,7 @@
           >
             <i class="fas fa-highlighter fa-fw"></i>
           </button>
-          <div class="flex items-center bg-gray-600 rounded-md p-2">
+          <div class="flex items-center rounded-md p-2">
             <label for="brush-size" class="mr-2 text-sm">大小:</label>
             <input
               type="range"
@@ -527,15 +765,15 @@
               class="w-24"
             />
           </div>
-          <div class="flex items-center bg-gray-600 rounded-md p-2" id="color-container">
+          <div class="flex items-center rounded-md p-2" id="color-container">
             <label for="brush-color" class="mr-2 text-sm">颜色:</label>
             <input type="color" id="brush-color" value="#ff0000" />
           </div>
-          <div class="flex items-center bg-gray-600 rounded-md p-2" id="mask-color-container">
+          <div class="flex items-center rounded-md p-2" id="mask-color-container">
             <label for="mask-color" class="mr-2 text-sm">蒙版颜色:</label>
             <input type="color" id="mask-color" value="#ffff00" />
           </div>
-          <div class="flex items-center bg-gray-600 rounded-md p-2" id="layer-opacity-container">
+          <div class="flex items-center rounded-md p-2" id="layer-opacity-container">
             <label for="layer-opacity" class="mr-2 text-sm">标注不透明度:</label>
             <input
               type="range"
@@ -548,7 +786,7 @@
             />
             <span id="layer-opacity-value" class="ml-2 text-xs w-8">100%</span>
           </div>
-          <div class="flex items-center bg-gray-600 rounded-md p-2" id="mask-opacity-container">
+          <div class="flex items-center rounded-md p-2" id="mask-opacity-container">
             <label for="mask-opacity" class="mr-2 text-sm">蒙版不透明度:</label>
             <input
               type="range"
@@ -594,19 +832,19 @@
           </button>
           <button
             id="saveBtn"
-            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+            class="font-bold py-2 px-4 rounded-lg transition-colors"
           >
             <i class="fas fa-download mr-2"></i>导出标注 PNG
           </button>
           <button
             id="exportBtn"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+            class="font-bold py-2 px-4 rounded-lg transition-colors"
           >
             <i class="fas fa-file-export mr-2"></i>导出合并图像
           </button>
           <button
             id="importBtn"
-            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+            class="font-bold py-2 px-4 rounded-lg transition-colors"
           >
             <i class="fas fa-image mr-2"></i>导入图像
           </button>
@@ -629,7 +867,7 @@
         <p id="modal-message"></p>
         <button
           id="modal-close"
-          class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+          class="mt-4 font-bold py-2 px-4 rounded-lg"
         >
           关闭
         </button>
@@ -641,61 +879,102 @@
       <i class="fas fa-code"></i>
     </div>
 
-    <!-- Python接口对话框 -->
-    <div id="python-modal" class="python-modal">
-      <h2>Python 接口设置</h2>
-      
-      <div class="form-group">
-        <label for="api-service">选择服务</label>
-        <select id="api-service">
-          <option value="chat">星火聊天模型</option>
-          <option value="ocr">OCR识别服务</option>
-          <option value="voice">语音交互服务</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label for="api-endpoint">API 端点</label>
-        <input type="text" id="api-endpoint" placeholder="请输入API端点URL" />
-      </div>
-      
-      <div class="form-group" id="chat-params">
-        <label for="chat-message">聊天消息</label>
-        <textarea id="chat-message" rows="4" placeholder="请输入要发送的消息"></textarea>
-      </div>
-      
-      <div class="form-group" id="ocr-params" style="display: none;">
-        <div class="file-upload-area" id="ocr-file-upload">
-          <i class="fas fa-cloud-upload-alt"></i>
-          <p>点击或拖拽上传图片进行OCR识别</p>
-        </div>
-        <input type="file" id="ocr-file-input" accept="image/*" style="display: none;" />
-        <p>或使用当前画布图像:</p>
-        <button id="ocr-use-canvas" class="btn-secondary mt-2">使用当前画布</button>
-      </div>
-      
-      <div class="form-group" id="voice-params" style="display: none;">
-        <div class="file-upload-area" id="voice-file-upload">
-          <i class="fas fa-microphone"></i>
-          <p>点击或拖拽上传音频文件</p>
-        </div>
-        <input type="file" id="voice-file-input" accept="audio/*" style="display: none;" />
-        <p>支持的格式: MP3, WAV</p>
-      </div>
-      
-      <div class="response-area">
-        <p>API响应:</p>
-        <pre id="api-response">等待操作...</pre>
-      </div>
-      
-      <div class="button-group">
-        <button id="test-api-btn" class="btn-secondary">测试连接</button>
-        <button id="cancel-api-btn" class="btn-secondary">取消</button>
-        <button id="execute-api-btn" class="btn-primary">执行</button>
+    <!-- Python接口对话框 - 修改为聊天样式 -->
+  <div id="python-modal" class="python-modal">
+    <div class="chat-header">
+      <h2>AI 助手</h2>
+      <div class="api-status-indicator">
+        <span class="api-status"></span>
+        <span id="api-status-text">离线</span>
       </div>
     </div>
 
+    <div class="chat-messages" id="chat-messages">
+      <div class="message bot-message">
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <p>您好！我是您的AI助手，请问有什么可以帮您？</p>
+          <div class="message-time">刚刚</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="service-selector">
+        <select id="api-service" class="service-dropdown">
+          <option value="chat">聊天模式</option>
+          <option value="ocr">图片识别</option>
+          <option value="voice">语音交互</option>
+        </select>
+      </div>
+
+      <div class="input-container">
+        <textarea 
+          id="chat-input" 
+          placeholder="输入您的问题或指令..." 
+          rows="1"
+        ></textarea>
+
+        <div class="input-buttons">
+          <button id="image-upload-btn" class="input-button" title="上传图片">
+            <i class="fas fa-image"></i>
+          </button>
+          <button id="voice-upload-btn" class="input-button" title="上传语音">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button id="send-message-btn" class="input-button send-button">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 隐藏的文件输入 -->
+      <input type="file" id="image-file-input" accept="image/*" style="display: none;" />
+      <input type="file" id="voice-file-input" accept="audio/*" style="display: none;" />
+
+      <!-- 隐藏的API端点输入 -->
+      <input type="text" id="api-endpoint" value="http://127.0.0.1:5001/chat" style="display: none;" />
+    </div>
+
+    <!-- 隐藏的原始参数区域 -->
+    <div id="chat-params" style="display: none;">
+      <textarea id="chat-message" style="display: none;"></textarea>
+    </div>
+
+    <div id="ocr-params" style="display: none;">
+      <div class="file-upload-area" id="ocr-file-upload" style="display: none;">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>点击或拖拽上传图片进行OCR识别</p>
+      </div>
+      <input type="file" id="ocr-file-input" accept="image/*" style="display: none;" />
+      <button id="ocr-use-canvas" style="display: none;">使用当前画布</button>
+    </div>
+
+    <div id="voice-params" style="display: none;">
+      <div class="file-upload-area" id="voice-file-upload" style="display: none;">
+        <i class="fas fa-microphone"></i>
+        <p>点击或拖拽上传音频文件</p>
+      </div>
+      <input type="file" id="voice-file-input" accept="audio/*" style="display: none;" />
+    </div>
+
+    <!-- 隐藏的响应区域 -->
+    <div class="response-area" style="display: none;">
+      <pre id="api-response">等待操作...</pre>
+    </div>
+
+    <!-- 隐藏的按钮组 -->
+    <div class="button-group" style="display: none;">
+      <button id="test-api-btn">测试连接</button>
+      <button id="cancel-api-btn">取消</button>
+      <button id="execute-api-btn" class="btn-primary">执行</button>
+    </div>
+  </div>
+
     <script>
+      // JavaScript代码保持不变
       document.addEventListener("DOMContentLoaded", () => {
         // DOM 元素获取
         const wrinkleTypeSelect = document.getElementById("wrinkleTypeSelect");
@@ -828,52 +1107,65 @@
           pythonModal.classList.remove('open');
         }
         
-        // 测试API连接
         async function testApiConnection() {
-          const service = apiServiceSelect.value;
-          const endpoint = apiEndpointInput.value;
-          
-          if (!endpoint) {
-            updateApiResponse("错误: 请输入API端点URL");
-            return;
-          }
-          
-          updateApiResponse("测试连接中...");
-          setApiStatus("connecting");
-          
-          try {
-            let testUrl = endpoint;
-            let options = {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            };
-            
-            // 根据不同服务调整测试URL
-            if (service === 'chat') {
-              testUrl = endpoint.replace('/chat', '/status');
-            } else if (service === 'ocr') {
-              testUrl = endpoint.replace('/ocr', '/status');
-            } else if (service === 'voice') {
-              testUrl = endpoint.replace('/chat', '/status');
-            }
-            
-            const response = await fetch(testUrl, options);
-            
-            if (response.ok) {
-              const data = await response.json();
-              updateApiResponse(`连接成功: ${JSON.stringify(data, null, 2)}`);
-              setApiStatus("connected");
-            } else {
-              updateApiResponse(`连接失败: 状态码 ${response.status}`);
-              setApiStatus("disconnected");
-            }
-          } catch (error) {
-            updateApiResponse(`连接错误: ${error.message}`);
-            setApiStatus("disconnected");
-          }
-        }
+  const service = apiServiceSelect.value;
+  const endpoint = apiEndpointInput.value;
+  
+  if (!endpoint) {
+    updateApiResponse("错误: 请输入API端点URL");
+    return;
+  }
+  
+  updateApiResponse("测试连接中...");
+  setApiStatus("connecting");
+  
+  try {
+    // 构建健康检查URL
+    let healthCheckUrl;
+    if (service === 'chat') {
+      healthCheckUrl = endpoint.replace('/chat', '/health');
+    } else if (service === 'ocr') {
+      healthCheckUrl = endpoint.replace('/ocr', '/health');
+    } else if (service === 'voice') {
+      healthCheckUrl = endpoint.replace('/chat', '/health');
+    } else {
+      throw new Error("未知的服务类型");
+    }
+    
+    const response = await fetch(healthCheckUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      updateApiResponse(`连接成功: ${JSON.stringify(data)}`);
+      setApiStatus("connected");
+      
+      // 更新API端点配置
+      state.apiEndpoints[service] = endpoint;
+    } else {
+      updateApiResponse(`连接失败: 状态码 ${response.status} - ${response.statusText}`);
+      setApiStatus("disconnected");
+    }
+  } catch (error) {
+    let errorMsg = `连接错误: ${error.message}`;
+    
+    // 提供更具体的错误诊断
+    if (error.message.includes('Failed to fetch')) {
+      errorMsg += "\n可能的原因:\n- 服务未启动\n- 端口被占用\n- CORS问题\n- 网络连接问题";
+    } else if (error.message.includes('net::ERR_CONNECTION_REFUSED')) {
+      errorMsg += "\n服务可能未启动或端口不正确";
+    } else if (error.message.includes('CORS')) {
+      errorMsg += "\nCORS配置问题，请检查后端CORS设置";
+    }
+    
+    updateApiResponse(errorMsg);
+    setApiStatus("disconnected");
+  }
+}
         
         // 执行API操作
         async function executeApiAction() {
@@ -2021,5 +2313,171 @@
         });
       });
     </script>
+
+    <script>
+  // 新增聊天功能JavaScript
+  document.addEventListener("DOMContentLoaded", function() {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-message-btn');
+    const imageUploadBtn = document.getElementById('image-upload-btn');
+    const voiceUploadBtn = document.getElementById('voice-upload-btn');
+    const imageFileInput = document.getElementById('image-file-input');
+    const voiceFileInput = document.getElementById('voice-file-input');
+    const apiService = document.getElementById('api-service');
+    
+    // 添加用户消息到聊天
+    function addUserMessage(message) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message user-message';
+      messageEl.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="message-content">
+          <p>${message}</p>
+          <div class="message-time">${getCurrentTime()}</div>
+        </div>
+      `;
+      chatMessages.appendChild(messageEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // 添加机器人消息到聊天
+    function addBotMessage(message) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message bot-message';
+      messageEl.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <p>${message}</p>
+          <div class="message-time">${getCurrentTime()}</div>
+        </div>
+      `;
+      chatMessages.appendChild(messageEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // 获取当前时间
+    function getCurrentTime() {
+      return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    
+    // 发送消息处理
+    function handleSendMessage() {
+      const message = chatInput.value.trim();
+      if (message) {
+        addUserMessage(message);
+        
+        // 设置聊天消息到隐藏的textarea
+        document.getElementById('chat-message').value = message;
+        
+        // 根据服务类型执行相应操作
+        if (apiService.value === 'chat') {
+          // 执行聊天操作
+          executeApiAction();
+        } else if (apiService.value === 'ocr') {
+          // 如果有图片文件，执行OCR
+          if (state.ocrFile) {
+            executeApiAction();
+          } else {
+            addBotMessage("请先上传图片进行识别");
+          }
+        } else if (apiService.value === 'voice') {
+          // 如果有语音文件，执行语音识别
+          if (state.voiceFile) {
+            executeApiAction();
+          } else {
+            addBotMessage("请先上传语音文件");
+          }
+        }
+        
+        chatInput.value = '';
+      }
+    }
+    
+    // 绑定发送消息事件
+    sendButton.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    });
+    
+    // 图片上传处理
+    imageUploadBtn.addEventListener('click', function() {
+      // 切换到OCR服务
+      apiService.value = 'ocr';
+      imageFileInput.click();
+    });
+    
+    imageFileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0) {
+        handleOcrFileUpload(e.target.files[0]);
+        addUserMessage("[图片已上传]");
+        addBotMessage("图片上传成功，请问您想对这张图片进行什么操作？");
+      }
+    });
+    
+    // 语音上传处理
+    voiceUploadBtn.addEventListener('click', function() {
+      // 切换到语音服务
+      apiService.value = 'voice';
+      voiceFileInput.click();
+    });
+    
+    voiceFileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0) {
+        handleVoiceFileUpload(e.target.files[0]);
+        addUserMessage("[语音消息已上传]");
+        addBotMessage("语音文件上传成功，正在处理...");
+        executeApiAction();
+      }
+    });
+    
+    // 修改API响应处理函数，将结果显示在聊天中
+    const originalUpdateApiResponse = updateApiResponse;
+    window.updateApiResponse = function(message) {
+      originalUpdateApiResponse(message);
+      
+      // 尝试解析JSON响应
+      try {
+        const data = JSON.parse(message);
+        if (data.text || data.message) {
+          addBotMessage(data.text || data.message);
+        } else {
+          addBotMessage("请求成功完成");
+        }
+      } catch (e) {
+        // 如果不是JSON，直接显示消息
+        if (message.length > 200) {
+          addBotMessage("收到较长响应，请查看详情");
+        } else {
+          addBotMessage(message);
+        }
+      }
+    };
+    
+    // 修改API状态更新函数
+    const originalSetApiStatus = setApiStatus;
+    window.setApiStatus = function(status) {
+      originalSetApiStatus(status);
+      
+      const statusElement = document.getElementById('api-status-text');
+      const statusIndicator = document.querySelector('.api-status');
+      
+      if (statusElement && statusIndicator) {
+        statusElement.textContent = 
+          status === 'connected' ? '在线' : 
+          status === 'connecting' ? '连接中...' : '离线';
+        
+        statusIndicator.className = 'api-status ' + status;
+      }
+    };
+  });
+</script>
   </body>
 </html>
