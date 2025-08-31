@@ -1,3 +1,2195 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>图像标注工具 - Flask版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* 新的全局样式 */
+      body {
+        font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+        background: linear-gradient(to right, #2c3e50, #4ca1af);
+        color: #fff;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .container {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+      }
+      
+      /* 侧边栏样式 */
+      .sidebar {
+        width: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 0 10px 10px 0;
+        margin-right: 0;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      /* 编辑区域样式 */
+      .editor-pane {
+        flex-grow: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px 0 0 10px;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+      }
+      
+      /* 工具栏样式 */
+      .editor-pane > .bg-gray-800 {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px 10px 0 0;
+      }
+      
+      /* 控件组样式 */
+      .flex.items-center.bg-gray-600 {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 5px;
+        color: #fff;
+      }
+      
+      /* 按钮样式 */
+      .tool-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      
+      .tool-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      
+      .tool-btn.active {
+        background: rgba(238, 130, 238, 0.7);
+      }
+      
+      /* 画布容器样式 */
+      .canvas-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        touch-action: none;
+        border-radius: 0 0 10px 10px;
+      }
+      
+      
+      #baseCanvas,
+      #drawingCanvas,
+      #maskCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform-origin: top left;
+        border-radius: 0 0 10px 10px;
+      }
+      
+      
+      #maskCanvas {
+        opacity: 0.5;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+      
+      /* 文件列表样式 */
+      .file-item,
+      .folder-item {
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+        color: #fff;
+      }
+      
+      
+      .file-item:hover,
+      .folder-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      
+      .file-item.active {
+        background: rgba(238, 130, 238, 0.7);
+        color: white;
+      }
+      
+      /* 模态框样式 */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      
+      .modal-content {
+        background: linear-gradient(to right, rgba(76, 161, 175, 0.9), rgba(238, 130, 238, 0.9));
+        padding: 2rem;
+        border-radius: 10px;
+        max-width: 500px;
+        text-align: center;
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      
+      /* 汉堡菜单按钮样式 */
+      .hamburger-menu {
+        position: fixed;
+        top: 50px;
+        left: 300px;
+        z-index: 1001;
+        display: none;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 9px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .hamburger-menu:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      
+      /* Python接口悬浮按钮 */
+      .python-interface-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(238, 130, 238, 0.7);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        z-index: 999;
+        transition: all 0.3s ease;
+      }
+
+      .python-interface-btn:hover {
+        background: rgba(238, 130, 238, 0.9);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      /* 表单控件样式 */
+      select, input[type="range"], input[type="color"] {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        color: #fff;
+        padding: 5px;
+      }
+      
+      /* 大按钮样式 */
+      button:not(.tool-btn) {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+      }
+      
+      button:not(.tool-btn):hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+      
+      /* 标题样式 */
+      h1, h2, h3 {
+        color: #fff;
+      }
+      
+      /* 移动端适配 */
+      @media (max-width: 2290px) {
+        .hamburger-menu {
+          display: block;
+        }
+        
+        .sidebar {
+          position: fixed;
+          top: 0;
+          left: -320px;
+          left: -320px;
+          width: 300px;
+          height: 150vh;
+          z-index: 1000;
+          transition: left 0.3s ease;
+          border-right: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 0 10px 10px 0;
+        }
+        
+        .sidebar.show {
+          left: 0;
+        }
+        
+        .editor-pane {
+          width: 100vw;
+          margin-left: 0;
+          border-radius: 0;
+        }
+        
+        .editor-pane > .bg-gray-800 {
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 8px;
+          border-radius: 0;
+        }
+        
+        .tool-btn {
+          padding: 8px;
+          min-width: 36px;
+          min-height: 36px;
+        }
+        
+        .flex.items-center.bg-gray-600 {
+          padding: 4px 8px;
+        }
+        
+        .canvas-container {
+          height: calc(100vh - 100px);
+          border-radius: 0;
+        }
+        
+        #baseCanvas,
+        #drawingCanvas,
+        #maskCanvas {
+          border-radius: 0;
+        }
+      }
+
+      /* 保留原有的功能样式 */
+      .eraser-preview {
+        position: absolute;
+        border: 2px solid #ef4444;
+        border-radius: 50%;
+        pointer-events: none;
+        background-color: rgba(239, 68, 68, 0.1);
+        display: none;
+        z-index: 10;
+      }
+      
+      .brush-preview {
+        position: absolute;
+        border: 2px solid #22c55e;
+        border-radius: 50%;
+        pointer-events: none;
+        background-color: rgba(34, 197, 94, 0.1);
+        display: none;
+        z-index: 10;
+      }
+      
+      input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      .mask-mode .editor-pane {
+        background-color: rgba(31, 41, 55, 0.8);
+      }
+      
+      .mask-mode .canvas-container {
+        background-image: linear-gradient(45deg, rgba(31, 41, 55, 0.8) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(31, 41, 55, 0.8) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(31, 41, 55, 0.8) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(31, 41, 55, 0.8) 75%);
+      }
+      
+      .mask-mode #baseCanvas {
+        filter: brightness(0.5);
+      }
+
+  /* Python接口悬浮按钮 - 修改为类似test.html的样式 */
+  .python-interface-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .python-interface-btn:hover {
+    background: linear-gradient(45deg, #5599ee, #8855ee);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Python接口对话框 - 修改为类似test.html的样式 */
+  .python-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1002;
+    display: none;
+    padding: 20px;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+
+  .python-modal.open {
+    display: block;
+  }
+
+  .python-modal h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    color: #333;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+  }
+
+  .python-modal .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .python-modal label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .python-modal select,
+  .python-modal input,
+  .python-modal textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #333;
+    font-family: "Microsoft Yahei", sans-serif;
+    box-sizing: border-box;
+  }
+
+  .python-modal select:focus,
+  .python-modal input:focus,
+  .python-modal textarea:focus {
+    outline: none;
+    border-color: #66b3ff;
+    box-shadow: 0 0 0 2px rgba(102, 179, 255, 0.2);
+  }
+
+  .python-modal .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 1.5rem;
+  }
+
+  .python-modal button {
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    transition: all 0.3s ease;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+
+  .python-modal button:hover {
+    background: #e0e0e0;
+  }
+
+  .python-modal .btn-primary {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+  }
+
+  .python-modal .btn-primary:hover {
+    background: linear-gradient(45deg, #5599ee, #8855ee);
+  }
+
+  .python-modal .response-area {
+    margin-top: 1.5rem;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+  }
+
+  .python-modal .response-area pre {
+    color: #333;
+    font-size: 0.875rem;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* 新增聊天样式 */
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .chat-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  
+  .api-status-indicator {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+  }
+  
+  .chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f5f7fa;
+  }
+  
+  .message {
+    display: flex;
+    margin-bottom: 15px;
+  }
+  
+  .user-message {
+    flex-direction: row-reverse;
+  }
+  
+  .message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin: 0 10px;
+    flex-shrink: 0;
+  }
+  
+  .user-message .message-avatar {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+  }
+  
+  .message-content {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+  }
+  
+  .bot-message .message-content {
+    background: white;
+    border-top-left-radius: 4px;
+  }
+  
+  .user-message .message-content {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+    border-top-right-radius: 4px;
+  }
+  
+  .message-content p {
+    margin: 0;
+    line-height: 1.4;
+  }
+  
+  .message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 5px;
+    text-align: right;
+  }
+  
+  .chat-input-area {
+    padding: 15px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .service-selector {
+    margin-bottom: 10px;
+  }
+  
+  .service-dropdown {
+    width: 100%;
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+  
+  .input-container {
+    display: flex;
+    align-items: flex-end;
+  }
+  
+  #chat-input {
+    flex-grow: 1;
+    padding: 12px 15px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    resize: none;
+    min-height: 40px;
+    max-height: 120px;
+    font-family: "Microsoft Yahei", sans-serif;
+  }
+  
+  #chat-input:focus {
+    outline: none;
+    border-color: #66b3ff;
+  }
+  
+  .input-buttons {
+    display: flex;
+    margin-left: 10px;
+  }
+  
+  .input-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #f0f0f0;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    transition: all 0.2s;
+  }
+  
+  .input-button:hover {
+    background: #e0e0e0;
+  }
+  
+  .send-button {
+    background: linear-gradient(45deg, #66b3ff, #9966ff);
+    color: white;
+  }
+  
+  .send-button:hover {
+    background: linear-gradient(45deg, #5599ee, #8855ee);
+  }
+  
+  /* 文件上传区域样式调整 */
+  .file-upload-area {
+    margin-top: 10px;
+    border: 2px dashed #ddd;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+  }
+  
+  .file-upload-area:hover {
+    border-color: #66b3ff;
+    background: #f0f7ff;
+  }
+
+  /* 调整API状态指示器 */
+  .api-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  .api-status.connected {
+    background-color: #22c55e;
+  }
+
+  .api-status.disconnected {
+    background-color: #ef4444;
+  }
+
+  .api-status.connecting {
+    background-color: #f59e0b;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+    </style>
+  </head>
+  <body class="flex h-screen overflow-hidden">
+  <body class="flex h-screen overflow-hidden">
+    <!-- 汉堡菜单按钮 (仅在移动端显示) -->
+    <button id="hamburger-menu" class="hamburger-menu" title="显示/隐藏侧边栏">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar flex flex-col p-4 space-y-4">
+      <h1 class="text-xl font-bold">图形标注工具</h1>
+      <div class="flex flex-col space-y-2">
+        <div class="flex flex-col space-y-2">
+          <label for="wrinkleTypeSelect" class="text-sm"
+            >皱纹类型：</label
+          >
+          <select
+            id="wrinkleTypeSelect"
+            class="w-full py-2 px-3 rounded-lg border focus:outline-none"
+          >
+            <option value="">请选择皱纹类型</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="file-tree" class="flex-grow overflow-y-auto pr-2">
+        <p class="text-gray-200">请选择皱纹类型以加载数据。</p>
+      </div>
+      <div class="text-xs text-gray-300">
+        <p>状态: <span id="status-text">就绪</span></p>
+        <p id="source-info" class="mt-1"></p>
+      </div>
+    </aside>
+
+    <!-- Editor Pane -->
+    <main class="editor-pane">
+      <!-- Toolbar -->
+      <div
+        class="p-2 flex items-center justify-between border-b"
+      >
+        <!-- 工具栏 -->
+        <div class="flex items-center gap-2">
+          <button
+            id="tool-pan"
+            class="tool-btn p-2 rounded-md"
+            title="移动 (V)"
+          >
+            <i class="fas fa-hand-paper fa-fw"></i>
+          </button>
+          <button
+            id="tool-pencil"
+            class="tool-btn p-2 rounded-md active"
+            title="画笔 (B)"
+          >
+            <i class="fas fa-pencil-alt fa-fw"></i>
+          </button>
+          <button
+            id="tool-rectangle"
+            class="tool-btn p-2 rounded-md"
+            title="矩形 (R)"
+          >
+            <i class="fas fa-vector-square fa-fw"></i>
+          </button>
+          <button
+            id="tool-polygon"
+            class="tool-btn p-2 rounded-md"
+            title="多边形 (P)"
+          >
+            <i class="fas fa-draw-polygon fa-fw"></i>
+          </button>
+          <button
+            id="tool-eraser"
+            class="tool-btn p-2 rounded-md"
+            title="橡皮擦 (E)"
+          >
+            <i class="fas fa-eraser fa-fw"></i>
+          </button>
+          <button
+            id="tool-mask"
+            class="tool-btn p-2 rounded-md"
+            title="蒙版工具 (T)"
+          >
+            <i class="fas fa-highlighter fa-fw"></i>
+          </button>
+          <div class="flex items-center rounded-md p-2">
+            <label for="brush-size" class="mr-2 text-sm">大小:</label>
+            <input
+              type="range"
+              id="brush-size"
+              min="1"
+              max="100"
+              value="5"
+              class="w-24"
+            />
+          </div>
+          <div class="flex items-center rounded-md p-2" id="color-container">
+            <label for="brush-color" class="mr-2 text-sm">颜色:</label>
+            <input type="color" id="brush-color" value="#ff0000" />
+          </div>
+          <div class="flex items-center rounded-md p-2" id="mask-color-container">
+            <label for="mask-color" class="mr-2 text-sm">蒙版颜色:</label>
+            <input type="color" id="mask-color" value="#ffff00" />
+          </div>
+          <div class="flex items-center rounded-md p-2" id="layer-opacity-container">
+            <label for="layer-opacity" class="mr-2 text-sm">标注不透明度:</label>
+            <input
+              type="range"
+              id="layer-opacity"
+              min="0"
+              max="100"
+              step="10"
+              value="100"
+              class="w-20"
+            />
+            <span id="layer-opacity-value" class="ml-2 text-xs w-8">100%</span>
+          </div>
+          <div class="flex items-center rounded-md p-2" id="mask-opacity-container">
+            <label for="mask-opacity" class="mr-2 text-sm">蒙版不透明度:</label>
+            <input
+              type="range"
+              id="mask-opacity"
+              min="0"
+              max="100"
+              value="50"
+              class="w-20"
+            />
+            <span id="mask-opacity-value" class="ml-2 text-xs w-8">50%</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="zoom-out" class="tool-btn p-2 rounded-md" title="缩小">
+            <i class="fas fa-search-minus fa-fw"></i>
+          </button>
+          <span id="zoom-level" class="text-sm w-12 text-center">100%</span>
+          <button id="zoom-in" class="tool-btn p-2 rounded-md" title="放大">
+            <i class="fas fa-search-plus fa-fw"></i>
+          </button>
+          <button
+            id="zoom-reset"
+            class="tool-btn p-2 rounded-md"
+            title="重置缩放"
+          >
+            <i class="fas fa-expand fa-fw"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="toggle-mask"
+            class="tool-btn p-2 rounded-md"
+            title="切换蒙版 (M)"
+          >
+            <i class="fas fa-layer-group fa-fw"></i>
+          </button>
+          <button
+            id="clear-mask"
+            class="tool-btn p-2 rounded-md"
+            title="清除蒙版"
+          >
+            <i class="fas fa-trash-alt fa-fw"></i>
+          </button>
+          <button
+            id="saveBtn"
+            class="font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            <i class="fas fa-download mr-2"></i>导出标注 PNG
+          </button>
+          <button
+            id="exportBtn"
+            class="font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            <i class="fas fa-file-export mr-2"></i>导出合并图像
+          </button>
+          <button
+            id="importBtn"
+            class="font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            <i class="fas fa-image mr-2"></i>导入图像
+          </button>
+          <input id="localImageInput" type="file" accept="image/*" multiple class="hidden" />
+        </div>
+      </div>
+      <!-- Canvas Area -->
+      <div id="canvas-container" class="canvas-container">
+        <canvas id="baseCanvas"></canvas>
+        <canvas id="drawingCanvas"></canvas>
+        <canvas id="maskCanvas"></canvas>
+        <div id="eraser-preview" class="eraser-preview"></div>
+        <div id="brush-preview" class="brush-preview"></div>
+      </div>
+    </main>
+
+    <!-- Modal for messages -->
+    <div id="modal" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <p id="modal-message"></p>
+        <button
+          id="modal-close"
+          class="mt-4 font-bold py-2 px-4 rounded-lg"
+        >
+          关闭
+        </button>
+      </div>
+    </div>
+
+    <!-- Python接口悬浮按钮 -->
+    <div id="python-interface-btn" class="python-interface-btn">
+      <i class="fas fa-code"></i>
+    </div>
+
+    <!-- Python接口对话框 - 修改为聊天样式 -->
+  <div id="python-modal" class="python-modal">
+    <div class="chat-header">
+      <h2>AI 助手</h2>
+      <div class="api-status-indicator">
+        <span class="api-status"></span>
+        <span id="api-status-text">离线</span>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="message bot-message">
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <p>您好！我是您的AI助手，请问有什么可以帮您？</p>
+          <div class="message-time">刚刚</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="service-selector">
+        <select id="api-service" class="service-dropdown">
+          <option value="chat">聊天模式</option>
+          <option value="ocr">图片识别</option>
+          <option value="voice">语音交互</option>
+        </select>
+      </div>
+
+      <div class="input-container">
+        <textarea 
+          id="chat-input" 
+          placeholder="输入您的问题或指令..." 
+          rows="1"
+        ></textarea>
+
+        <div class="input-buttons">
+          <button id="image-upload-btn" class="input-button" title="上传图片">
+            <i class="fas fa-image"></i>
+          </button>
+          <button id="voice-upload-btn" class="input-button" title="上传语音">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button id="send-message-btn" class="input-button send-button">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 隐藏的文件输入 -->
+      <input type="file" id="image-file-input" accept="image/*" style="display: none;" />
+      <input type="file" id="voice-file-input" accept="audio/*" style="display: none;" />
+
+      <!-- 隐藏的API端点输入 -->
+      <input type="text" id="api-endpoint" value="http://127.0.0.1:5001/chat" style="display: none;" />
+    </div>
+
+    <!-- 隐藏的原始参数区域 -->
+    <div id="chat-params" style="display: none;">
+      <textarea id="chat-message" style="display: none;"></textarea>
+    </div>
+
+    <div id="ocr-params" style="display: none;">
+      <div class="file-upload-area" id="ocr-file-upload" style="display: none;">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>点击或拖拽上传图片进行OCR识别</p>
+      </div>
+      <input type="file" id="ocr-file-input" accept="image/*" style="display: none;" />
+      <button id="ocr-use-canvas" style="display: none;">使用当前画布</button>
+    </div>
+
+    <div id="voice-params" style="display: none;">
+      <div class="file-upload-area" id="voice-file-upload" style="display: none;">
+        <i class="fas fa-microphone"></i>
+        <p>点击或拖拽上传音频文件</p>
+      </div>
+      <input type="file" id="voice-file-input" accept="audio/*" style="display: none;" />
+    </div>
+
+    <!-- 隐藏的响应区域 -->
+    <div class="response-area" style="display: none;">
+      <pre id="api-response">等待操作...</pre>
+    </div>
+
+    <!-- 隐藏的按钮组 -->
+    <div class="button-group" style="display: none;">
+      <button id="test-api-btn">测试连接</button>
+      <button id="cancel-api-btn">取消</button>
+      <button id="execute-api-btn" class="btn-primary">执行</button>
+    </div>
+  </div>
+
+    <script>
+      // JavaScript代码保持不变
+      document.addEventListener("DOMContentLoaded", () => {
+        // DOM 元素获取
+        const wrinkleTypeSelect = document.getElementById("wrinkleTypeSelect");
+        const fileTreeContainer = document.getElementById("file-tree");
+        const statusText = document.getElementById("status-text");
+        const sourceInfo = document.getElementById("source-info");
+
+        const baseCanvas = document.getElementById("baseCanvas");
+        const drawingCanvas = document.getElementById("drawingCanvas");
+        const maskCanvas = document.getElementById("maskCanvas");
+        const canvasContainer = document.getElementById("canvas-container");
+        const baseCtx = baseCanvas.getContext("2d");
+        const drawingCtx = drawingCanvas.getContext("2d");
+        const maskCtx = maskCanvas.getContext("2d");
+
+        const toolPan = document.getElementById("tool-pan");
+        const toolPencil = document.getElementById("tool-pencil");
+        const toolRectangle = document.getElementById("tool-rectangle");
+        const toolPolygon = document.getElementById("tool-polygon");
+        const toolEraser = document.getElementById("tool-eraser");
+        const toolMask = document.getElementById("tool-mask");
+        const brushSizeInput = document.getElementById("brush-size");
+        const brushColorInput = document.getElementById("brush-color");
+        const maskColorInput = document.getElementById("mask-color");
+        const layerOpacityInput = document.getElementById("layer-opacity");
+        const layerOpacityValueDisplay = document.getElementById("layer-opacity-value");
+        const maskOpacityInput = document.getElementById("mask-opacity");
+        const maskOpacityValueDisplay = document.getElementById("mask-opacity-value");
+        const eraserPreview = document.getElementById("eraser-preview");
+        const brushPreview = document.getElementById("brush-preview");
+
+        const zoomInBtn = document.getElementById("zoom-in");
+        const zoomOutBtn = document.getElementById("zoom-out");
+        const zoomResetBtn = document.getElementById("zoom-reset");
+        const zoomLevelDisplay = document.getElementById("zoom-level");
+
+        const saveBtn = document.getElementById("saveBtn");
+        const exportBtn = document.getElementById("exportBtn");
+        const importBtn = document.getElementById("importBtn");
+        const localImageInput = document.getElementById("localImageInput");
+        const toggleMaskBtn = document.getElementById("toggle-mask");
+        const clearMaskBtn = document.getElementById("clear-mask");
+
+        const modal = document.getElementById("modal");
+        const modalMessage = document.getElementById("modal-message");
+        const modalClose = document.getElementById("modal-close");
+        const hamburgerMenu = document.getElementById("hamburger-menu");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Python接口相关元素
+        const pythonInterfaceBtn = document.getElementById("python-interface-btn");
+        const pythonModal = document.getElementById("python-modal");
+        const apiServiceSelect = document.getElementById("api-service");
+        const apiEndpointInput = document.getElementById("api-endpoint");
+        const chatMessageTextarea = document.getElementById("chat-message");
+        const ocrFileUpload = document.getElementById("ocr-file-upload");
+        const ocrFileInput = document.getElementById("ocr-file-input");
+        const ocrUseCanvasBtn = document.getElementById("ocr-use-canvas");
+        const voiceFileUpload = document.getElementById("voice-file-upload");
+        const voiceFileInput = document.getElementById("voice-file-input");
+        const apiResponsePre = document.getElementById("api-response");
+        const testApiBtn = document.getElementById("test-api-btn");
+        const cancelApiBtn = document.getElementById("cancel-api-btn");
+        const executeApiBtn = document.getElementById("execute-api-btn");
+
+        // 应用状态
+        let state = {
+          // 本地模式数据
+          localFiles: [], // { name, dataURL, overlayData? }
+          activeLocalIndex: null,
+          isCanvasReady: false,
+          // 画布与交互
+          isDrawing: false,
+          isPanning: false,
+          isDrawingPolygon: false, // 多边形绘制状态
+          lastX: 0,
+          lastY: 0,
+          currentTool: "pencil", // 'pencil', 'eraser', 'pan', 'rectangle', 'polygon', 'mask'
+          zoom: 1,
+          pan: { x: 0, y: 0 },
+          imageSize: { width: 0, height: 0 },
+          originalImageSize: { width: 0, height: 0 }, // 原始图片尺寸
+          originalBaseImageDataURL: null, // 原始底图，用于无损导出合并图
+          canvasScale: 1, // 画布缩放比例
+          savedCanvasState: null,
+          polygonPoints: [], // 多边形顶点
+          supportsPressure: false, // 压力感应支持检测
+          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+          // 蒙版相关状态
+          isMaskVisible: true,
+          maskColor: 'rgba(255, 255, 0, 0.5)',
+          maskOpacity: 50,
+          // API相关状态
+          apiStatus: "disconnected", // disconnected, connecting, connected
+          // API端点配置
+          apiEndpoints: {
+            chat: "http://127.0.0.1:5001/chat",
+            ocr: "http://127.0.0.1:6000/ocr",
+            voice: "http://127.0.0.1:7000/chat"
+          },
+          // 文件上传相关
+          ocrFile: null,
+          voiceFile: null
+        };
+
+        // --- Python接口相关函数 ---
+        
+        // 根据选择的服务更新端点输入框和参数区域
+        function updateApiUI() {
+          const service = apiServiceSelect.value;
+          apiEndpointInput.value = state.apiEndpoints[service] || "";
+          
+          // 隐藏所有参数区域
+          document.getElementById("chat-params").style.display = "none";
+          document.getElementById("ocr-params").style.display = "none";
+          document.getElementById("voice-params").style.display = "none";
+          
+          // 显示当前服务的参数区域
+          document.getElementById(`${service}-params`).style.display = "block";
+        }
+        
+        // 打开Python接口对话框
+        function openPythonModal() {
+          updateApiUI();
+          pythonModal.classList.add('open');
+        }
+        
+        // 关闭Python接口对话框
+        function closePythonModal() {
+          pythonModal.classList.remove('open');
+        }
+        
+        async function testApiConnection() {
+  const service = apiServiceSelect.value;
+  const endpoint = apiEndpointInput.value;
+  
+  if (!endpoint) {
+    updateApiResponse("错误: 请输入API端点URL");
+    return;
+  }
+  
+  updateApiResponse("测试连接中...");
+  setApiStatus("connecting");
+  
+  try {
+    // 构建健康检查URL
+    let healthCheckUrl;
+    if (service === 'chat') {
+      healthCheckUrl = endpoint.replace('/chat', '/health');
+    } else if (service === 'ocr') {
+      healthCheckUrl = endpoint.replace('/ocr', '/health');
+    } else if (service === 'voice') {
+      healthCheckUrl = endpoint.replace('/chat', '/health');
+    } else {
+      throw new Error("未知的服务类型");
+    }
+    
+    const response = await fetch(healthCheckUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      updateApiResponse(`连接成功: ${JSON.stringify(data)}`);
+      setApiStatus("connected");
+      
+      // 更新API端点配置
+      state.apiEndpoints[service] = endpoint;
+    } else {
+      updateApiResponse(`连接失败: 状态码 ${response.status} - ${response.statusText}`);
+      setApiStatus("disconnected");
+    }
+  } catch (error) {
+    let errorMsg = `连接错误: ${error.message}`;
+    
+    // 提供更具体的错误诊断
+    if (error.message.includes('Failed to fetch')) {
+      errorMsg += "\n可能的原因:\n- 服务未启动\n- 端口被占用\n- CORS问题\n- 网络连接问题";
+    } else if (error.message.includes('net::ERR_CONNECTION_REFUSED')) {
+      errorMsg += "\n服务可能未启动或端口不正确";
+    } else if (error.message.includes('CORS')) {
+      errorMsg += "\nCORS配置问题，请检查后端CORS设置";
+    }
+    
+    updateApiResponse(errorMsg);
+    setApiStatus("disconnected");
+  }
+}
+        
+        // 执行API操作
+        async function executeApiAction() {
+          const service = apiServiceSelect.value;
+          const endpoint = apiEndpointInput.value;
+          
+          if (!endpoint) {
+            updateApiResponse("错误: 请输入API端点URL");
+            return;
+          }
+          
+          updateApiResponse("执行中...");
+          setApiStatus("connecting");
+          
+          try {
+            let result;
+            
+            switch (service) {
+              case 'chat':
+                result = await executeChatAction(endpoint);
+                break;
+              case 'ocr':
+                result = await executeOcrAction(endpoint);
+                break;
+              case 'voice':
+                result = await executeVoiceAction(endpoint);
+                break;
+              default:
+                throw new Error(`未知的服务类型: ${service}`);
+            }
+            
+            updateApiResponse(`执行成功: ${JSON.stringify(result, null, 2)}`);
+            setApiStatus("connected");
+          } catch (error) {
+            updateApiResponse(`执行错误: ${error.message}`);
+            setApiStatus("disconnected");
+          }
+        }
+        
+        // 执行聊天操作
+        async function executeChatAction(endpoint) {
+          const message = chatMessageTextarea.value;
+          
+          if (!message) {
+            throw new Error("请输入聊天消息");
+          }
+          
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              user_id: 'annotation_tool_user',
+              message: message
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+          }
+          
+          return await response.json();
+        }
+        
+        // 执行OCR操作
+        async function executeOcrAction(endpoint) {
+          let formData = new FormData();
+          
+          if (state.ocrFile) {
+            // 使用上传的文件
+            formData.append('file', state.ocrFile);
+          } else {
+            // 使用当前画布图像
+            const canvasDataURL = baseCanvas.toDataURL('image/png');
+            const blob = await (await fetch(canvasDataURL)).blob();
+            formData.append('file', blob, 'canvas_image.png');
+          }
+          
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+          }
+          
+          return await response.json();
+        }
+        
+        // 执行语音操作
+        async function executeVoiceAction(endpoint) {
+          if (!state.voiceFile) {
+            throw new Error("请先上传音频文件");
+          }
+          
+          const formData = new FormData();
+          formData.append('audio', state.voiceFile);
+          
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+          }
+          
+          return await response.json();
+        }
+        
+        // 更新API响应显示
+        function updateApiResponse(message) {
+          apiResponsePre.textContent = message;
+        }
+        
+        // 设置API状态
+        function setApiStatus(status) {
+          state.apiStatus = status;
+          // 这里可以添加状态指示器更新的逻辑
+        }
+        
+        // 处理OCR文件上传
+        function handleOcrFileUpload(file) {
+          state.ocrFile = file;
+          ocrFileUpload.querySelector('p').textContent = `已选择: ${file.name}`;
+        }
+        
+        // 处理语音文件上传
+        function handleVoiceFileUpload(file) {
+          state.voiceFile = file;
+          voiceFileUpload.querySelector('p').textContent = `已选择: ${file.name}`;
+        }
+        
+        // 绑定Python接口相关事件
+        pythonInterfaceBtn.addEventListener('click', openPythonModal);
+        cancelApiBtn.addEventListener('click', closePythonModal);
+        testApiBtn.addEventListener('click', testApiConnection);
+        executeApiBtn.addEventListener('click', executeApiAction);
+        apiServiceSelect.addEventListener('change', updateApiUI);
+        
+        // OCR文件上传事件
+        ocrFileUpload.addEventListener('click', () => ocrFileInput.click());
+        ocrFileUpload.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          ocrFileUpload.style.borderColor = '#3b82f6';
+        });
+        ocrFileUpload.addEventListener('dragleave', () => {
+          ocrFileUpload.style.borderColor = '#4b5563';
+        });
+        ocrFileUpload.addEventListener('drop', (e) => {
+          e.preventDefault();
+          ocrFileUpload.style.borderColor = '#4b5563';
+          if (e.dataTransfer.files.length > 0) {
+            handleOcrFileUpload(e.dataTransfer.files[0]);
+          }
+        });
+        ocrFileInput.addEventListener('change', (e) => {
+          if (e.target.files.length > 0) {
+            handleOcrFileUpload(e.target.files[0]);
+          }
+        });
+        
+        // 使用当前画布图像
+        ocrUseCanvasBtn.addEventListener('click', () => {
+          state.ocrFile = null;
+          ocrFileUpload.querySelector('p').textContent = '点击或拖拽上传图片进行OCR识别';
+          updateApiResponse("已选择使用当前画布图像");
+        });
+        
+        // 语音文件上传事件
+        voiceFileUpload.addEventListener('click', () => voiceFileInput.click());
+        voiceFileUpload.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          voiceFileUpload.style.borderColor = '#3b82f6';
+        });
+        voiceFileUpload.addEventListener('dragleave', () => {
+          voiceFileUpload.style.borderColor = '#4b5563';
+        });
+        voiceFileUpload.addEventListener('drop', (e) => {
+          e.preventDefault();
+          voiceFileUpload.style.borderColor = '#4b5563';
+          if (e.dataTransfer.files.length > 0) {
+            handleVoiceFileUpload(e.dataTransfer.files[0]);
+          }
+        });
+        voiceFileInput.addEventListener('change', (e) => {
+          if (e.target.files.length > 0) {
+            handleVoiceFileUpload(e.target.files[0]);
+          }
+        });
+        
+        // 点击模态框外部关闭
+        pythonModal.addEventListener('click', (e) => {
+          if (e.target === pythonModal) {
+            closePythonModal();
+          }
+        }); 
+        
+        // 初始化API端点配置
+        apiEndpointInput.value = state.apiEndpoints.chat;
+        
+        // --- 本地模式：工具函数与数据流 ---
+        function dataURLFromBlankPNG(width, height, fillColor = "#ffffff") {
+          const c = document.createElement("canvas");
+          c.width = width; c.height = height;
+          const ctx = c.getContext("2d");
+          // 白板背景
+          ctx.fillStyle = fillColor;
+          ctx.fillRect(0, 0, width, height);
+          return c.toDataURL("image/png");
+        }
+
+        // --- 画布尺寸计算函数 ---
+        function calculateCanvasSize(originalWidth, originalHeight) {
+          // iPad内存限制参数
+          const MAX_CANVAS_SIZE = 16777216; // 16MB像素限制
+          const MAX_DIMENSION = 9000; // 单边最大尺寸
+          
+          let canvasWidth = originalWidth;
+          let canvasHeight = originalHeight;
+          let scale = 1;
+          
+          // 检查是否超过单边限制
+          if (canvasWidth > MAX_DIMENSION || canvasHeight > MAX_DIMENSION) {
+            const scaleX = MAX_DIMENSION / canvasWidth;
+            const scaleY = MAX_DIMENSION / canvasHeight;
+            scale = Math.min(scaleX, scaleY);
+            canvasWidth = Math.floor(canvasWidth * scale);
+            canvasHeight = Math.floor(canvasHeight * scale);
+          }
+          
+          // 检查是否超过总像素限制
+          if (canvasWidth * canvasHeight > MAX_CANVAS_SIZE) {
+            const totalPixels = canvasWidth * canvasHeight;
+            const pixelScale = Math.sqrt(MAX_CANVAS_SIZE / totalPixels);
+            scale = scale * pixelScale;
+            canvasWidth = Math.floor(originalWidth * scale);
+            canvasHeight = Math.floor(originalHeight * scale);
+          }
+          
+          // 确保最小尺寸
+          const MIN_SIZE = 100;
+          if (canvasWidth < MIN_SIZE || canvasHeight < MIN_SIZE) {
+            const minScale = Math.max(MIN_SIZE / originalWidth, MIN_SIZE / originalHeight);
+            scale = Math.max(scale, minScale);
+            canvasWidth = Math.floor(originalWidth * scale);
+            canvasHeight = Math.floor(originalHeight * scale);
+          }
+          
+          console.log(`画布尺寸调整: 原始(${originalWidth}x${originalHeight}) -> 画布(${canvasWidth}x${canvasHeight}), 缩放比例: ${scale.toFixed(3)}`);
+          
+          return {
+            width: canvasWidth,
+            height: canvasHeight,
+            scale: scale
+          };
+        }
+
+        // 处理本地文件列表（FileList 或 Array<File>）
+        function handleLocalFiles(fileList) {
+          const filesArray = Array.from(fileList).filter(f => f.type.startsWith("image/"));
+          if (filesArray.length === 0) return;
+          const readers = filesArray.map(file => {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve({ name: file.name, dataURL: reader.result });
+              reader.readAsDataURL(file);
+            });
+          });
+          Promise.all(readers).then(images => {
+            images.forEach(img => state.localFiles.push({ name: img.name, dataURL: img.dataURL }));
+            renderFileTree();
+            sourceInfo.textContent = `数据源: 本地 (${state.localFiles.length} 张)`;
+            statusText.textContent = "已导入图像";
+            if (state.activeLocalIndex === null && state.localFiles.length > 0) {
+              selectLocalFile(0);
+            }
+          });
+        }
+
+        // 从 dataURL 加载为底图，设置画布尺寸与缩放
+        function loadBaseFromDataURL(name, dataURL) {
+          const img = new Image();
+          img.onload = () => {
+            const canvasSize = calculateCanvasSize(img.naturalWidth, img.naturalHeight);
+            state.originalImageSize = { width: img.naturalWidth, height: img.naturalHeight };
+            state.imageSize = { width: canvasSize.width, height: canvasSize.height };
+            state.canvasScale = canvasSize.scale;
+            state.originalBaseImageDataURL = dataURL;
+
+            baseCanvas.width = drawingCanvas.width = maskCanvas.width = canvasSize.width;
+            baseCanvas.height = drawingCanvas.height = maskCanvas.height = canvasSize.height;
+
+            baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+            baseCtx.drawImage(img, 0, 0, canvasSize.width, canvasSize.height);
+
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+            // 如果有该文件的 overlayData，恢复
+            const idx = state.activeLocalIndex;
+            if (idx !== null) {
+              const file = state.localFiles[idx];
+              if (file && file.overlayData) {
+                const overlayImg = new Image();
+                overlayImg.onload = () => {
+                  drawingCtx.drawImage(overlayImg, 0, 0, canvasSize.width, canvasSize.height);
+                  state.isCanvasReady = true;
+                  resetZoomAndPan();
+                  statusText.textContent = `已加载: ${name} (缩放比例: ${(state.canvasScale * 100).toFixed(1)}%)`;
+                };
+                overlayImg.onerror = () => {
+                  state.isCanvasReady = true;
+                  resetZoomAndPan();
+                  statusText.textContent = `已加载: ${name} (缩放比例: ${(state.canvasScale * 100).toFixed(1)}%)`;
+                };
+                overlayImg.src = file.overlayData;
+                return;
+              }
+            }
+            state.isCanvasReady = true;
+            resetZoomAndPan();
+            statusText.textContent = `已加载: ${name} (缩放比例: ${(state.canvasScale * 100).toFixed(1)}%)`;
+          };
+          img.onerror = () => {
+            showModal(`图像加载失败: ${name}`);
+            statusText.textContent = "图像加载失败";
+          };
+          img.src = dataURL;
+        }
+
+        // 选择某个本地图像
+        function selectLocalFile(index) {
+          // 切换前保存当前 overlay 到旧文件条目
+          if (state.activeLocalIndex !== null) {
+            const prev = state.localFiles[state.activeLocalIndex];
+            if (prev) {
+              prev.overlayData = drawingCanvas.toDataURL("image/png");
+              prev.maskData = maskCanvas.toDataURL("image/png");
+            }
+          }
+          state.activeLocalIndex = index;
+          const file = state.localFiles[index];
+          if (!file) return;
+          // 高亮
+          document.querySelectorAll(".file-item.active").forEach(el => el.classList.remove("active"));
+          const currentFileEl = Array.from(document.querySelectorAll('.file-item')).find(el => el.textContent.trim().endsWith(file.name));
+          if (currentFileEl) currentFileEl.classList.add("active");
+          loadBaseFromDataURL(file.name, file.dataURL);
+          
+          // 恢复蒙版数据
+          if (file.maskData) {
+            const maskImg = new Image();
+            maskImg.onload = () => {
+              maskCtx.drawImage(maskImg, 0, 0, maskCanvas.width, maskCanvas.height);
+            };
+            maskImg.src = file.maskData;
+          }
+        }
+
+        // 创建白板
+        function setWhiteboard(width = 1920, height = 1080) {
+          const canvasSize = calculateCanvasSize(width, height);
+          state.originalImageSize = { width, height };
+          state.imageSize = { width: canvasSize.width, height: canvasSize.height };
+          state.canvasScale = canvasSize.scale;
+          state.originalBaseImageDataURL = dataURLFromBlankPNG(width, height, "#ffffff");
+
+          baseCanvas.width = drawingCanvas.width = maskCanvas.width = canvasSize.width;
+          baseCanvas.height = drawingCanvas.height = maskCanvas.height = canvasSize.height;
+          // 白色底板
+          baseCtx.fillStyle = "#ffffff";
+          baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+          drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+          state.isCanvasReady = true;
+          resetZoomAndPan();
+          statusText.textContent = `白板已创建 (${width}x${height})`;
+          sourceInfo.textContent = "数据源: 本地 (白板)";
+        }
+
+        // --- UI 更新函数 ---
+        function populateWrinkleTypeSelect(wrinkleTypes) {
+          wrinkleTypeSelect.innerHTML = '<option value="">请选择皱纹类型</option>';
+          wrinkleTypes.forEach((type) => {
+            const option = document.createElement("option");
+            option.value = type.value;
+            option.textContent = type.name;
+            wrinkleTypeSelect.appendChild(option);
+          });
+        }
+
+        function renderFileTree() {
+          if (!state.localFiles || state.localFiles.length === 0) {
+            fileTreeContainer.innerHTML = '<p class="text-gray-400">本地模式：使用上方"导入图像"按钮或将图片拖拽到画布区域。</p>';
+            return;
+          }
+          const html = state.localFiles.map((file, idx) => `
+            <div class="file-item ${idx === state.activeLocalIndex ? 'active' : ''}" data-idx="${idx}">
+              <i class="fas fa-image mr-2"></i>${file.name}
+            </div>`).join("");
+          fileTreeContainer.innerHTML = html;
+          fileTreeContainer.querySelectorAll('.file-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+              const idx = parseInt(e.currentTarget.dataset.idx);
+              selectLocalFile(idx);
+            });
+          });
+        }
+
+        // 兼容旧逻辑的占位：不再使用远程文件选择
+        function selectFile() {}
+
+        // 本地模式：隐藏皱纹类型选择器
+        if (wrinkleTypeSelect) {
+          const wrapper = wrinkleTypeSelect.closest('.flex.flex-col.space-y-2');
+          if (wrapper) wrapper.style.display = 'none';
+        }
+
+        // --- 蒙版相关函数 ---
+        function toggleMask() {
+          state.isMaskVisible = !state.isMaskVisible;
+          maskCanvas.style.display = state.isMaskVisible ? 'block' : 'none';
+          toggleMaskBtn.classList.toggle('active', state.isMaskVisible);
+          statusText.textContent = `蒙版已${state.isMaskVisible ? '显示' : '隐藏'}`;
+        }
+
+        function clearMask() {
+          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+          statusText.textContent = "蒙版已清除";
+        }
+
+        function updateMaskColor(e) {
+          const hex = e.target.value;
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          state.maskColor = `rgba(${r}, ${g}, ${b}, ${state.maskOpacity/100})`;
+        }
+
+        function updateMaskOpacity(e) {
+          state.maskOpacity = parseInt(e.target.value);
+          maskOpacityValueDisplay.textContent = `${state.maskOpacity}%`;
+          maskCanvas.style.opacity = state.maskOpacity / 100;
+          
+          // 更新颜色以包含新的透明度
+          const hex = maskColorInput.value;
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          state.maskColor = `rgba(${r}, ${g}, ${b}, ${state.maskOpacity/100})`;
+        }
+
+        // --- 多边形工具函数 ---
+        function redrawPolygonPreview(mousePos) {
+            if (!state.savedCanvasState) return;
+            drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+            if (state.polygonPoints.length === 0) return;
+            
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
+            for (let i = 1; i < state.polygonPoints.length; i++) {
+                drawingCtx.lineTo(state.polygonPoints[i].x, state.polygonPoints[i].y);
+            }
+            if (mousePos) {
+                drawingCtx.lineTo(mousePos.x, mousePos.y);
+            }
+            drawingCtx.stroke();
+        }
+
+        function finishPolygon(shouldClosePath = true) {
+            if (!state.isDrawingPolygon || state.polygonPoints.length < 2) {
+                cancelPolygon();
+                return;
+            }
+            drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
+            for (let i = 1; i < state.polygonPoints.length; i++) {
+                drawingCtx.lineTo(state.polygonPoints[i].x, state.polygonPoints[i].y);
+            }
+            if (shouldClosePath) {
+                drawingCtx.closePath();
+            }
+            drawingCtx.stroke();
+            state.polygonPoints = [];
+            state.isDrawingPolygon = false;
+            state.savedCanvasState = null;
+        }
+
+        function cancelPolygon() {
+            if (state.isDrawingPolygon) {
+                drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+                state.polygonPoints = [];
+                state.isDrawingPolygon = false;
+                state.savedCanvasState = null;
+            }
+        }
+
+        // --- 画布与工具 ---
+        function updateTool(newTool) {
+          if (state.isDrawingPolygon) finishPolygon(false); // 如果切换工具，则完成当前的多边形（不闭合）
+          state.currentTool = newTool;
+          [toolPan, toolPencil, toolEraser, toolRectangle, toolPolygon, toolMask].forEach((btn) =>
+            btn.classList.remove("active")
+          );
+          document.getElementById(`tool-${newTool}`).classList.add("active");
+          
+          // 切换蒙版模式视觉效果
+          if (newTool === "mask") {
+            document.body.classList.add("mask-mode");
+          } else {
+            document.body.classList.remove("mask-mode");
+          }
+          
+          if (newTool === "pan") canvasContainer.style.cursor = "grab";
+          else if (newTool === "eraser" || newTool === "pencil" || newTool === "mask") canvasContainer.style.cursor = "none";
+          else canvasContainer.style.cursor = "crosshair";
+          
+          const colorContainer = document.getElementById("color-container");
+          const maskColorContainer = document.getElementById("mask-color-container");
+          if (newTool === "pencil" || newTool === "rectangle" || newTool === "polygon") {
+            colorContainer.style.opacity = "1";
+            brushColorInput.disabled = false;
+            maskColorContainer.style.opacity = "0.5";
+            maskColorInput.disabled = true;
+          } else if (newTool === "mask") {
+            colorContainer.style.opacity = "0.5";
+            brushColorInput.disabled = true;
+            maskColorContainer.style.opacity = "1";
+            maskColorInput.disabled = false;
+          } else {
+            colorContainer.style.opacity = "0.5";
+            brushColorInput.disabled = true;
+            maskColorContainer.style.opacity = "0.5";
+            maskColorInput.disabled = true;
+          }
+          
+          if (newTool !== "eraser") eraserPreview.style.display = "none";
+          if (newTool !== "pencil" && newTool !== "mask") brushPreview.style.display = "none";
+        }
+
+        toolPan.addEventListener("click", () => updateTool("pan"));
+        toolPencil.addEventListener("click", () => updateTool("pencil"));
+        toolRectangle.addEventListener("click", () => updateTool("rectangle"));
+        toolPolygon.addEventListener("click", () => updateTool("polygon"));
+        toolEraser.addEventListener("click", () => updateTool("eraser"));
+        toolMask.addEventListener("click", () => updateTool("mask"));
+
+        layerOpacityInput.addEventListener("input", (e) => {
+          const opacityPercent = parseInt(e.target.value);
+          layerOpacityValueDisplay.textContent = `${opacityPercent}%`;
+          drawingCanvas.style.opacity = opacityPercent / 100;
+        });
+
+        maskOpacityInput.addEventListener("input", updateMaskOpacity);
+        maskColorInput.addEventListener("input", updateMaskColor);
+
+        function updateToolPreview(e) {
+          const rect = canvasContainer.getBoundingClientRect();
+          const size = parseInt(brushSizeInput.value) * state.zoom;
+          if (state.currentTool === "eraser") {
+            eraserPreview.style.display = "block";
+            eraserPreview.style.width = `${size}px`;
+            eraserPreview.style.height = `${size}px`;
+            eraserPreview.style.left = `${e.clientX - rect.left - size / 2}px`;
+            eraserPreview.style.top = `${e.clientY - rect.top - size / 2}px`;
+            brushPreview.style.display = "none";
+          } else if (state.currentTool === "pencil" || state.currentTool === "mask") {
+            brushPreview.style.display = "block";
+            brushPreview.style.width = `${size}px`;
+            brushPreview.style.height = `${size}px`;
+            brushPreview.style.left = `${e.clientX - rect.left - size / 2}px`;
+            brushPreview.style.top = `${e.clientY - rect.top - size / 2}px`;
+            eraserPreview.style.display = "none";
+            
+            // 设置预览颜色
+            if (state.currentTool === "mask") {
+              brushPreview.style.borderColor = maskColorInput.value;
+              brushPreview.style.backgroundColor = maskColorInput.value.replace(')', ', 0.1)');
+            } else {
+              brushPreview.style.borderColor = "#22c55e";
+              brushPreview.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
+            }
+          } else {
+            eraserPreview.style.display = "none";
+            brushPreview.style.display = "none";
+          }
+        }
+
+        canvasContainer.addEventListener("pointermove", updateToolPreview);
+        canvasContainer.addEventListener("pointerenter", updateToolPreview);
+        canvasContainer.addEventListener("pointerleave", () => {
+          eraserPreview.style.display = "none";
+          brushPreview.style.display = "none";
+        });
+
+        function getCanvasCoordinates(e) {
+          const rect = drawingCanvas.getBoundingClientRect();
+          return {
+            x: (e.clientX - rect.left - state.pan.x) / state.zoom,
+            y: (e.clientY - rect.top - state.pan.y) / state.zoom,
+          };
+        }
+
+        function draw(e) {
+          if (!state.isDrawing) return;
+          const pos = getCanvasCoordinates(e);
+          
+          // 压力感应支持
+          const pressure = e.pressure > 0 ? e.pressure : 0.5;
+          const baseBrushSize = parseFloat(brushSizeInput.value);
+          const currentBrushSize = baseBrushSize * (0.5 + pressure * 0.5); // 压力影响范围：50%-100%
+          
+          if (state.currentTool === "mask") {
+            maskCtx.lineWidth = currentBrushSize;
+            maskCtx.strokeStyle = state.maskColor;
+            maskCtx.lineJoin = "round";
+            maskCtx.lineCap = "round";
+            maskCtx.beginPath();
+            maskCtx.moveTo(state.lastX, state.lastY);
+            maskCtx.lineTo(pos.x, pos.y);
+            maskCtx.stroke();
+          } else {
+            drawingCtx.lineWidth = currentBrushSize;
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.lastX, state.lastY);
+            drawingCtx.lineTo(pos.x, pos.y);
+            drawingCtx.stroke();
+          }
+          
+          [state.lastX, state.lastY] = [pos.x, pos.y];
+        }
+
+        function pan(e) {
+          if (!state.isPanning) return;
+          const dx = e.clientX - state.lastX;
+          const dy = e.clientY - state.lastY;
+          state.pan.x += dx;
+          state.pan.y += dy;
+          [state.lastX, state.lastY] = [e.clientX, e.clientY];
+          updateCanvasTransform();
+        }
+
+        drawingCanvas.addEventListener("pointerdown", (e) => {
+          if (!state.isCanvasReady) return;
+          
+          // 检测压力感应支持
+          if (e.pressure > 0 && e.pressure < 1) {
+            if (!state.supportsPressure) {
+              state.supportsPressure = true;
+              console.log("检测到压力感应支持");
+            }
+          }
+          
+          // 设置指针捕获以确保在移动设备上正常工作
+          drawingCanvas.setPointerCapture(e.pointerId);
+
+          if (state.currentTool === "pan") {
+            state.isPanning = true;
+            [state.lastX, state.lastY] = [e.clientX, e.clientY];
+            canvasContainer.style.cursor = "grabbing";
+          } else if (state.currentTool === 'polygon') {
+            const pos = getCanvasCoordinates(e);
+            if (state.isDrawingPolygon && state.polygonPoints.length > 1) {
+                const firstPoint = state.polygonPoints[0];
+                const dx = pos.x - firstPoint.x;
+                const dy = pos.y - firstPoint.y;
+                const threshold = 10 / state.zoom;
+                if (Math.sqrt(dx * dx + dy * dy) < threshold) {
+                    finishPolygon(true);
+                    return;
+                }
+            }
+            if (!state.isDrawingPolygon) {
+                state.isDrawingPolygon = true;
+                state.savedCanvasState = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.lineWidth = brushSizeInput.value;
+                drawingCtx.strokeStyle = brushColorInput.value;
+                drawingCtx.lineJoin = "round";
+                drawingCtx.lineCap = "round";
+            }
+            state.polygonPoints.push(pos);
+            redrawPolygonPreview();
+          } else if (state.currentTool === 'mask') {
+            state.isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            [state.lastX, state.lastY] = [pos.x, pos.y];
+            maskCtx.globalCompositeOperation = "source-over";
+            maskCtx.globalAlpha = state.maskOpacity / 100;
+            maskCtx.strokeStyle = state.maskColor;
+            maskCtx.lineWidth = brushSizeInput.value;
+            maskCtx.lineJoin = "round";
+            maskCtx.lineCap = "round";
+            maskCtx.beginPath();
+            maskCtx.moveTo(pos.x, pos.y);
+          } else {
+            state.isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            [state.lastX, state.lastY] = [pos.x, pos.y];
+            drawingCtx.globalCompositeOperation = "source-over";
+            drawingCtx.globalAlpha = 1.0;
+            if (state.currentTool === 'rectangle') {
+                state.savedCanvasState = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.lineWidth = brushSizeInput.value;
+                drawingCtx.lineJoin = "miter";
+                drawingCtx.lineCap = "square";
+                drawingCtx.strokeStyle = brushColorInput.value;
+            } else {
+                // 压力感应初始设置
+                const pressure = e.pressure > 0 ? e.pressure : 0.5;
+                const baseBrushSize = parseFloat(brushSizeInput.value);
+                const currentBrushSize = baseBrushSize * (0.5 + pressure * 0.5);
+                
+                drawingCtx.lineWidth = currentBrushSize;
+                drawingCtx.lineJoin = "round";
+                drawingCtx.lineCap = "round";
+                if (state.currentTool === "eraser") {
+                  drawingCtx.globalCompositeOperation = "destination-out";
+                  drawingCtx.globalAlpha = 1.0;
+                  drawingCtx.strokeStyle = `rgba(0, 0, 0, 1)`;
+                } else if (state.currentTool === "pencil") {
+                  const color = brushColorInput.value;
+                  const r = parseInt(color.slice(1, 3), 16);
+                  const g = parseInt(color.slice(3, 5), 16);
+                  const b = parseInt(color.slice(5, 7), 16);
+                  drawingCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, 1.0)`;
+                }
+                draw(e);
+            }
+          }
+        });
+
+        drawingCanvas.addEventListener("pointermove", (e) => {
+          if (state.isDrawing) {
+            if (state.currentTool === 'rectangle') {
+                if (state.savedCanvasState) drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+                const pos = getCanvasCoordinates(e);
+                const width = pos.x - state.lastX;
+                const height = pos.y - state.lastY;
+                drawingCtx.beginPath();
+                drawingCtx.rect(state.lastX, state.lastY, width, height);
+                drawingCtx.stroke();
+            } else {
+                draw(e);
+            }
+          } else if (state.isPanning) {
+            pan(e);
+          } else if (state.currentTool === 'polygon' && state.isDrawingPolygon) {
+            redrawPolygonPreview(getCanvasCoordinates(e));
+          }
+        });
+
+        drawingCanvas.addEventListener("pointerup", (e) => {
+            if (state.isDrawing && state.currentTool !== 'polygon') {
+                if (state.currentTool === 'rectangle') state.savedCanvasState = null;
+                state.isDrawing = false;
+            }
+            if (state.isPanning) {
+                state.isPanning = false;
+                canvasContainer.style.cursor = "grab";
+            }
+            
+            // 释放指针捕获
+            drawingCanvas.releasePointerCapture(e.pointerId);
+        });
+
+        drawingCanvas.addEventListener("pointerleave", () => {
+            if (state.isDrawing && state.currentTool !== 'polygon') state.isDrawing = false;
+        });
+
+        // --- 缩放与平移 ---
+        function updateCanvasTransform() {
+          const transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
+          baseCanvas.style.transform = transform;
+          drawingCanvas.style.transform = transform;
+          maskCanvas.style.transform = transform;
+          zoomLevelDisplay.textContent = `${Math.round(state.zoom * 100)}%`;
+        }
+
+        function adjustZoom(delta) {
+          if (!state.isCanvasReady) return;
+          const newZoom = Math.max(0.1, Math.min(10, state.zoom + delta));
+          state.zoom = newZoom;
+          updateCanvasTransform();
+        }
+
+        zoomInBtn.addEventListener("click", () => adjustZoom(0.1));
+        zoomOutBtn.addEventListener("click", () => adjustZoom(-0.1));
+        zoomResetBtn.addEventListener("click", resetZoomAndPan);
+
+        canvasContainer.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          adjustZoom(delta);
+        });
+
+        function resetZoomAndPan() {
+          if (!state.imageSize.width) return;
+          const containerRatio = canvasContainer.clientWidth / canvasContainer.clientHeight;
+          const imageRatio = state.imageSize.width / state.imageSize.height;
+          let newZoom;
+          if (containerRatio > imageRatio) {
+            newZoom = canvasContainer.clientHeight / state.imageSize.height;
+          } else {
+            newZoom = canvasContainer.clientWidth / state.imageSize.width;
+          }
+          state.zoom = newZoom * 0.95;
+          const canvasWidth = state.imageSize.width * state.zoom;
+          const canvasHeight = state.imageSize.height * state.zoom;
+          state.pan.x = (canvasContainer.clientWidth - canvasWidth) / 2;
+          state.pan.y = (canvasContainer.clientHeight - canvasHeight) / 2;
+          updateCanvasTransform();
+        }
+
+        function downloadURI(uri, name) {
+          const link = document.createElement("a");
+          link.download = name;
+          link.href = uri;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+
+        // 远程刷新不再需要
+        async function refreshFileListAndReselect() { renderFileTree(); }
+
+        // 导出仅标注图层 PNG
+        saveBtn.addEventListener("click", async () => {
+          if (!state.isCanvasReady) {
+            showModal("当前没有可导出的标注图层。");
+            return;
+          }
+          try {
+            let finalCanvas = drawingCanvas;
+            if (state.canvasScale !== 1) {
+              const tempCanvas = document.createElement("canvas");
+              tempCanvas.width = state.originalImageSize.width;
+              tempCanvas.height = state.originalImageSize.height;
+              const tempCtx = tempCanvas.getContext("2d");
+              tempCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              finalCanvas = tempCanvas;
+            }
+            const canvasDataURL = finalCanvas.toDataURL("image/png");
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+            downloadURI(canvasDataURL, `${baseName}_overlay.png`);
+          } catch (error) {
+            console.error("导出标注失败:", error);
+            showModal(`导出标注失败: ${error.message}`);
+          }
+        });
+
+        exportBtn.addEventListener("click", () => {
+          if (!state.isCanvasReady) {
+            showModal("没有活动的图像可导出。");
+            return;
+          }
+          const exportCanvas = document.createElement("canvas");
+          exportCanvas.width = state.originalImageSize.width;
+          exportCanvas.height = state.originalImageSize.height;
+          const exportCtx = exportCanvas.getContext("2d");
+          const baseImg = new Image();
+          baseImg.onload = () => {
+            exportCtx.drawImage(baseImg, 0, 0);
+            if (state.canvasScale !== 1) {
+              exportCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+            } else {
+              exportCtx.drawImage(drawingCanvas, 0, 0);
+            }
+            
+            // 添加蒙版图层
+            if (state.isMaskVisible) {
+              exportCtx.globalAlpha = state.maskOpacity / 100;
+              if (state.canvasScale !== 1) {
+                exportCtx.drawImage(maskCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              } else {
+                exportCtx.drawImage(maskCanvas, 0, 0);
+              }
+            }
+            
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+            downloadURI(exportCanvas.toDataURL("image/png"), `${baseName}_merged.png`);
+          };
+          baseImg.onerror = () => {
+            // 退化为直接用当前可见底图
+            const fallback = new Image();
+            fallback.onload = () => {
+              exportCtx.drawImage(fallback, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              if (state.canvasScale !== 1) {
+                exportCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              } else {
+                exportCtx.drawImage(drawingCanvas, 0, 0);
+              }
+              
+              // 添加蒙版图层
+              if (state.isMaskVisible) {
+                exportCtx.globalAlpha = state.maskOpacity / 100;
+                if (state.canvasScale !== 1) {
+                  exportCtx.drawImage(maskCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+                } else {
+                  exportCtx.drawImage(maskCanvas, 0, 0);
+                }
+              }
+              
+              const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+              const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+              downloadURI(exportCanvas.toDataURL("image/png"), `${baseName}_merged.png`);
+            };
+            fallback.src = baseCanvas.toDataURL();
+          };
+          baseImg.src = state.originalBaseImageDataURL || baseCanvas.toDataURL();
+        });
+
+        // 导入图像
+        importBtn.addEventListener('click', () => localImageInput.click());
+        localImageInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleLocalFiles(e.target.files);
+            e.target.value = '';
+          }
+        });
+
+        // 支持拖拽导入
+        canvasContainer.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+        canvasContainer.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (e.dataTransfer && e.dataTransfer.files) {
+            handleLocalFiles(e.dataTransfer.files);
+          }
+        });
+
+        // 蒙版控制
+        toggleMaskBtn.addEventListener('click', toggleMask);
+        clearMaskBtn.addEventListener('click', clearMask);
+
+        // --- 键盘快捷键 ---
+        window.addEventListener("keydown", (e) => {
+          if (e.target.tagName === 'INPUT') return; // Ignore keydown on input elements
+          switch (e.key.toLowerCase()) {
+            case "b": updateTool("pencil"); break;
+            case "e": updateTool("eraser"); break;
+            case "v": updateTool("pan"); break;
+            case "r": updateTool("rectangle"); break;
+            case "p": updateTool("polygon"); break;
+            case "t": updateTool("mask"); break;
+            case "m": 
+              e.preventDefault();
+              toggleMask();
+              break;
+            case "enter":
+              if (state.currentTool === 'polygon') {
+                e.preventDefault();
+                finishPolygon(true);
+              }
+              break;
+            case "escape":
+               if (state.currentTool === 'polygon') {
+                e.preventDefault();
+                cancelPolygon();
+              }
+              break;
+            case "+":
+            case "=":
+              e.preventDefault();
+              adjustZoom(0.1);
+              break;
+            case "-":
+              e.preventDefault();
+              adjustZoom(-0.1);
+              break;
+          }
+        });
+
+        // --- 汉堡菜单控制 ---
+        hamburgerMenu.addEventListener("click", () => {
+          sidebar.classList.toggle("show");
+        });
+        
+        // 点击侧边栏外部区域关闭侧边栏
+        document.addEventListener("click", (e) => {
+          if (window.innerWidth <= 2290 && 
+              !sidebar.contains(e.target) && 
+              !hamburgerMenu.contains(e.target) && 
+              sidebar.classList.contains("show")) {
+            sidebar.classList.remove("show");
+          }
+        });
+
+        // --- 模态框 ---
+        function showModal(message) {
+          modalMessage.textContent = message;
+          modal.classList.remove("hidden");
+        }
+        modalClose.addEventListener("click", () =>
+          modal.classList.add("hidden")
+        );
+
+        window.addEventListener("resize", resetZoomAndPan);
+
+        async function initialize() {
+          try {
+            statusText.textContent = "正在初始化本地模式...";
+            // 移动端优化：防止双击缩放
+            document.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                e.preventDefault();
+              }
+            }, { passive: false });
+
+=======
 <!DOCTYPE html>
 <html lang="zh-CN">
   <head>
@@ -2899,6 +5091,7 @@
               }
             }, { passive: false });
 
+>>>>>>> origin/main
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function(e) {
               const now = (new Date()).getTime();
@@ -3030,5 +5223,171 @@
         });
       });
     </script>
+
+    <script>
+  // 新增聊天功能JavaScript
+  document.addEventListener("DOMContentLoaded", function() {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-message-btn');
+    const imageUploadBtn = document.getElementById('image-upload-btn');
+    const voiceUploadBtn = document.getElementById('voice-upload-btn');
+    const imageFileInput = document.getElementById('image-file-input');
+    const voiceFileInput = document.getElementById('voice-file-input');
+    const apiService = document.getElementById('api-service');
+    
+    // 添加用户消息到聊天
+    function addUserMessage(message) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message user-message';
+      messageEl.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="message-content">
+          <p>${message}</p>
+          <div class="message-time">${getCurrentTime()}</div>
+        </div>
+      `;
+      chatMessages.appendChild(messageEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // 添加机器人消息到聊天
+    function addBotMessage(message) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message bot-message';
+      messageEl.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <p>${message}</p>
+          <div class="message-time">${getCurrentTime()}</div>
+        </div>
+      `;
+      chatMessages.appendChild(messageEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // 获取当前时间
+    function getCurrentTime() {
+      return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+    
+    // 发送消息处理
+    function handleSendMessage() {
+      const message = chatInput.value.trim();
+      if (message) {
+        addUserMessage(message);
+        
+        // 设置聊天消息到隐藏的textarea
+        document.getElementById('chat-message').value = message;
+        
+        // 根据服务类型执行相应操作
+        if (apiService.value === 'chat') {
+          // 执行聊天操作
+          executeApiAction();
+        } else if (apiService.value === 'ocr') {
+          // 如果有图片文件，执行OCR
+          if (state.ocrFile) {
+            executeApiAction();
+          } else {
+            addBotMessage("请先上传图片进行识别");
+          }
+        } else if (apiService.value === 'voice') {
+          // 如果有语音文件，执行语音识别
+          if (state.voiceFile) {
+            executeApiAction();
+          } else {
+            addBotMessage("请先上传语音文件");
+          }
+        }
+        
+        chatInput.value = '';
+      }
+    }
+    
+    // 绑定发送消息事件
+    sendButton.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    });
+    
+    // 图片上传处理
+    imageUploadBtn.addEventListener('click', function() {
+      // 切换到OCR服务
+      apiService.value = 'ocr';
+      imageFileInput.click();
+    });
+    
+    imageFileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0) {
+        handleOcrFileUpload(e.target.files[0]);
+        addUserMessage("[图片已上传]");
+        addBotMessage("图片上传成功，请问您想对这张图片进行什么操作？");
+      }
+    });
+    
+    // 语音上传处理
+    voiceUploadBtn.addEventListener('click', function() {
+      // 切换到语音服务
+      apiService.value = 'voice';
+      voiceFileInput.click();
+    });
+    
+    voiceFileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0) {
+        handleVoiceFileUpload(e.target.files[0]);
+        addUserMessage("[语音消息已上传]");
+        addBotMessage("语音文件上传成功，正在处理...");
+        executeApiAction();
+      }
+    });
+    
+    // 修改API响应处理函数，将结果显示在聊天中
+    const originalUpdateApiResponse = updateApiResponse;
+    window.updateApiResponse = function(message) {
+      originalUpdateApiResponse(message);
+      
+      // 尝试解析JSON响应
+      try {
+        const data = JSON.parse(message);
+        if (data.text || data.message) {
+          addBotMessage(data.text || data.message);
+        } else {
+          addBotMessage("请求成功完成");
+        }
+      } catch (e) {
+        // 如果不是JSON，直接显示消息
+        if (message.length > 200) {
+          addBotMessage("收到较长响应，请查看详情");
+        } else {
+          addBotMessage(message);
+        }
+      }
+    };
+    
+    // 修改API状态更新函数
+    const originalSetApiStatus = setApiStatus;
+    window.setApiStatus = function(status) {
+      originalSetApiStatus(status);
+      
+      const statusElement = document.getElementById('api-status-text');
+      const statusIndicator = document.querySelector('.api-status');
+      
+      if (statusElement && statusIndicator) {
+        statusElement.textContent = 
+          status === 'connected' ? '在线' : 
+          status === 'connecting' ? '连接中...' : '离线';
+        
+        statusIndicator.className = 'api-status ' + status;
+      }
+    };
+  });
+</script>
   </body>
 </html>
