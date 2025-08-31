@@ -3,6 +3,7 @@ import { Layout, Card, Typography, Avatar, Button, Dropdown, Space, Select, mess
 import { UserOutlined, RobotOutlined, SendOutlined, ExportOutlined, DownloadOutlined, FileTextOutlined, FileOutlined, FilePdfOutlined, ReloadOutlined } from '@ant-design/icons';
 import ChatInput from './ChatInput';
 import AIService, { Role } from '../services/aiService';
+import '../styles/modal.css';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -108,20 +109,39 @@ const CareerGuideChat: React.FC = () => {
     updateUserProfile(content);
 
     try {
-      // 调用AI服务获取回复
-      const response = await aiService.sendMessage(content, appState.currentRole);
-      
-      const isResumeGenerated = response.reply.includes('📝 **专业简历已生成完成！**');
-      
-      const botMessage: Message = {
+      // 创建临时消息用于显示流式响应
+      const tempBotMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: response.reply,
+        content: '',
         sender: 'bot',
-        timestamp: new Date(),
-        hasResumeDownload: isResumeGenerated
+        timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => [...prev, tempBotMessage]);
+      
+      // 调用流式AI服务获取回复
+      const response = await aiService.sendMessageStream(content, appState.currentRole, (chunk: string) => {
+        // 实时更新消息内容
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === tempBotMessage.id 
+              ? { ...msg, content: msg.content + chunk }
+              : msg
+          )
+        );
+      });
+      
+      // 检查是否生成了简历
+      const isResumeGenerated = response.reply.includes('📝 **专业简历已生成完成！**');
+      
+      // 更新最终消息
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempBotMessage.id 
+            ? { ...msg, content: response.reply, hasResumeDownload: isResumeGenerated }
+            : msg
+        )
+      );
       
       // 如果生成了简历，保存到状态中
       if (isResumeGenerated) {
@@ -611,21 +631,23 @@ ${resumeContent}
   ];
 
   return (
-    <Layout style={{ height: '100vh', backgroundColor: '#f0f2f5' }}>
-      <Content style={{ padding: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ width: '100%', maxWidth: '800px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Card 
-            className="chat-window-header"
+    <Layout style={{ height: '100vh', backgroundColor: 'transparent' }}>
+      <Content style={{ padding: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ width: '100%', maxWidth: '900px', height: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div 
             style={{ 
-              marginBottom: '16px', 
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              borderRadius: '20px',
+              background: 'rgba(255, 255, 255, 0.25)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              padding: '20px'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Title level={4} style={{ color: 'white', margin: 0, fontWeight: 'bold' }}>
-                AI 职业发展顾问
+              <Title level={4} className="modal-title" style={{ color: '#1e293b', margin: 0, fontWeight: '600', textShadow: '0 1px 2px rgba(255, 255, 255, 0.5)' }}>
+                🤖 AI 职业发展顾问
               </Title>
               <Space>
                 <Select
@@ -640,35 +662,45 @@ ${resumeContent}
                   placeholder="选择AI角色"
                 />
                 <Button 
-                  icon={<ReloadOutlined />} 
+                  icon={<ReloadOutlined className="modal-icon" />} 
                   size="small"
                   onClick={handleNewChat}
                   title="开始新对话"
+                  className="modal-button-secondary"
                 >
                   新对话
                 </Button>
                 {appState.showResumeDownload && (
                   <Dropdown menu={{ items: resumeDownloadItems }} placement="bottomRight">
-                    <Button type="primary" icon={<DownloadOutlined />} size="small">
+                    <Button type="primary" icon={<DownloadOutlined className="modal-icon" />} size="small" className="modal-button">
                       下载简历
                     </Button>
                   </Dropdown>
                 )}
                 {messages.length > 1 && (
                   <Dropdown menu={{ items: exportMenuItems }} placement="bottomRight">
-                    <Button icon={<DownloadOutlined />} size="small">
+                    <Button icon={<DownloadOutlined className="modal-icon" />} size="small" className="modal-button-secondary">
                       导出对话
                     </Button>
                   </Dropdown>
                 )}
               </Space>
             </div>
-          </Card>
+          </div>
 
-          <Card 
-            className="chat-window"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-            styles={{ body: { padding: '12px 16px', flex: 1, overflowY: 'auto' } }}
+          <div 
+            style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              borderRadius: '20px',
+              background: 'rgba(255, 255, 255, 0.35)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.5)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.05)',
+              padding: '20px'
+            }}
           >
             <div ref={chatContainerRef} style={{ height: '100%', overflowY: 'auto' }}>
             {messages.map((message) => (
@@ -676,8 +708,12 @@ ${resumeContent}
                 key={message.id}
                 style={{
                   marginBottom: '15px',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  borderRadius: '16px',
+                  background: 'rgba(255, 255, 255, 0.25)',
+                  backdropFilter: 'blur(15px)',
+                  WebkitBackdropFilter: 'blur(15px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
                 }}
                 styles={{ body: { padding: '16px' } }}
               >
@@ -701,12 +737,16 @@ ${resumeContent}
                     maxWidth: message.sender === 'user' ? '70%' : '85%'
                   }}>
                     <div style={{
-                      backgroundColor: message.sender === 'user' ? '#f0f9ff' : '#ffffff',
-                      border: `1px solid ${message.sender === 'user' ? '#91d5ff' : '#e6f7ff'}`,
-                      borderRadius: '12px',
+                      background: message.sender === 'user' 
+                        ? 'rgba(0, 255, 255, 0.08)' 
+                        : 'rgba(255, 0, 255, 0.06)',
+                      border: `1px solid ${message.sender === 'user' ? 'rgba(0, 255, 255, 0.2)' : 'rgba(255, 0, 255, 0.15)'}`,
+                      borderRadius: '16px',
                       padding: '16px',
                       position: 'relative',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
                     }}>
                       <div style={{
                         position: 'absolute',
@@ -723,10 +763,11 @@ ${resumeContent}
                       }} />
                       
                       <Text strong style={{ 
-                        color: message.sender === 'user' ? '#52c41a' : '#1890ff',
+                        color: message.sender === 'user' ? '#0891b2' : '#7c3aed',
                         fontSize: '14px',
                         marginBottom: '8px',
-                        display: 'block'
+                        display: 'block',
+                        textShadow: '0 1px 2px rgba(255, 255, 255, 0.5)'
                       }}>
                         {message.sender === 'user' ? '您' : '🤖 AI顾问'}
                       </Text>
@@ -735,9 +776,10 @@ ${resumeContent}
                         whiteSpace: 'pre-line',
                         lineHeight: '1.6',
                         fontSize: '14px',
-                        color: '#262626'
+                        color: '#1e293b',
+                        textShadow: '0 1px 1px rgba(255, 255, 255, 0.3)'
                       }}>
-                        <Text>{message.content}</Text>
+                        <Text style={{ color: '#1e293b' }}>{message.content}</Text>
                       </div>
                       
                       {/* Loading indicator for bot messages */}
@@ -771,13 +813,8 @@ ${resumeContent}
                           >
                             <Button 
                               type="primary" 
-                              icon={<DownloadOutlined />}
-                              style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                border: 'none',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
-                              }}
+                              icon={<DownloadOutlined className="modal-icon" />}
+                              className="modal-button"
                             >
                               📄 下载简历
                             </Button>
@@ -789,7 +826,7 @@ ${resumeContent}
                         marginTop: '12px',
                         textAlign: message.sender === 'user' ? 'right' : 'left'
                       }}>
-                        <Text type="secondary" style={{ fontSize: '11px' }}>
+                        <Text type="secondary" style={{ fontSize: '11px', color: 'rgba(30, 41, 59, 0.6)', textShadow: '0 1px 1px rgba(255, 255, 255, 0.3)' }}>
                           {message.timestamp.toLocaleTimeString()}
                         </Text>
                       </div>
@@ -801,7 +838,7 @@ ${resumeContent}
               {/* 用于自动滚动的锚点 */}
               <div ref={messagesEndRef} style={{ height: '1px' }} />
             </div>
-          </Card>
+          </div>
           <ChatInput onSend={handleSendMessage} isLoading={appState.isLoading} />
         </div>
       </Content>

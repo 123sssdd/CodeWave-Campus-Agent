@@ -25,8 +25,8 @@ const suggestionButtons = document.getElementById("suggestionButtons");
 const customInputBtn = document.getElementById("customInputBtn");
 const backToSuggestionsBtn = document.getElementById("backToSuggestionsBtn");
 const textInputContainer = document.getElementById("textInputContainer");
-// 初始输入区域 DOM
-const initialInputSection = document.getElementById("initialInputSection");
+// 模态框 DOM
+const modalOverlay = document.getElementById("modalOverlay");
 const knowledgePointInput = document.getElementById("knowledgePointInput");
 const startLearningBtn = document.getElementById("startLearningBtn");
 
@@ -99,23 +99,23 @@ function setupDemoButton() {
   }
 }
 
-// 隐藏初始输入区域，显示主内容
-function hideInitialInput() {
-  if (initialInputSection) {
-    initialInputSection.style.display = "none";
+// 隐藏模态框
+function hideModal() {
+  if (modalOverlay) {
+    modalOverlay.style.display = "none";
   }
 }
 
-// 显示初始输入区域，隐藏主内容
-function showInitialInput() {
-  if (initialInputSection) {
-    initialInputSection.style.display = "block";
+// 显示模态框
+function showModal() {
+  if (modalOverlay) {
+    modalOverlay.style.display = "flex";
   }
 }
 
 // 播放代数方程求解演示
 async function playDemoAlgebra() {
-  hideInitialInput();
+  hideModal();
   clearMessages();
   try {
     const res = await fetch("/api/demo_algebra");
@@ -144,7 +144,7 @@ async function playDemoAlgebra() {
 
 // 播放二分查找演示（AI 自动播报 + 用户手动/选择回复）
 async function playDemoBinarySearch() {
-  hideInitialInput();
+  hideModal();
   clearMessages();
   resetDemoState();
   try {
@@ -432,7 +432,7 @@ async function startLearningSession() {
     return;
   }
 
-  hideInitialInput();
+  hideModal();
   showLoading(true);
 
   try {
@@ -600,9 +600,10 @@ function addConfidenceMessage(confidence, threshold) {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// 清空消息
+// 清空消息（保留模态框）
 function clearMessages() {
-  messagesContainer.innerHTML = "";
+  const messages = messagesContainer.querySelectorAll('.message, .feedback-message, .confidence-message');
+  messages.forEach(msg => msg.remove());
   chatArea.style.display = "flex";
   summaryArea.style.display = "none";
 }
@@ -612,8 +613,9 @@ function showChatArea() {
   chatArea.style.display = "flex";
   summaryArea.style.display = "none";
 
-  // 清空消息容器
-  messagesContainer.innerHTML = "";
+  // 清空消息容器（保留模态框）
+  const messages = messagesContainer.querySelectorAll('.message, .feedback-message, .confidence-message');
+  messages.forEach(msg => msg.remove());
 
   // 隐藏输入区域，等待模拟消息完成
   hideInputArea();
@@ -719,8 +721,8 @@ function showSummary(summary) {
 function showStartLearning() {
   // 重置演示状态并清空消息
   resetDemoState();
-  // 显示初始输入区域
-  showInitialInput();
+  // 显示模态框
+  showModal();
   // 清空消息并隐藏对话区域
   clearMessages();
   currentSession = null;

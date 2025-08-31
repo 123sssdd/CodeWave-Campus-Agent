@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="zh-CN">
   <head>
@@ -93,6 +94,7 @@
         border-radius: 0 0 10px 10px;
       }
       
+      
       #baseCanvas,
       #drawingCanvas,
       #maskCanvas {
@@ -102,6 +104,7 @@
         transform-origin: top left;
         border-radius: 0 0 10px 10px;
       }
+      
       
       #maskCanvas {
         opacity: 0.5;
@@ -119,10 +122,12 @@
         color: #fff;
       }
       
+      
       .file-item:hover,
       .folder-item:hover {
         background: rgba(255, 255, 255, 0.2);
       }
+      
       
       .file-item.active {
         background: rgba(238, 130, 238, 0.7);
@@ -236,6 +241,7 @@
         .sidebar {
           position: fixed;
           top: 0;
+          left: -320px;
           left: -320px;
           width: 300px;
           height: 150vh;
@@ -672,6 +678,7 @@
   }
     </style>
   </head>
+  <body class="flex h-screen overflow-hidden">
   <body class="flex h-screen overflow-hidden">
     <!-- 汉堡菜单按钮 (仅在移动端显示) -->
     <button id="hamburger-menu" class="hamburger-menu" title="显示/隐藏侧边栏">
@@ -2182,6 +2189,2909 @@
               }
             }, { passive: false });
 
+=======
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>图像标注工具 - Flask版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* 现代化UI样式 */
+      :root {
+        --primary-bg: #f8fafc;
+        --secondary-bg: #ffffff;
+        --accent-color: #3b82f6;
+        --accent-hover: #2563eb;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+      }
+      
+      body {
+        font-family: "Inter", "SF Pro Display", "Helvetica Neue", "Arial", sans-serif;
+        color: var(--text-primary);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0;
+        padding: 0;
+      }
+      
+      .sidebar {
+        width: 320px;
+        background: var(--secondary-bg);
+        border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+        box-shadow: var(--shadow-lg);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid var(--border-color);
+      }
+      
+      .editor-pane {
+        flex-grow: 1;
+        background: var(--primary-bg);
+        margin: 16px;
+        margin-left: 0;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+      
+      .canvas-container {
+        position: relative;
+        width: calc(100% - 32px);
+        height: calc(100% - 32px);
+        margin: 16px;
+        overflow: hidden;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        background: 
+          linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+          linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        touch-action: none;
+      }
+      
+      #baseCanvas,
+      #drawingCanvas,
+      #maskCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform-origin: top left;
+        border-radius: var(--radius-md);
+      }
+      
+      #baseCanvas {
+        background: white;
+        z-index: 1;
+      }
+      
+      #drawingCanvas {
+        z-index: 2;
+      }
+      
+      #maskCanvas {
+        z-index: 3;
+      }
+      
+      #maskCanvas {
+        opacity: 0.5;
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+      
+      .file-item,
+      .folder-item {
+        cursor: pointer;
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        margin: 4px 0;
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .file-item:hover,
+      .folder-item:hover {
+        background: #f1f5f9;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .file-item.active {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+        color: white;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+      }
+      .folder-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .folder-content {
+        padding-left: 20px;
+      }
+      .tool-btn {
+        background: var(--secondary-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .tool-btn:hover {
+        background: var(--primary-bg);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        color: var(--text-primary);
+      }
+      
+      .tool-btn.active {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+        color: white;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+      }
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-content {
+        background: var(--secondary-bg);
+        padding: 2rem;
+        border-radius: var(--radius-xl);
+        max-width: 500px;
+        text-align: center;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+      }
+      
+      /* 橡皮擦预览圆 - 现代化样式 */
+      .eraser-preview {
+        position: absolute;
+        border: 3px solid #ef4444;
+        border-radius: 50%;
+        pointer-events: none;
+        background-color: rgba(239, 68, 68, 0.1);
+        display: none;
+        z-index: 10;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+      }
+      
+      /* 画笔预览圆 - 现代化样式 */
+      .brush-preview {
+        position: absolute;
+        border: 3px solid #22c55e;
+        border-radius: 50%;
+        pointer-events: none;
+        background-color: rgba(34, 197, 94, 0.1);
+        display: none;
+        z-index: 10;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+      }
+      
+      /* 禁用状态的控件样式 */
+      input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      /* 汉堡菜单按钮样式 */
+      .hamburger-menu {
+        position: fixed;
+        top: 50px;
+        left: 300px;
+        z-index: 1001;
+        display: none;
+        background-color: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 9px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .hamburger-menu:hover {
+        background-color: var(--primary-bg);
+      }
+      
+      /* 蒙版模式下的暗化效果 */
+      .mask-mode .editor-pane {
+        background: var(--secondary-bg);
+      }
+      .mask-mode .canvas-container {
+        background: 
+          linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+          linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      }
+      .mask-mode #baseCanvas {
+        filter: brightness(0.5);
+      }
+      
+      /* 现代化控件样式 */
+      select:focus, input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      
+      /* 圆形状态指示器 */
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      
+      .status-indicator.ready {
+        background: #10b981;
+      }
+      
+      .status-indicator.loading {
+        background: #f59e0b;
+        animation: pulse 1.5s infinite;
+      }
+      
+      .status-indicator.error {
+        background: #ef4444;
+      }
+      
+      /* 现代化工具栏分组 */
+      .toolbar-group {
+        background: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      /* 现代化按钮样式 */
+      .modern-btn {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        padding: 12px 24px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .modern-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+      
+      .modern-btn.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+      
+      .modern-btn.purple {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      }
+      
+      /* 工具栏按钮的特殊颜色变体 */
+      .tool-btn.success-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+      
+      .tool-btn.success-btn:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        transform: translateY(-1px);
+      }
+      
+      .tool-btn.purple-btn {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+      }
+      
+      .tool-btn.purple-btn:hover {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        transform: translateY(-1px);
+      }
+      
+      /* 移动端适配 */
+      @media (max-width: 2290px) {
+        .hamburger-menu {
+          display: block;
+        }
+        
+        .sidebar {
+          position: fixed;
+          top: 0;
+          left: -320px;
+          width: 300px;
+          height: 100vh;
+          z-index: 1000;
+          transition: left 0.3s ease;
+          border-right: 1px solid var(--border-color);
+        }
+        
+        .sidebar.show {
+          left: 0;
+        }
+        
+        .editor-pane {
+          width: 100vw;
+          margin-left: 0;
+          margin: 8px;
+        }
+        
+        .canvas-container {
+          height: calc(100vh - 120px);
+          margin: 8px;
+        }
+      }
+      
+      /* iPad 横屏适配 */
+      @media (min-width: 1491px) and (max-width: 2290px) and (orientation: landscape) {
+        .sidebar {
+          width: 250px;
+        }
+        
+        .tool-btn {
+          padding: 6px;
+        }
+        
+        .flex.items-center.bg-gray-600 {
+          padding: 4px 6px;
+        }
+        
+        .flex.items-center.bg-gray-600 label {
+          font-size: 12px;
+        }
+      }
+
+      /* Python接口悬浮按钮 */
+      .python-interface-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: var(--accent-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        z-index: 999;
+        transition: all 0.3s ease;
+      }
+
+      .python-interface-btn:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      .python-interface-btn i {
+        font-size: 24px;
+      }
+
+      /* Python接口悬浮窗 */
+      .python-modal {
+        position: fixed;
+        top: 80px;
+        left: 80px;
+        width: 480px;
+        height: 600px;
+        min-width: 380px;
+        min-height: 400px;
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+        z-index: 1002;
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      .python-modal.open {
+        display: flex;
+        flex-direction: column;
+        animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9) translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      /* 悬浮窗标题栏 */
+      .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px 16px 0 0;
+        cursor: move;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .modal-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        border-radius: 16px 16px 0 0;
+        pointer-events: none;
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .modal-header h2 i {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .modal-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .modal-control-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 13px;
+        backdrop-filter: blur(10px);
+      }
+
+      .modal-control-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+      }
+
+      .modal-control-btn.close:hover {
+        background: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      }
+
+      .modal-control-btn.minimize:hover {
+        background: #f59e0b;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      }
+
+      /* 悬浮窗内容区域 */
+      .modal-body {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      /* 缩放手柄 */
+      .resize-handle {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 24px;
+        height: 24px;
+        cursor: nw-resize;
+        background: linear-gradient(-45deg, transparent 0%, transparent 35%, rgba(0,0,0,0.1) 35%, rgba(0,0,0,0.1) 65%, transparent 65%);
+        background-size: 6px 6px;
+        border-radius: 0 0 16px 0;
+        opacity: 0.6;
+        transition: opacity 0.2s ease;
+      }
+
+      .resize-handle:hover {
+        opacity: 1;
+      }
+
+      /* AI助手样式 */
+      .ai-chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: 16px;
+      }
+
+      .chat-messages {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 12px;
+        padding: 20px;
+        overflow-y: auto;
+        min-height: 280px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(10px);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .chat-message {
+        margin-bottom: 16px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        max-width: 85%;
+        line-height: 1.5;
+        font-size: 14px;
+        position: relative;
+        animation: messageSlideIn 0.3s ease-out;
+      }
+
+      @keyframes messageSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .chat-message.user {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .chat-message.user::before {
+        content: '';
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid #764ba2;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+      }
+
+      .chat-message.assistant {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        color: #374151;
+      }
+
+      .chat-message.assistant::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-right: 6px solid rgba(255, 255, 255, 0.9);
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+      }
+
+      .chat-input-area {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(10px);
+      }
+
+      .chat-input {
+        flex: 1;
+        min-height: 44px;
+        max-height: 120px;
+        padding: 12px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        resize: none;
+        font-family: inherit;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.2s ease;
+        line-height: 1.4;
+      }
+
+      .chat-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white;
+      }
+
+      .chat-input::placeholder {
+        color: #9ca3af;
+      }
+
+      .send-btn {
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        min-width: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .send-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .send-btn:active {
+        transform: translateY(0);
+      }
+
+      .send-btn:disabled {
+        background: #d1d5db;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* 输入控制按钮 */
+      .input-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .input-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+
+      .input-btn:hover {
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .input-btn.active {
+        background: #667eea;
+        color: white;
+      }
+
+      /* 语音录制状态 */
+      .voice-recording {
+        padding: 12px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+
+      .recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ef4444;
+        font-weight: 500;
+      }
+
+      .pulse-dot {
+        width: 12px;
+        height: 12px;
+        background: #ef4444;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+      }
+
+      .stop-btn {
+        padding: 6px 12px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      }
+
+      .stop-btn:hover {
+        background: #dc2626;
+      }
+
+      /* 文件预览区域 */
+      .file-preview {
+        margin-bottom: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.05);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .clear-btn {
+        padding: 4px 8px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+      }
+
+      .preview-content {
+        padding: 12px;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+
+      .file-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 4px;
+        margin-bottom: 6px;
+        font-size: 12px;
+      }
+
+      .file-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .file-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #667eea;
+        color: white;
+        border-radius: 4px;
+        font-size: 10px;
+      }
+
+      .file-info {
+        flex: 1;
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .file-size {
+        color: var(--text-secondary);
+        font-size: 10px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .form-group label {
+        font-weight: 500;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      .form-group select,
+      .form-group input,
+      .form-group textarea {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      }
+
+      .form-group select:focus,
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+      }
+
+      .button-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .btn-primary {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--accent-hover);
+      }
+
+      .btn-secondary {
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background-color: var(--secondary-bg);
+        border-color: var(--accent-color);
+      }
+
+      /* API调用状态指示器 */
+      .api-status {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .api-status.connected {
+        background-color: #10b981;
+      }
+
+      .api-status.disconnected {
+        background-color: #ef4444;
+      }
+
+      .api-status.connecting {
+        background-color: #f59e0b;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+      
+      /* 文件上传区域 - 现代化样式 */
+      .file-upload-area {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.02), rgba(147, 51, 234, 0.02));
+      }
+      
+      .file-upload-area:hover {
+        border-color: var(--accent-color);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .file-upload-area i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--accent-color);
+      }
+      
+      .file-upload-area p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+      
+      /* 现代化滚动条 */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: var(--primary-bg);
+        border-radius: 3px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+    </style>
+  </head>
+  <body class="flex h-screen overflow-hidden">
+    <!-- 汉堡菜单按钮 (仅在移动端显示) -->
+    <button id="hamburger-menu" class="hamburger-menu" title="显示/隐藏侧边栏">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar flex flex-col p-6 space-y-6">
+      <div class="text-center">
+        <h1 class="text-2xl font-bold" style="background: linear-gradient(135deg, var(--accent-color), var(--accent-hover)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">PhotoRemark</h1>
+        <p class="text-sm" style="color: var(--text-secondary); margin-top: 4px;">智能图像标注工具</p>
+      </div>
+      <div class="flex flex-col space-y-2">
+        <div class="p-4 rounded-lg" style="background: var(--primary-bg); border: 1px solid var(--border-color);">
+          <label for="wrinkleTypeSelect" class="text-sm font-semibold mb-2 block" style="color: var(--text-primary);"
+            >🏷️ 皱纹类型</label
+          >
+          <select
+            id="wrinkleTypeSelect"
+            class="w-full py-3 px-4 rounded-lg border focus:outline-none focus:ring-2 transition-all"
+            style="background: var(--secondary-bg); border-color: var(--border-color); color: var(--text-primary);"
+          >
+            <option value="">请选择皱纹类型</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex-grow">
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary);">📁 文件管理</h3>
+          <div id="file-tree" class="space-y-2 overflow-y-auto pr-2 max-h-96">
+            <p style="color: var(--text-secondary); font-size: 14px;">拖拽图片到此处或点击导入按钮</p>
+          </div>
+        </div>
+        
+        <div class="p-4 rounded-lg" style="background: var(--primary-bg); border: 1px solid var(--border-color);">
+          <h3 class="text-sm font-semibold mb-2" style="color: var(--text-primary);">📊 状态信息</h3>
+          <div class="space-y-1">
+            <p class="text-xs" style="color: var(--text-secondary);">状态: <span class="status-indicator ready"></span><span id="status-text" class="font-medium" style="color: var(--accent-color);">就绪</span></p>
+            <p id="source-info" class="text-xs" style="color: var(--text-secondary);"></p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Editor Pane -->
+    <main class="editor-pane flex flex-col">
+      <!-- Toolbar -->
+      <div
+        class="p-2 flex items-center justify-between border-b" style="background: var(--secondary-bg); border-color: var(--border-color); min-height: 60px;"
+      >
+        <!-- 左侧工具栏 -->
+        <div class="flex items-center gap-1">
+          <!-- 绘图工具组 -->
+          <div class="toolbar-group">
+            <button
+              id="tool-pan"
+              class="tool-btn"
+              title="移动 (V)"
+            >
+              <i class="fas fa-hand-paper fa-fw"></i>
+            </button>
+            <button
+              id="tool-pencil"
+              class="tool-btn active"
+              title="画笔 (B)"
+            >
+              <i class="fas fa-pencil-alt fa-fw"></i>
+            </button>
+            <button
+              id="tool-rectangle"
+              class="tool-btn"
+              title="矩形 (R)"
+            >
+              <i class="fas fa-vector-square fa-fw"></i>
+            </button>
+            <button
+              id="tool-polygon"
+              class="tool-btn"
+              title="多边形 (P)"
+            >
+              <i class="fas fa-draw-polygon fa-fw"></i>
+            </button>
+            <button
+              id="tool-eraser"
+              class="tool-btn"
+              title="橡皮擦 (E)"
+            >
+              <i class="fas fa-eraser fa-fw"></i>
+            </button>
+            <button
+              id="tool-mask"
+              class="tool-btn"
+              title="蒙版工具 (T)"
+            >
+              <i class="fas fa-highlighter fa-fw"></i>
+            </button>
+          </div>
+          
+          <!-- 绘图属性组 -->
+          <div class="toolbar-group">
+            <label for="brush-size" class="text-xs font-medium" style="color: var(--text-secondary);">大小</label>
+            <input
+              type="range"
+              id="brush-size"
+              min="1"
+              max="100"
+              value="5"
+              class="w-12"
+              style="accent-color: var(--accent-color);"
+            />
+          </div>
+          
+          <div class="toolbar-group" id="color-container">
+            <label for="brush-color" class="text-xs font-medium" style="color: var(--text-secondary);">颜色</label>
+            <input type="color" id="brush-color" value="#ff0000" class="w-6 h-6 rounded border" style="border-color: var(--border-color);" />
+          </div>
+          
+          <div class="toolbar-group" id="mask-color-container">
+            <label for="mask-color" class="text-xs font-medium" style="color: var(--text-secondary);">蒙版</label>
+            <input type="color" id="mask-color" value="#ffff00" class="w-6 h-6 rounded border" style="border-color: var(--border-color);" />
+          </div>
+          
+          <div class="toolbar-group" id="layer-opacity-container">
+            <label for="layer-opacity" class="text-xs font-medium" style="color: var(--text-secondary);">标注</label>
+            <input
+              type="range"
+              id="layer-opacity"
+              min="0"
+              max="100"
+              step="10"
+              value="100"
+              class="w-10"
+              style="accent-color: var(--accent-color);"
+            />
+            <span id="layer-opacity-value" class="text-xs font-medium" style="color: var(--text-primary);">100%</span>
+          </div>
+          
+          <div class="toolbar-group" id="mask-opacity-container">
+            <label for="mask-opacity" class="text-xs font-medium" style="color: var(--text-secondary);">蒙版</label>
+            <input
+              type="range"
+              id="mask-opacity"
+              min="0"
+              max="100"
+              value="50"
+              class="w-10"
+              style="accent-color: var(--accent-color);"
+            />
+            <span id="mask-opacity-value" class="text-xs font-medium" style="color: var(--text-primary);">50%</span>
+          </div>
+        </div>
+        
+        <!-- 中间缩放控制组 -->
+        <div class="toolbar-group">
+          <button id="zoom-out" class="tool-btn" title="缩小">
+            <i class="fas fa-search-minus fa-fw"></i>
+          </button>
+          <span id="zoom-level" class="text-xs w-8 text-center font-semibold px-1 py-1 rounded" style="color: var(--text-primary); background: var(--primary-bg);">100%</span>
+          <button id="zoom-in" class="tool-btn" title="放大">
+            <i class="fas fa-search-plus fa-fw"></i>
+          </button>
+          <button
+            id="zoom-reset"
+            class="tool-btn"
+            title="重置缩放"
+          >
+            <i class="fas fa-expand fa-fw"></i>
+          </button>
+        </div>
+        
+        <!-- 右侧操作按钮组 -->
+        <div class="flex items-center gap-1">
+          <button
+            id="toggle-mask"
+            class="tool-btn"
+            title="切换蒙版 (M)"
+          >
+            <i class="fas fa-layer-group fa-fw"></i>
+          </button>
+          <button
+            id="clear-mask"
+            class="tool-btn"
+            title="清除蒙版"
+          >
+            <i class="fas fa-trash-alt fa-fw"></i>
+          </button>
+          <button
+            id="saveBtn"
+            class="tool-btn success-btn"
+            title="导出标注"
+          >
+            <i class="fas fa-download fa-fw"></i>
+          </button>
+          <button
+            id="exportBtn"
+            class="tool-btn purple-btn"
+            title="导出合并"
+          >
+            <i class="fas fa-file-export fa-fw"></i>
+          </button>
+          <button
+            id="importBtn"
+            class="tool-btn"
+            title="导入图像"
+          >
+            <i class="fas fa-image fa-fw"></i>
+          </button>
+          <input id="localImageInput" type="file" accept="image/*" multiple class="hidden" />
+        </div>
+      </div>
+      <!-- Canvas Area -->
+      <div id="canvas-container" class="canvas-container">
+        <canvas id="baseCanvas"></canvas>
+        <canvas id="drawingCanvas"></canvas>
+        <canvas id="maskCanvas"></canvas>
+        <div id="eraser-preview" class="eraser-preview"></div>
+        <div id="brush-preview" class="brush-preview"></div>
+      </div>
+    </main>
+
+    <!-- Modal for messages -->
+    <div id="modal" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <p id="modal-message" style="color: var(--text-primary); margin-bottom: 1.5rem;"></p>
+        <button
+          id="modal-close"
+          class="modern-btn"
+        >
+          关闭
+        </button>
+      </div>
+    </div>
+
+    <!-- Python接口悬浮按钮 -->
+    <div id="python-interface-btn" class="python-interface-btn">
+      <i class="fas fa-code"></i>
+    </div>
+
+    <!-- Python接口悬浮窗 -->
+    <div id="python-modal" class="python-modal">
+      <div class="modal-header">
+        <h2><i class="fas fa-robot"></i> AI 助手</h2>
+        <div class="modal-controls">
+          <button class="modal-control-btn minimize" title="最小化">
+            <i class="fas fa-minus"></i>
+          </button>
+          <button class="modal-control-btn close" title="关闭">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <div class="ai-chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-message assistant">
+              <strong>AI助手:</strong> 欢迎使用AI助手！我可以帮助您分析图像、回答问题或协助标注工作。
+            </div>
+          </div>
+          
+          <div class="chat-input-area">
+            <div class="input-controls">
+              <button id="file-upload-btn" class="input-btn" title="上传文件">
+                <i class="fas fa-paperclip"></i>
+              </button>
+              <button id="voice-btn" class="input-btn" title="语音输入">
+                <i class="fas fa-microphone"></i>
+              </button>
+            </div>
+            <textarea 
+              id="chat-input" 
+              class="chat-input" 
+              placeholder="输入您的问题，或点击按钮使用语音/文件..."
+              rows="1"></textarea>
+            <button id="send-btn" class="send-btn">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+            <input type="file" id="file-input" accept="image/*,audio/*" style="display: none;" multiple>
+          </div>
+          
+          <!-- 语音录制状态 -->
+          <div id="voice-recording" class="voice-recording" style="display: none;">
+            <div class="recording-indicator">
+              <div class="pulse-dot"></div>
+              <span>正在录音...</span>
+              <button id="stop-recording" class="stop-btn">停止</button>
+            </div>
+          </div>
+          
+          <!-- 文件预览区域 -->
+          <div id="file-preview" class="file-preview" style="display: none;">
+            <div class="preview-header">
+              <span>已选择文件:</span>
+              <button id="clear-files" class="clear-btn">清除</button>
+            </div>
+            <div id="preview-content" class="preview-content"></div>
+          </div>
+        </div>
+        
+        <!-- 高级设置区域 -->
+        <details class="advanced-settings" style="margin-top: 16px;">
+          <summary style="cursor: pointer; font-weight: 500; color: var(--text-secondary);">高级设置</summary>
+          <div style="margin-top: 12px; padding: 12px; background: var(--primary-bg); border-radius: 6px; border: 1px solid var(--border-color);">
+            <div class="form-group">
+              <label for="api-service">选择服务</label>
+              <select id="api-service">
+                <option value="chat">星火聊天模型</option>
+                <option value="ocr">OCR识别服务</option>
+                <option value="voice">语音交互服务</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="api-endpoint">API 端点</label>
+              <input type="text" id="api-endpoint" placeholder="请输入API端点URL" />
+            </div>
+            
+            <div class="button-group">
+              <button id="test-api-btn" class="btn-secondary">测试连接</button>
+            </div>
+          </div>
+        </details>
+      </div>
+      
+      <div class="resize-handle"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // DOM 元素获取
+        const wrinkleTypeSelect = document.getElementById("wrinkleTypeSelect");
+        const fileTreeContainer = document.getElementById("file-tree");
+        const statusText = document.getElementById("status-text");
+        const sourceInfo = document.getElementById("source-info");
+
+        const baseCanvas = document.getElementById("baseCanvas");
+        const drawingCanvas = document.getElementById("drawingCanvas");
+        const maskCanvas = document.getElementById("maskCanvas");
+        const canvasContainer = document.getElementById("canvas-container");
+        const baseCtx = baseCanvas.getContext("2d");
+        const drawingCtx = drawingCanvas.getContext("2d");
+        const maskCtx = maskCanvas.getContext("2d");
+
+        const toolPan = document.getElementById("tool-pan");
+        const toolPencil = document.getElementById("tool-pencil");
+        const toolRectangle = document.getElementById("tool-rectangle");
+        const toolPolygon = document.getElementById("tool-polygon");
+        const toolEraser = document.getElementById("tool-eraser");
+        const toolMask = document.getElementById("tool-mask");
+        const brushSizeInput = document.getElementById("brush-size");
+        const brushColorInput = document.getElementById("brush-color");
+        const maskColorInput = document.getElementById("mask-color");
+        const layerOpacityInput = document.getElementById("layer-opacity");
+        const layerOpacityValueDisplay = document.getElementById("layer-opacity-value");
+        const maskOpacityInput = document.getElementById("mask-opacity");
+        const maskOpacityValueDisplay = document.getElementById("mask-opacity-value");
+        const eraserPreview = document.getElementById("eraser-preview");
+        const brushPreview = document.getElementById("brush-preview");
+
+        const zoomInBtn = document.getElementById("zoom-in");
+        const zoomOutBtn = document.getElementById("zoom-out");
+        const zoomResetBtn = document.getElementById("zoom-reset");
+        const zoomLevelDisplay = document.getElementById("zoom-level");
+
+        const saveBtn = document.getElementById("saveBtn");
+        const exportBtn = document.getElementById("exportBtn");
+        const importBtn = document.getElementById("importBtn");
+        const localImageInput = document.getElementById("localImageInput");
+        const toggleMaskBtn = document.getElementById("toggle-mask");
+        const clearMaskBtn = document.getElementById("clear-mask");
+
+        const modal = document.getElementById("modal");
+        const modalMessage = document.getElementById("modal-message");
+        const modalClose = document.getElementById("modal-close");
+        const hamburgerMenu = document.getElementById("hamburger-menu");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Python接口相关元素
+        const pythonInterfaceBtn = document.getElementById("python-interface-btn");
+        const pythonModal = document.getElementById("python-modal");
+        const modalHeader = pythonModal.querySelector('.modal-header');
+        const modalCloseBtn = pythonModal.querySelector('.modal-control-btn.close');
+        const modalMinimizeBtn = pythonModal.querySelector('.modal-control-btn.minimize');
+        const resizeHandle = pythonModal.querySelector('.resize-handle');
+        const chatMessages = document.getElementById("chat-messages");
+        const chatInput = document.getElementById("chat-input");
+        const sendMessageBtn = document.getElementById("send-message-btn");
+        const apiServiceSelect = document.getElementById("api-service");
+        const apiEndpointInput = document.getElementById("api-endpoint");
+        const testApiBtn = document.getElementById("test-api-btn");
+
+        // 应用状态
+        let state = {
+          // 本地模式数据
+          localFiles: [], // { name, dataURL, overlayData? }
+          activeLocalIndex: null,
+          isCanvasReady: false,
+          // 画布与交互
+          isDrawing: false,
+          isPanning: false,
+          isDrawingPolygon: false, // 多边形绘制状态
+          lastX: 0,
+          lastY: 0,
+          currentTool: "pencil", // 'pencil', 'eraser', 'pan', 'rectangle', 'polygon', 'mask'
+          zoom: 1,
+          pan: { x: 0, y: 0 },
+          imageSize: { width: 0, height: 0 },
+          originalImageSize: { width: 0, height: 0 }, // 原始图片尺寸
+          originalBaseImageDataURL: null, // 原始底图，用于无损导出合并图
+          canvasScale: 1, // 画布缩放比例
+          savedCanvasState: null,
+          polygonPoints: [], // 多边形顶点
+          supportsPressure: false, // 压力感应支持检测
+          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+          // 蒙版相关状态
+          isMaskVisible: true,
+          maskColor: 'rgba(255, 255, 0, 0.5)',
+          maskOpacity: 50,
+          // API相关状态
+          apiStatus: "disconnected", // disconnected, connecting, connected
+          // API端点配置
+          apiEndpoints: {
+            chat: "http://127.0.0.1:5001/chat",
+            ocr: "http://127.0.0.1:6000/ocr",
+            voice: "http://127.0.0.1:7000/chat"
+          },
+          // 悬浮窗状态
+          modalDragging: false,
+          modalResizing: false,
+          modalStartPos: { x: 0, y: 0 },
+          modalStartSize: { width: 0, height: 0 },
+          modalIsMinimized: false,
+          // 聊天历史
+          chatHistory: []
+        };
+
+        // --- 悬浮窗拖拽和缩放功能 ---
+        
+        // 初始化悬浮窗拖拽功能
+        function initModalDrag() {
+          modalHeader.addEventListener('mousedown', startDrag);
+          document.addEventListener('mousemove', drag);
+          document.addEventListener('mouseup', stopDrag);
+        }
+        
+        function startDrag(e) {
+          if (e.target.closest('.modal-control-btn')) return;
+          state.modalDragging = true;
+          state.modalStartPos = {
+            x: e.clientX - pythonModal.offsetLeft,
+            y: e.clientY - pythonModal.offsetTop
+          };
+          pythonModal.style.cursor = 'move';
+          e.preventDefault();
+        }
+        
+        function drag(e) {
+          if (!state.modalDragging && !state.modalResizing) return;
+          
+          if (state.modalDragging) {
+            const newX = e.clientX - state.modalStartPos.x;
+            const newY = e.clientY - state.modalStartPos.y;
+            
+            // 限制在窗口范围内
+            const maxX = window.innerWidth - pythonModal.offsetWidth;
+            const maxY = window.innerHeight - pythonModal.offsetHeight;
+            
+            pythonModal.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+            pythonModal.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
+          }
+          
+          if (state.modalResizing) {
+            const newWidth = Math.max(400, e.clientX - pythonModal.offsetLeft + 10);
+            const newHeight = Math.max(300, e.clientY - pythonModal.offsetTop + 10);
+            
+            pythonModal.style.width = newWidth + 'px';
+            pythonModal.style.height = newHeight + 'px';
+          }
+        }
+        
+        function stopDrag() {
+          state.modalDragging = false;
+          state.modalResizing = false;
+          pythonModal.style.cursor = 'default';
+        }
+        
+        // 初始化缩放功能
+        function initModalResize() {
+          resizeHandle.addEventListener('mousedown', startResize);
+        }
+        
+        function startResize(e) {
+          state.modalResizing = true;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        // 打开悬浮窗
+        function openPythonModal() {
+          pythonModal.classList.add('open');
+          if (state.modalIsMinimized) {
+            toggleMinimize();
+          }
+        }
+        
+        // 关闭悬浮窗
+        function closePythonModal() {
+          pythonModal.classList.remove('open');
+        }
+        
+        // 最小化/恢复悬浮窗
+        function toggleMinimize() {
+          const modalBody = pythonModal.querySelector('.modal-body');
+          const resizeHandle = pythonModal.querySelector('.resize-handle');
+          
+          if (state.modalIsMinimized) {
+            // 恢复
+            modalBody.style.display = 'flex';
+            resizeHandle.style.display = 'block';
+            pythonModal.style.height = '500px';
+            modalMinimizeBtn.innerHTML = '<i class="fas fa-minus"></i>';
+            state.modalIsMinimized = false;
+          } else {
+            // 最小化
+            modalBody.style.display = 'none';
+            resizeHandle.style.display = 'none';
+            pythonModal.style.height = '50px';
+            modalMinimizeBtn.innerHTML = '<i class="fas fa-window-restore"></i>';
+            state.modalIsMinimized = true;
+          }
+        }
+        
+        // 测试API连接
+        // async function testApiConnection() {
+        //   const service = apiServiceSelect.value;
+        //   const endpoint = apiEndpointInput.value;
+          
+        //   if (!endpoint) {
+        //     updateApiResponse("错误: 请输入API端点URL");
+        //     return;
+        //   }
+          
+        //   updateApiResponse("测试连接中...");
+        //   setApiStatus("connecting");
+          
+        //   try {
+        //     let testUrl = endpoint;
+        //     let options = {
+        //       method: 'GET',
+        //       headers: {
+        //         'Content-Type': 'application/json',
+        //       },
+        //     };
+            
+        //     // 根据不同服务调整测试URL
+        //     if (service === 'chat') {
+        //       testUrl = endpoint.replace('/chat', '/status');
+        //     } else if (service === 'ocr') {
+        //       testUrl = endpoint.replace('/ocr', '/status');
+        //     } else if (service === 'voice') {
+        //       testUrl = endpoint.replace('/chat', '/status');
+        //     }
+            
+        //     const response = await fetch(testUrl, options);
+            
+        //     if (response.ok) {
+        //       const data = await response.json();
+        //       updateApiResponse(`连接成功: ${JSON.stringify(data, null, 2)}`);
+        //       setApiStatus("connected");
+        //     } else {
+        //       updateApiResponse(`连接失败: 状态码 ${response.status}`);
+        //       setApiStatus("disconnected");
+        //     }
+        //   } catch (error) {
+        //     updateApiResponse(`连接错误: ${error.message}`);
+        //     setApiStatus("disconnected");
+        //   }
+        // }
+        async function testApiConnection() {
+          const service = apiServiceSelect.value;
+          const endpoint = apiEndpointInput.value;
+          
+          if (!endpoint) {
+            showConnectionStatus("错误: 请输入API端点URL", true);
+            return;
+          }
+          
+          showConnectionStatus("测试连接中...");
+          setApiStatus("connecting");
+          
+          try {
+            // 构建健康检查URL
+            let healthCheckUrl;
+            if (service === 'chat') {
+              healthCheckUrl = endpoint.replace('/chat', '/health');
+            } else if (service === 'ocr') {
+              healthCheckUrl = endpoint.replace('/ocr', '/health');
+            } else if (service === 'voice') {
+              healthCheckUrl = endpoint.replace('/chat', '/health');
+            } else {
+              throw new Error("未知的服务类型");
+            }
+            
+            const response = await fetch(healthCheckUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              showConnectionStatus(`连接成功: ${data.status || '服务正常'}`);
+              setApiStatus("connected");
+              
+              // 更新API端点配置
+              state.apiEndpoints[service] = endpoint;
+            } else {
+              showConnectionStatus(`连接失败: 状态码 ${response.status}`, true);
+              setApiStatus("disconnected");
+            }
+          } catch (error) {
+            let errorMsg = `连接错误: ${error.message}`;
+            
+            // 提供更具体的错误诊断
+            if (error.message.includes('Failed to fetch')) {
+              errorMsg += "\n可能的原因: 服务未启动或网络问题";
+            }
+            
+            showConnectionStatus(errorMsg, true);
+            setApiStatus("disconnected");
+          }
+        }
+        
+        // --- AI聊天功能 ---
+        
+        // 全局变量
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let selectedFiles = [];
+        let isRecording = false;
+        
+        // 发送消息（支持多模态）
+        async function sendMessage() {
+          const message = chatInput.value.trim();
+          const hasFiles = selectedFiles.length > 0;
+          
+          if (!message && !hasFiles) return;
+          
+          // 构建消息内容
+          let messageContent = message;
+          if (hasFiles) {
+            const fileNames = selectedFiles.map(f => f.name).join(', ');
+            messageContent += hasFiles && message ? `\n[附件: ${fileNames}]` : `[附件: ${fileNames}]`;
+          }
+          
+          // 添加用户消息到聊天记录
+          addMessageToChat('user', messageContent);
+          chatInput.value = '';
+          clearSelectedFiles();
+          
+          // 显示正在输入状态
+          const typingMsg = addMessageToChat('assistant', '正在处理中...');
+          const sendBtn = document.getElementById('send-btn');
+          sendBtn.disabled = true;
+          
+          try {
+            let response;
+            
+            if (hasFiles) {
+              // 处理文件上传
+              response = await handleFileUpload(selectedFiles, message);
+            } else {
+              // 普通文字聊天
+              response = await sendTextMessage(message);
+            }
+            
+            // 移除正在输入消息，添加实际回复
+            typingMsg.remove();
+            addMessageToChat('assistant', response);
+            
+          } catch (error) {
+            typingMsg.remove();
+            addMessageToChat('assistant', `抱歉，处理失败：${error.message}`);
+          } finally {
+            sendBtn.disabled = false;
+          }
+        }
+        
+        // 发送文字消息
+        async function sendTextMessage(message) {
+          const endpoint = state.apiEndpoints.chat;
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              user_id: 'annotation_tool_user',
+              message: message
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          return data.reply || data.response || data.message || '抱歉，AI服务暂时不可用。';
+        }
+        
+        // 处理文件上传
+        async function handleFileUpload(files, textMessage = '') {
+          const formData = new FormData();
+          
+          for (let file of files) {
+            if (file.type.startsWith('image/')) {
+              // 图片文件 - 使用OCR API
+              formData.append('image', file);
+              
+              const response = await fetch('http://127.0.0.1:8000/ocr', {
+                method: 'POST',
+                body: formData
+              });
+              
+              if (!response.ok) {
+                throw new Error('OCR处理失败');
+              }
+              
+              const data = await response.json();
+              let result = `图片识别结果：\n${data.text || '未识别到文字'}`;
+              
+              if (textMessage) {
+                // 将OCR结果和用户问题一起发送给聊天API
+                const chatResponse = await sendTextMessage(`${textMessage}\n\n图片内容：${data.text}`);
+                result += `\n\nAI分析：${chatResponse}`;
+              }
+              
+              return result;
+              
+            } else if (file.type.startsWith('audio/')) {
+              // 音频文件 - 使用语音API
+              const audioFormData = new FormData();
+              audioFormData.append('audio', file);
+              
+              const response = await fetch('http://127.0.0.1:7000/chat', {
+                method: 'POST',
+                body: audioFormData
+              });
+              
+              if (!response.ok) {
+                throw new Error('语音处理失败');
+              }
+              
+              const data = await response.json();
+              let result = `语音识别：${data.text || '未识别到语音'}`;
+              
+              if (data.audio_file) {
+                result += `\n[AI语音回复已生成]`;
+                // 可以在这里添加播放音频的功能
+              }
+              
+              return result;
+            }
+          }
+          
+          return '文件类型不支持';
+        }
+        
+        // 语音录制功能
+        async function startVoiceRecording() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = (event) => {
+              audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.onstop = async () => {
+              const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+              await handleVoiceInput(audioBlob);
+              stream.getTracks().forEach(track => track.stop());
+            };
+            
+            mediaRecorder.start();
+            isRecording = true;
+            
+            // 显示录制状态
+            document.getElementById('voice-recording').style.display = 'block';
+            document.getElementById('voice-btn').classList.add('active');
+            
+          } catch (error) {
+            addMessageToChat('assistant', `语音录制失败：${error.message}`);
+          }
+        }
+        
+        function stopVoiceRecording() {
+          if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+            
+            // 隐藏录制状态
+            document.getElementById('voice-recording').style.display = 'none';
+            document.getElementById('voice-btn').classList.remove('active');
+          }
+        }
+        
+        async function handleVoiceInput(audioBlob) {
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'voice_input.wav');
+          
+          const typingMsg = addMessageToChat('assistant', '正在识别语音...');
+          
+          try {
+            const response = await fetch('http://127.0.0.1:7000/chat', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!response.ok) {
+              throw new Error('语音识别失败');
+            }
+            
+            const data = await response.json();
+            typingMsg.remove();
+            
+            // 显示识别结果
+            addMessageToChat('user', `[语音] ${data.text || '未识别到内容'}`);
+            
+            if (data.text) {
+              // 将识别的文字填入输入框
+              chatInput.value = data.text;
+            }
+            
+            if (data.audio_file) {
+              addMessageToChat('assistant', `语音回复已生成 [${data.audio_file}]`);
+            }
+            
+          } catch (error) {
+            typingMsg.remove();
+            addMessageToChat('assistant', `语音处理失败：${error.message}`);
+          }
+        }
+        
+        // 文件上传功能
+        function handleFileSelect(event) {
+          const files = Array.from(event.target.files);
+          selectedFiles = [...selectedFiles, ...files];
+          updateFilePreview();
+        }
+        
+        function updateFilePreview() {
+          const previewDiv = document.getElementById('file-preview');
+          const previewContent = document.getElementById('preview-content');
+          
+          if (selectedFiles.length === 0) {
+            previewDiv.style.display = 'none';
+            return;
+          }
+          
+          previewDiv.style.display = 'block';
+          previewContent.innerHTML = '';
+          
+          selectedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const icon = file.type.startsWith('image/') ? '🖼️' : 
+                        file.type.startsWith('audio/') ? '🎵' : '📄';
+            
+            fileItem.innerHTML = `
+              <div class="file-icon">${icon}</div>
+              <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+              </div>
+              <button onclick="removeFile(${index})" class="clear-btn">×</button>
+            `;
+            
+            previewContent.appendChild(fileItem);
+          });
+        }
+        
+        function removeFile(index) {
+          selectedFiles.splice(index, 1);
+          updateFilePreview();
+        }
+        
+        function clearSelectedFiles() {
+          selectedFiles = [];
+          updateFilePreview();
+          document.getElementById('file-input').value = '';
+        }
+        
+        function formatFileSize(bytes) {
+          if (bytes === 0) return '0 B';
+          const k = 1024;
+          const sizes = ['B', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 添加消息到聊天界面
+        function addMessageToChat(sender, message) {
+          const messageDiv = document.createElement('div');
+          messageDiv.className = `chat-message ${sender}`;
+          
+          if (sender === 'user') {
+            messageDiv.innerHTML = `<strong>您:</strong> ${message}`;
+          } else {
+            messageDiv.innerHTML = `<strong>AI助手:</strong> ${message}`;
+          }
+          
+          chatMessages.appendChild(messageDiv);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          
+          // 保存到聊天历史
+          state.chatHistory.push({ sender, message, timestamp: Date.now() });
+          
+          return messageDiv;
+        }
+        
+        // 处理输入框回车事件
+        function handleChatInput(e) {
+          // 修复特殊符号输入问题：只在非组合输入状态下处理回车
+          if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            sendMessage();
+          }
+        }
+        
+        // 根据选择的服务更新端点输入框
+        function updateApiUI() {
+          const service = apiServiceSelect.value;
+          apiEndpointInput.value = state.apiEndpoints[service] || "";
+        }
+        
+        // 设置API状态
+        function setApiStatus(status) {
+          state.apiStatus = status;
+        }
+        
+        // 显示连接状态消息
+        function showConnectionStatus(message, isError = false) {
+          const statusMsg = addMessageToChat('assistant', message);
+          if (isError) {
+            statusMsg.style.color = '#ef4444';
+          } else {
+            statusMsg.style.color = '#10b981';
+          }
+        }
+        
+        
+        // 绑定悬浮窗相关事件
+        pythonInterfaceBtn.addEventListener('click', openPythonModal);
+        modalCloseBtn.addEventListener('click', closePythonModal);
+        modalMinimizeBtn.addEventListener('click', toggleMinimize);
+        
+        // 聊天相关事件
+        const sendBtn = document.getElementById('send-btn');
+        const voiceBtn = document.getElementById('voice-btn');
+        const fileUploadBtn = document.getElementById('file-upload-btn');
+        const fileInput = document.getElementById('file-input');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const clearFilesBtn = document.getElementById('clear-files');
+        
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', handleChatInput);
+        
+        // 语音录制事件
+        voiceBtn.addEventListener('click', () => {
+          if (isRecording) {
+            stopVoiceRecording();
+          } else {
+            startVoiceRecording();
+          }
+        });
+        
+        stopRecordingBtn.addEventListener('click', stopVoiceRecording);
+        
+        // 文件上传事件
+        fileUploadBtn.addEventListener('click', () => {
+          fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        clearFilesBtn.addEventListener('click', clearSelectedFiles);
+        
+        // 修复输入法兼容性问题
+        chatInput.addEventListener('compositionstart', () => {
+          chatInput.isComposing = true;
+        });
+        chatInput.addEventListener('compositionend', () => {
+          chatInput.isComposing = false;
+        });
+        
+        // 自动调整输入框高度
+        chatInput.addEventListener('input', () => {
+          chatInput.style.height = 'auto';
+          chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+        });
+        
+        // 高级设置事件
+        testApiBtn.addEventListener('click', testApiConnection);
+        apiServiceSelect.addEventListener('change', updateApiUI);
+        
+        // 初始化拖拽和缩放功能
+        initModalDrag();
+        initModalResize();
+        
+        // 初始化API端点配置
+        apiEndpointInput.value = state.apiEndpoints.chat;
+        
+        // --- 本地模式：工具函数与数据流 ---
+        function dataURLFromBlankPNG(width, height, fillColor = "#ffffff") {
+          const c = document.createElement("canvas");
+          c.width = width; c.height = height;
+          const ctx = c.getContext("2d");
+          // 白板背景
+          ctx.fillStyle = fillColor;
+          ctx.fillRect(0, 0, width, height);
+          return c.toDataURL("image/png");
+        }
+
+        // --- 画布尺寸计算函数 ---
+        function calculateCanvasSize(originalWidth, originalHeight) {
+          // iPad内存限制参数
+          const MAX_CANVAS_SIZE = 16777216; // 16MB像素限制
+          const MAX_DIMENSION = 9000; // 单边最大尺寸
+          
+          let canvasWidth = originalWidth;
+          let canvasHeight = originalHeight;
+          let scale = 1;
+          
+          // 检查是否超过单边限制
+          if (canvasWidth > MAX_DIMENSION || canvasHeight > MAX_DIMENSION) {
+            const scaleX = MAX_DIMENSION / canvasWidth;
+            const scaleY = MAX_DIMENSION / canvasHeight;
+            scale = Math.min(scaleX, scaleY);
+            canvasWidth = Math.floor(canvasWidth * scale);
+            canvasHeight = Math.floor(canvasHeight * scale);
+          }
+          
+          // 检查是否超过总像素限制
+          if (canvasWidth * canvasHeight > MAX_CANVAS_SIZE) {
+            const totalPixels = canvasWidth * canvasHeight;
+            const pixelScale = Math.sqrt(MAX_CANVAS_SIZE / totalPixels);
+            scale = scale * pixelScale;
+            canvasWidth = Math.floor(originalWidth * scale);
+            canvasHeight = Math.floor(originalHeight * scale);
+          }
+          
+          // 确保最小尺寸
+          const MIN_SIZE = 100;
+          if (canvasWidth < MIN_SIZE || canvasHeight < MIN_SIZE) {
+            const minScale = Math.max(MIN_SIZE / originalWidth, MIN_SIZE / originalHeight);
+            scale = Math.max(scale, minScale);
+            canvasWidth = Math.floor(originalWidth * scale);
+            canvasHeight = Math.floor(originalHeight * scale);
+          }
+          
+          console.log(`画布尺寸调整: 原始(${originalWidth}x${originalHeight}) -> 画布(${canvasWidth}x${canvasHeight}), 缩放比例: ${scale.toFixed(3)}`);
+          
+          return {
+            width: canvasWidth,
+            height: canvasHeight,
+            scale: scale
+          };
+        }
+
+        // 处理本地文件列表（FileList 或 Array<File>）
+        function handleLocalFiles(fileList) {
+          const filesArray = Array.from(fileList).filter(f => f.type.startsWith("image/"));
+          if (filesArray.length === 0) return;
+          const readers = filesArray.map(file => {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve({ name: file.name, dataURL: reader.result });
+              reader.readAsDataURL(file);
+            });
+          });
+          Promise.all(readers).then(images => {
+            images.forEach(img => state.localFiles.push({ name: img.name, dataURL: img.dataURL }));
+            renderFileTree();
+            sourceInfo.textContent = `数据源: 本地 (${state.localFiles.length} 张)`;
+            statusText.textContent = "已导入图像";
+            if (state.activeLocalIndex === null && state.localFiles.length > 0) {
+              selectLocalFile(0);
+            }
+          });
+        }
+
+        // 从 dataURL 加载为底图，设置画布尺寸与缩放
+        function loadBaseFromDataURL(name, dataURL) {
+          const img = new Image();
+          img.onload = () => {
+            state.originalImageSize = { width: img.width, height: img.height };
+            state.imageSize = { width: img.width, height: img.height };
+            state.canvasScale = 1;
+            state.originalBaseImageDataURL = dataURL;
+
+            // 设置画布尺寸为容器大小
+            const containerWidth = canvasContainer.clientWidth;
+            const containerHeight = canvasContainer.clientHeight;
+            
+            baseCanvas.width = drawingCanvas.width = maskCanvas.width = containerWidth;
+            baseCanvas.height = drawingCanvas.height = maskCanvas.height = containerHeight;
+            
+            baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+            // 计算图像在画布中的位置和大小
+            const containerRatio = containerWidth / containerHeight;
+            const imageRatio = img.width / img.height;
+            let drawWidth, drawHeight, drawX, drawY;
+            
+            if (containerRatio > imageRatio) {
+              drawHeight = containerHeight * 0.9;
+              drawWidth = drawHeight * imageRatio;
+              drawX = (containerWidth - drawWidth) / 2;
+              drawY = (containerHeight - drawHeight) / 2;
+            } else {
+              drawWidth = containerWidth * 0.9;
+              drawHeight = drawWidth / imageRatio;
+              drawX = (containerWidth - drawWidth) / 2;
+              drawY = (containerHeight - drawHeight) / 2;
+            }
+            
+            // 绘制图像到基础画布
+            baseCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+            
+            // 保存图像绘制信息用于坐标转换
+            state.imageDrawInfo = { x: drawX, y: drawY, width: drawWidth, height: drawHeight };
+
+            // 尝试恢复对应的 overlay 数据
+            for (const file of state.localFiles) {
+              if (file.name === name && file.overlayData) {
+                const overlayImg = new Image();
+                overlayImg.onload = () => {
+                  drawingCtx.drawImage(overlayImg, drawX, drawY, drawWidth, drawHeight);
+                  state.isCanvasReady = true;
+                  resetZoomAndPan();
+                  statusText.textContent = `已加载: ${name}`;
+                };
+                overlayImg.onerror = () => {
+                  state.isCanvasReady = true;
+                  resetZoomAndPan();
+                  statusText.textContent = `已加载: ${name}`;
+                };
+                overlayImg.src = file.overlayData;
+                return;
+              }
+            }
+            state.isCanvasReady = true;
+            resetZoomAndPan();
+            statusText.textContent = `已加载: ${name}`;
+          };
+          img.onerror = () => {
+            showModal(`图像加载失败: ${name}`);
+            statusText.textContent = "图像加载失败";
+          };
+          img.src = dataURL;
+        }
+
+        // 选择某个本地图像
+        function selectLocalFile(index) {
+          // 切换前保存当前 overlay 到旧文件条目
+          if (state.activeLocalIndex !== null) {
+            const prev = state.localFiles[state.activeLocalIndex];
+            if (prev) {
+              prev.overlayData = drawingCanvas.toDataURL("image/png");
+              prev.maskData = maskCanvas.toDataURL("image/png");
+            }
+          }
+          state.activeLocalIndex = index;
+          const file = state.localFiles[index];
+          if (!file) return;
+          // 高亮
+          document.querySelectorAll(".file-item.active").forEach(el => el.classList.remove("active"));
+          const currentFileEl = Array.from(document.querySelectorAll('.file-item')).find(el => el.textContent.trim().endsWith(file.name));
+          if (currentFileEl) currentFileEl.classList.add("active");
+          loadBaseFromDataURL(file.name, file.dataURL);
+          
+          // 恢复蒙版数据
+          if (file.maskData) {
+            const maskImg = new Image();
+            maskImg.onload = () => {
+              maskCtx.drawImage(maskImg, 0, 0, maskCanvas.width, maskCanvas.height);
+            };
+            maskImg.src = file.maskData;
+          }
+        }
+
+        // 创建白板
+        function setWhiteboard(width = 1920, height = 1080) {
+          state.originalImageSize = { width, height };
+          state.imageSize = { width, height };
+          state.canvasScale = 1;
+          state.originalBaseImageDataURL = dataURLFromBlankPNG(width, height, "#ffffff");
+
+          // 设置画布尺寸为容器大小
+          const containerWidth = canvasContainer.clientWidth;
+          const containerHeight = canvasContainer.clientHeight;
+          
+          baseCanvas.width = drawingCanvas.width = maskCanvas.width = containerWidth;
+          baseCanvas.height = drawingCanvas.height = maskCanvas.height = containerHeight;
+          
+          // 白色底板填充整个画布
+          baseCtx.fillStyle = "#ffffff";
+          baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+          drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+
+          // 设置绘制区域信息
+          state.imageDrawInfo = { x: 0, y: 0, width: containerWidth, height: containerHeight };
+
+          state.isCanvasReady = true;
+          resetZoomAndPan();
+          statusText.textContent = `白板已创建 (${containerWidth}x${containerHeight})`;
+          sourceInfo.textContent = "数据源: 本地 (白板)";
+        }
+
+        // --- UI 更新函数 ---
+        function populateWrinkleTypeSelect(wrinkleTypes) {
+          wrinkleTypeSelect.innerHTML = '<option value="">请选择皱纹类型</option>';
+          wrinkleTypes.forEach((type) => {
+            const option = document.createElement("option");
+            option.value = type.value;
+            option.textContent = type.name;
+            wrinkleTypeSelect.appendChild(option);
+          });
+        }
+
+        function renderFileTree() {
+          if (!state.localFiles || state.localFiles.length === 0) {
+            fileTreeContainer.innerHTML = '<p class="text-gray-400">本地模式：使用上方"导入图像"按钮或将图片拖拽到画布区域。</p>';
+            return;
+          }
+          const html = state.localFiles.map((file, idx) => `
+            <div class="file-item ${idx === state.activeLocalIndex ? 'active' : ''}" data-idx="${idx}">
+              <i class="fas fa-image mr-2"></i>${file.name}
+            </div>`).join("");
+          fileTreeContainer.innerHTML = html;
+          fileTreeContainer.querySelectorAll('.file-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+              const idx = parseInt(e.currentTarget.dataset.idx);
+              selectLocalFile(idx);
+            });
+          });
+        }
+
+        // 兼容旧逻辑的占位：不再使用远程文件选择
+        function selectFile() {}
+
+        // 本地模式：隐藏皱纹类型选择器
+        if (wrinkleTypeSelect) {
+          const wrapper = wrinkleTypeSelect.closest('.flex.flex-col.space-y-2');
+          if (wrapper) wrapper.style.display = 'none';
+        }
+
+        // --- 蒙版相关函数 ---
+        function toggleMask() {
+          state.isMaskVisible = !state.isMaskVisible;
+          maskCanvas.style.display = state.isMaskVisible ? 'block' : 'none';
+          toggleMaskBtn.classList.toggle('active', state.isMaskVisible);
+          statusText.textContent = `蒙版已${state.isMaskVisible ? '显示' : '隐藏'}`;
+        }
+
+        function clearMask() {
+          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+          statusText.textContent = "蒙版已清除";
+        }
+
+        function updateMaskColor(e) {
+          const hex = e.target.value;
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          state.maskColor = `rgba(${r}, ${g}, ${b}, ${state.maskOpacity/100})`;
+        }
+
+        function updateMaskOpacity(e) {
+          state.maskOpacity = parseInt(e.target.value);
+          maskOpacityValueDisplay.textContent = `${state.maskOpacity}%`;
+          maskCanvas.style.opacity = state.maskOpacity / 100;
+          
+          // 更新颜色以包含新的透明度
+          const hex = maskColorInput.value;
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          state.maskColor = `rgba(${r}, ${g}, ${b}, ${state.maskOpacity/100})`;
+        }
+
+        // --- 多边形工具函数 ---
+        function redrawPolygonPreview(mousePos) {
+            if (!state.savedCanvasState) return;
+            drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+            if (state.polygonPoints.length === 0) return;
+            
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
+            for (let i = 1; i < state.polygonPoints.length; i++) {
+                drawingCtx.lineTo(state.polygonPoints[i].x, state.polygonPoints[i].y);
+            }
+            if (mousePos) {
+                drawingCtx.lineTo(mousePos.x, mousePos.y);
+            }
+            drawingCtx.stroke();
+        }
+
+        function finishPolygon(shouldClosePath = true) {
+            if (!state.isDrawingPolygon || state.polygonPoints.length < 2) {
+                cancelPolygon();
+                return;
+            }
+            drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
+            for (let i = 1; i < state.polygonPoints.length; i++) {
+                drawingCtx.lineTo(state.polygonPoints[i].x, state.polygonPoints[i].y);
+            }
+            if (shouldClosePath) {
+                drawingCtx.closePath();
+            }
+            drawingCtx.stroke();
+            state.polygonPoints = [];
+            state.isDrawingPolygon = false;
+            state.savedCanvasState = null;
+        }
+
+        function cancelPolygon() {
+            if (state.isDrawingPolygon) {
+                drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+                state.polygonPoints = [];
+                state.isDrawingPolygon = false;
+                state.savedCanvasState = null;
+            }
+        }
+
+        // --- 画布与工具 ---
+        function updateTool(newTool) {
+          if (state.isDrawingPolygon) finishPolygon(false); // 如果切换工具，则完成当前的多边形（不闭合）
+          state.currentTool = newTool;
+          [toolPan, toolPencil, toolEraser, toolRectangle, toolPolygon, toolMask].forEach((btn) =>
+            btn.classList.remove("active")
+          );
+          document.getElementById(`tool-${newTool}`).classList.add("active");
+          
+          // 切换蒙版模式视觉效果
+          if (newTool === "mask") {
+            document.body.classList.add("mask-mode");
+          } else {
+            document.body.classList.remove("mask-mode");
+          }
+          
+          if (newTool === "pan") canvasContainer.style.cursor = "grab";
+          else if (newTool === "eraser" || newTool === "pencil" || newTool === "mask") canvasContainer.style.cursor = "none";
+          else canvasContainer.style.cursor = "crosshair";
+          
+          const colorContainer = document.getElementById("color-container");
+          const maskColorContainer = document.getElementById("mask-color-container");
+          if (newTool === "pencil" || newTool === "rectangle" || newTool === "polygon") {
+            colorContainer.style.opacity = "1";
+            brushColorInput.disabled = false;
+            maskColorContainer.style.opacity = "0.5";
+            maskColorInput.disabled = true;
+          } else if (newTool === "mask") {
+            colorContainer.style.opacity = "0.5";
+            brushColorInput.disabled = true;
+            maskColorContainer.style.opacity = "1";
+            maskColorInput.disabled = false;
+          } else {
+            colorContainer.style.opacity = "0.5";
+            brushColorInput.disabled = true;
+            maskColorContainer.style.opacity = "0.5";
+            maskColorInput.disabled = true;
+          }
+          
+          if (newTool !== "eraser") eraserPreview.style.display = "none";
+          if (newTool !== "pencil" && newTool !== "mask") brushPreview.style.display = "none";
+        }
+
+        toolPan.addEventListener("click", () => updateTool("pan"));
+        toolPencil.addEventListener("click", () => updateTool("pencil"));
+        toolRectangle.addEventListener("click", () => updateTool("rectangle"));
+        toolPolygon.addEventListener("click", () => updateTool("polygon"));
+        toolEraser.addEventListener("click", () => updateTool("eraser"));
+        toolMask.addEventListener("click", () => updateTool("mask"));
+
+        layerOpacityInput.addEventListener("input", (e) => {
+          const opacityPercent = parseInt(e.target.value);
+          layerOpacityValueDisplay.textContent = `${opacityPercent}%`;
+          drawingCanvas.style.opacity = opacityPercent / 100;
+        });
+
+        maskOpacityInput.addEventListener("input", updateMaskOpacity);
+        maskColorInput.addEventListener("input", updateMaskColor);
+
+        function updateToolPreview(e) {
+          const containerRect = canvasContainer.getBoundingClientRect();
+          const size = parseInt(brushSizeInput.value);
+          
+          const previewX = e.clientX - containerRect.left - size / 2;
+          const previewY = e.clientY - containerRect.top - size / 2;
+          
+          if (state.currentTool === "eraser") {
+            eraserPreview.style.display = "block";
+            eraserPreview.style.width = `${size}px`;
+            eraserPreview.style.height = `${size}px`;
+            eraserPreview.style.left = `${previewX}px`;
+            eraserPreview.style.top = `${previewY}px`;
+            brushPreview.style.display = "none";
+          } else if (state.currentTool === "pencil" || state.currentTool === "mask") {
+            brushPreview.style.display = "block";
+            brushPreview.style.width = `${size}px`;
+            brushPreview.style.height = `${size}px`;
+            brushPreview.style.left = `${previewX}px`;
+            brushPreview.style.top = `${previewY}px`;
+            eraserPreview.style.display = "none";
+            
+            // 设置预览颜色
+            if (state.currentTool === "mask") {
+              brushPreview.style.borderColor = maskColorInput.value;
+              brushPreview.style.backgroundColor = maskColorInput.value.replace(')', ', 0.1)');
+            } else {
+              brushPreview.style.borderColor = "#22c55e";
+              brushPreview.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
+            }
+          } else {
+            eraserPreview.style.display = "none";
+            brushPreview.style.display = "none";
+          }
+        }
+
+        canvasContainer.addEventListener("pointermove", updateToolPreview);
+        canvasContainer.addEventListener("pointerenter", updateToolPreview);
+        canvasContainer.addEventListener("pointerleave", () => {
+          eraserPreview.style.display = "none";
+          brushPreview.style.display = "none";
+        });
+
+        function getCanvasCoordinates(e) {
+          const rect = canvasContainer.getBoundingClientRect();
+          const rawX = e.clientX - rect.left;
+          const rawY = e.clientY - rect.top;
+          
+          // 考虑画布的缩放和平移变换
+          const x = (rawX - state.pan.x) / state.zoom;
+          const y = (rawY - state.pan.y) / state.zoom;
+          
+          return { x, y };
+        }
+
+        function draw(e) {
+          if (!state.isDrawing) return;
+          const pos = getCanvasCoordinates(e);
+          
+          // 压力感应支持
+          const pressure = e.pressure > 0 ? e.pressure : 0.5;
+          const baseBrushSize = parseFloat(brushSizeInput.value);
+          const adjustedBrushSize = baseBrushSize * (0.5 + pressure * 0.5);
+          
+          const currentCtx = state.currentTool === "mask" ? maskCtx : drawingCtx;
+          
+          if (state.currentTool === "eraser") {
+            currentCtx.globalCompositeOperation = "destination-out";
+          } else {
+            currentCtx.globalCompositeOperation = "source-over";
+          }
+          
+          currentCtx.lineWidth = adjustedBrushSize;
+          currentCtx.lineCap = "round";
+          currentCtx.lineJoin = "round";
+          
+          if (state.currentTool === "mask") {
+            currentCtx.strokeStyle = maskColorInput.value;
+          } else if (state.currentTool === "pencil") {
+            currentCtx.strokeStyle = brushColorInput.value;
+          }
+          
+          if (state.lastPos) {
+            // 只有在连续绘制时才连线
+            currentCtx.beginPath();
+            currentCtx.moveTo(state.lastPos.x, state.lastPos.y);
+            currentCtx.lineTo(pos.x, pos.y);
+            currentCtx.stroke();
+          } else {
+            // 新笔画开始，绘制一个点
+            currentCtx.beginPath();
+            currentCtx.arc(pos.x, pos.y, adjustedBrushSize / 2, 0, Math.PI * 2);
+            currentCtx.fill();
+          }
+          
+          state.lastPos = pos;
+        }
+
+        function pan(e) {
+          if (!state.isPanning) return;
+          const dx = e.clientX - state.lastX;
+          const dy = e.clientY - state.lastY;
+          state.pan.x += dx;
+          state.pan.y += dy;
+          [state.lastX, state.lastY] = [e.clientX, e.clientY];
+          updateCanvasTransform();
+        }
+
+        drawingCanvas.addEventListener("pointerdown", (e) => {
+          if (!state.isCanvasReady) return;
+          
+          // 检测压力感应支持
+          if (e.pressure > 0 && e.pressure < 1) {
+            if (!state.supportsPressure) {
+              state.supportsPressure = true;
+              console.log("检测到压力感应支持");
+            }
+          }
+          
+          // 设置指针捕获以确保在移动设备上正常工作
+          drawingCanvas.setPointerCapture(e.pointerId);
+
+          if (state.currentTool === "pan") {
+            state.isPanning = true;
+            [state.lastX, state.lastY] = [e.clientX, e.clientY];
+            canvasContainer.style.cursor = "grabbing";
+          } else if (state.currentTool === 'polygon') {
+            const pos = getCanvasCoordinates(e);
+            if (state.isDrawingPolygon && state.polygonPoints.length > 1) {
+                const firstPoint = state.polygonPoints[0];
+                const dx = pos.x - firstPoint.x;
+                const dy = pos.y - firstPoint.y;
+                const threshold = 10 / state.zoom;
+                if (Math.sqrt(dx * dx + dy * dy) < threshold) {
+                    finishPolygon(true);
+                    return;
+                }
+            }
+            if (!state.isDrawingPolygon) {
+                state.isDrawingPolygon = true;
+                state.savedCanvasState = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.lineWidth = brushSizeInput.value;
+                drawingCtx.strokeStyle = brushColorInput.value;
+                drawingCtx.lineJoin = "round";
+                drawingCtx.lineCap = "round";
+            }
+            state.polygonPoints.push(pos);
+            redrawPolygonPreview();
+          } else if (state.currentTool === 'mask') {
+            state.isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            state.lastPos = pos;
+            maskCtx.globalCompositeOperation = "source-over";
+            maskCtx.globalAlpha = state.maskOpacity / 100;
+            maskCtx.strokeStyle = maskColorInput.value;
+            maskCtx.lineWidth = brushSizeInput.value;
+            maskCtx.lineJoin = "round";
+            maskCtx.lineCap = "round";
+            maskCtx.beginPath();
+            maskCtx.moveTo(pos.x, pos.y);
+          } else {
+            state.isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            state.lastPos = pos;
+            drawingCtx.globalCompositeOperation = "source-over";
+            drawingCtx.globalAlpha = 1.0;
+            if (state.currentTool === 'rectangle') {
+                state.savedCanvasState = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.lineWidth = brushSizeInput.value;
+                drawingCtx.lineJoin = "miter";
+                drawingCtx.lineCap = "square";
+                drawingCtx.strokeStyle = brushColorInput.value;
+            } else {
+                // 压力感应初始设置
+                const pressure = e.pressure > 0 ? e.pressure : 0.5;
+                const baseBrushSize = parseFloat(brushSizeInput.value);
+                const adjustedBrushSize = baseBrushSize * (0.5 + pressure * 0.5);
+                
+                drawingCtx.lineWidth = adjustedBrushSize;
+                drawingCtx.lineJoin = "round";
+                drawingCtx.lineCap = "round";
+                if (state.currentTool === "eraser") {
+                  drawingCtx.globalCompositeOperation = "destination-out";
+                  drawingCtx.globalAlpha = 1.0;
+                  drawingCtx.strokeStyle = `rgba(0, 0, 0, 1)`;
+                } else if (state.currentTool === "pencil") {
+                  const color = brushColorInput.value;
+                  const r = parseInt(color.slice(1, 3), 16);
+                  const g = parseInt(color.slice(3, 5), 16);
+                  const b = parseInt(color.slice(5, 7), 16);
+                  drawingCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, 1.0)`;
+                }
+                state.lastPos = null; // 确保新笔画开始时清除上一个位置
+                draw(e);
+            }
+          }
+        });
+
+        drawingCanvas.addEventListener("pointermove", (e) => {
+          if (state.isDrawing) {
+            if (state.currentTool === 'rectangle') {
+                if (state.savedCanvasState) drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+                const pos = getCanvasCoordinates(e);
+                const width = pos.x - state.lastPos.x;
+                const height = pos.y - state.lastPos.y;
+                drawingCtx.beginPath();
+                drawingCtx.rect(state.lastPos.x, state.lastPos.y, width, height);
+                drawingCtx.stroke();
+            } else {
+                draw(e);
+            }
+          } else if (state.isPanning) {
+            pan(e);
+          } else if (state.currentTool === 'polygon' && state.isDrawingPolygon) {
+            redrawPolygonPreview(getCanvasCoordinates(e));
+          }
+        });
+
+        drawingCanvas.addEventListener("pointerup", (e) => {
+            if (state.isDrawing && state.currentTool !== 'polygon') {
+                if (state.currentTool === 'rectangle') state.savedCanvasState = null;
+                state.isDrawing = false;
+                state.lastPos = null; // 清除最后位置，防止自动连线
+            }
+            if (state.isPanning) {
+                state.isPanning = false;
+                canvasContainer.style.cursor = "grab";
+            }
+            
+            // 释放指针捕获
+            drawingCanvas.releasePointerCapture(e.pointerId);
+        });
+
+        drawingCanvas.addEventListener("pointerleave", () => {
+            if (state.isDrawing && state.currentTool !== 'polygon') {
+                state.isDrawing = false;
+                state.lastPos = null; // 清除最后位置，防止自动连线
+            }
+        });
+
+        // --- 缩放与平移 ---
+        function updateCanvasTransform() {
+          const transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
+          baseCanvas.style.transform = transform;
+          drawingCanvas.style.transform = transform;
+          maskCanvas.style.transform = transform;
+          zoomLevelDisplay.textContent = `${Math.round(state.zoom * 100)}%`;
+        }
+
+        function adjustZoom(delta) {
+          if (!state.isCanvasReady) return;
+          const newZoom = Math.max(0.1, Math.min(10, state.zoom + delta));
+          state.zoom = newZoom;
+          updateCanvasTransform();
+        }
+
+        zoomInBtn.addEventListener("click", () => adjustZoom(0.1));
+        zoomOutBtn.addEventListener("click", () => adjustZoom(-0.1));
+        zoomResetBtn.addEventListener("click", resetZoomAndPan);
+
+        canvasContainer.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          adjustZoom(delta);
+        });
+
+        function resetZoomAndPan() {
+          state.zoom = 1;
+          state.pan.x = 0;
+          state.pan.y = 0;
+          updateCanvasTransform();
+        }
+
+        function downloadURI(uri, name) {
+          const link = document.createElement("a");
+          link.download = name;
+          link.href = uri;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+
+        // 远程刷新不再需要
+        async function refreshFileListAndReselect() { renderFileTree(); }
+
+        // 导出仅标注图层 PNG
+        saveBtn.addEventListener("click", async () => {
+          if (!state.isCanvasReady) {
+            showModal("当前没有可导出的标注图层。");
+            return;
+          }
+          try {
+            let finalCanvas = drawingCanvas;
+            if (state.canvasScale !== 1) {
+              const tempCanvas = document.createElement("canvas");
+              tempCanvas.width = state.originalImageSize.width;
+              tempCanvas.height = state.originalImageSize.height;
+              const tempCtx = tempCanvas.getContext("2d");
+              tempCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              finalCanvas = tempCanvas;
+            }
+            const canvasDataURL = finalCanvas.toDataURL("image/png");
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+            downloadURI(canvasDataURL, `${baseName}_overlay.png`);
+          } catch (error) {
+            console.error("导出标注失败:", error);
+            showModal(`导出标注失败: ${error.message}`);
+          }
+        });
+
+        exportBtn.addEventListener("click", () => {
+          if (!state.isCanvasReady) {
+            showModal("没有活动的图像可导出。");
+            return;
+          }
+          const exportCanvas = document.createElement("canvas");
+          exportCanvas.width = state.originalImageSize.width;
+          exportCanvas.height = state.originalImageSize.height;
+          const exportCtx = exportCanvas.getContext("2d");
+          const baseImg = new Image();
+          baseImg.onload = () => {
+            exportCtx.drawImage(baseImg, 0, 0);
+            if (state.canvasScale !== 1) {
+              exportCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+            } else {
+              exportCtx.drawImage(drawingCanvas, 0, 0);
+            }
+            
+            // 添加蒙版图层
+            if (state.isMaskVisible) {
+              exportCtx.globalAlpha = state.maskOpacity / 100;
+              if (state.canvasScale !== 1) {
+                exportCtx.drawImage(maskCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              } else {
+                exportCtx.drawImage(maskCanvas, 0, 0);
+              }
+            }
+            
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+            downloadURI(exportCanvas.toDataURL("image/png"), `${baseName}_merged.png`);
+          };
+          baseImg.onerror = () => {
+            // 退化为直接用当前可见底图
+            const fallback = new Image();
+            fallback.onload = () => {
+              exportCtx.drawImage(fallback, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              if (state.canvasScale !== 1) {
+                exportCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+              } else {
+                exportCtx.drawImage(drawingCanvas, 0, 0);
+              }
+              
+              // 添加蒙版图层
+              if (state.isMaskVisible) {
+                exportCtx.globalAlpha = state.maskOpacity / 100;
+                if (state.canvasScale !== 1) {
+                  exportCtx.drawImage(maskCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
+                } else {
+                  exportCtx.drawImage(maskCanvas, 0, 0);
+                }
+              }
+              
+              const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+              const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+              downloadURI(exportCanvas.toDataURL("image/png"), `${baseName}_merged.png`);
+            };
+            fallback.src = baseCanvas.toDataURL();
+          };
+          baseImg.src = state.originalBaseImageDataURL || baseCanvas.toDataURL();
+        });
+
+        // 导入图像
+        importBtn.addEventListener('click', () => localImageInput.click());
+        localImageInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleLocalFiles(e.target.files);
+            e.target.value = '';
+          }
+        });
+
+        // 支持拖拽导入
+        canvasContainer.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+        canvasContainer.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (e.dataTransfer && e.dataTransfer.files) {
+            handleLocalFiles(e.dataTransfer.files);
+          }
+        });
+
+        // 蒙版控制
+        toggleMaskBtn.addEventListener('click', toggleMask);
+        clearMaskBtn.addEventListener('click', clearMask);
+
+        // --- 键盘快捷键 ---
+        window.addEventListener("keydown", (e) => {
+          if (e.target.tagName === 'INPUT') return; // Ignore keydown on input elements
+          switch (e.key.toLowerCase()) {
+            case "b": updateTool("pencil"); break;
+            case "e": updateTool("eraser"); break;
+            case "v": updateTool("pan"); break;
+            case "r": updateTool("rectangle"); break;
+            case "p": updateTool("polygon"); break;
+            case "t": updateTool("mask"); break;
+            case "m": 
+              e.preventDefault();
+              toggleMask();
+              break;
+            case "enter":
+              if (state.currentTool === 'polygon') {
+                e.preventDefault();
+                finishPolygon(true);
+              }
+              break;
+            case "escape":
+               if (state.currentTool === 'polygon') {
+                e.preventDefault();
+                cancelPolygon();
+              }
+              break;
+            case "+":
+            case "=":
+              e.preventDefault();
+              adjustZoom(0.1);
+              break;
+            case "-":
+              e.preventDefault();
+              adjustZoom(-0.1);
+              break;
+          }
+        });
+
+        // --- 汉堡菜单控制 ---
+        hamburgerMenu.addEventListener("click", () => {
+          sidebar.classList.toggle("show");
+        });
+        
+        // 点击侧边栏外部区域关闭侧边栏
+        document.addEventListener("click", (e) => {
+          if (window.innerWidth <= 2290 && 
+              !sidebar.contains(e.target) && 
+              !hamburgerMenu.contains(e.target) && 
+              sidebar.classList.contains("show")) {
+            sidebar.classList.remove("show");
+          }
+        });
+
+        // --- 模态框 ---
+        function showModal(message) {
+          modalMessage.textContent = message;
+          modal.classList.remove("hidden");
+        }
+        modalClose.addEventListener("click", () =>
+          modal.classList.add("hidden")
+        );
+
+        window.addEventListener("resize", resetZoomAndPan);
+
+        async function initialize() {
+          try {
+            statusText.textContent = "正在初始化本地模式...";
+            // 移动端优化：防止双击缩放
+            document.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                e.preventDefault();
+              }
+            }, { passive: false });
+
+>>>>>>> origin/main
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function(e) {
               const now = (new Date()).getTime();

@@ -73,84 +73,54 @@ export const TestimonialsList = {
   ],
   TESTIMONIAL_ZH: [
     {
-      nickname: "番茄钟",
-      description: "时间管理工具",
+      nickname: "AscendingCopilot",
+      description: "学习踩坑AI",
       avatar: "/logo.png",
-      content:
-        "基础模式为25分钟专注+5分钟休息循环，支持自定义时长（如45+10），同时也提供“强制锁机”功能（禅定模式），避免学习期间使用手机分心，并统计专注时段生成效率报告",
-      link:"https://www.tomatolist.com/timer.html",
+      content: "一个帮助你学习、发现并解决编程中遇到问题的AI助手。",
+      link:"http://124.222.121.87:8302",
     },
     {
-      nickname: "任务清单与待办规划",
-      description: "时间管理工具",
+      nickname: "简历导师",
+      description: "AI简历优化",
       avatar: "/logo.png",
-      content:
-        "支持创建日/周计划表，拆解大任务为小目标，并与番茄钟联动执行",
-      link:"https://ricocc.com/pages/page-todo.php",
+      content: "AI驱动的简历导师，帮助你优化简历，提升求职竞争力。",
+      link:"http://124.222.121.87:8546",
     },
     {
-      nickname: "笔记整合工具",
-      description: "课程与知识管理工具",
+      nickname: "小游戏",
+      description: "休闲放松",
       avatar: "/logo.png",
-      content:
-        "支持文字、手写、截图等多种笔记形式，支持分类标签与搜索，嵌入思维导图功能辅助知识结构化",
-      link:"https://cn.anotepad.com/",
+      content: "在学习之余，玩一些小游戏放松一下吧。",
+      link:"http://124.222.121.87:8547",
     },
     {
-      nickname: "在线题库",
-      description: "课程与知识管理工具",
+      nickname: "效率工具集",
+      description: "番茄钟、日程、待办",
       avatar: "/logo.png",
-      content:
-        "提供高质量的题目哟~",
-      link:"https://www.icourse163.org/channel/3002.htm",
+      content: "集成了番茄钟、日程规划和待办事项，提升你的学习效率。",
+      link:"http://124.222.121.87:8304",
     },
     {
-      nickname: "工具1",
-      description: "虚拟人",
+      nickname: "Zen RSS",
+      description: "RSS阅读器，禅模式",
       avatar: "/logo.png",
-      content:
-        "懒得写了",
-      link:"https://www.deepseek.com/",
+      content: "一个让你专注阅读的RSS阅读器，提供禅模式，免受干扰。",
+      link:"https://zenfeed.xyz/",
     },
     {
-      nickname: "工具2",
-      description: "XX工具",
+      nickname: "个性化题库",
+      description: "AI生成题库",
       avatar: "/logo.png",
-      content:
-        "懒得写了",
-      link:"https://www.deepseek.com/",
+      content: "根据你的需求，AI为你生成个性化的练习题库。",
+      link:"http://124.222.121.87:8303",
     },
     {
-      nickname: "工具3",
-      description: "XX工具",
+      nickname: "笔记白板 AI",
+      description: "AI笔记与白板",
       avatar: "/logo.png",
-      content:
-        "懒得写了",
-      link:"https://www.deepseek.com/",
+      content: "结合AI功能的笔记和白板，激发你的创造力和灵感。",
+      link:"http://124.222.121.87:8355",
     },
-    {
-      nickname: "工具4",
-      description: "XX工具",
-      avatar: "/logo.png",
-      content:
-        "懒得写了",
-      link:"https://www.deepseek.com/",
-    },
-    {
-      nickname: "工具5",
-      description: "XX工具",
-      avatar: "/logo.png",
-      content:
-        "懒得写了",
-      link:"https://www.deepseek.com/",
-    },
-    // {
-    //   nickname: "User",
-    //   description: "虚拟人",
-    //   avatar: "/logo.png",
-    //   content:
-    //     "这个模板的社区支持非常出色。每当我遇到问题或需要建议时，社区都能迅速回应并提供有用的解决方案。成为这样一个支持性网络的一部分真是太好了。",
-    // },
   ],
 
   TESTIMONIAL_FR: [
