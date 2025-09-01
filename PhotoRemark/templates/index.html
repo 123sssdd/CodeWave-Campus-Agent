@@ -2,10 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>图像标注工具 - Flask版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -23,25 +20,22 @@
         --text-secondary: #64748b;
         --border-color: #e2e8f0;
         --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1),
-          0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
-          0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         --radius-sm: 0.375rem;
         --radius-md: 0.5rem;
         --radius-lg: 0.75rem;
         --radius-xl: 1rem;
       }
-
+      
       body {
-        font-family: "Inter", "SF Pro Display", "Helvetica Neue", "Arial",
-          sans-serif;
+        font-family: "Inter", "SF Pro Display", "Helvetica Neue", "Arial", sans-serif;
         color: var(--text-primary);
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         margin: 0;
         padding: 0;
       }
-
+      
       .sidebar {
         width: 320px;
         background: var(--secondary-bg);
@@ -50,7 +44,7 @@
         backdrop-filter: blur(10px);
         border-right: 1px solid var(--border-color);
       }
-
+      
       .editor-pane {
         flex-grow: 1;
         background: var(--primary-bg);
@@ -60,7 +54,7 @@
         box-shadow: var(--shadow-lg);
         overflow: hidden;
       }
-
+      
       .canvas-container {
         position: relative;
         width: calc(100% - 32px);
@@ -69,15 +63,16 @@
         overflow: hidden;
         border-radius: var(--radius-lg);
         box-shadow: var(--shadow-lg);
-        background: linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
-          linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
-          linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+        background: 
+          linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
           linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
         background-size: 20px 20px;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         touch-action: none;
       }
-
+      
       #baseCanvas,
       #drawingCanvas,
       #maskCanvas {
@@ -89,26 +84,26 @@
         transform-origin: top left;
         border-radius: var(--radius-md);
       }
-
+      
       #baseCanvas {
         background: white;
         z-index: 1;
       }
-
+      
       #drawingCanvas {
         z-index: 2;
       }
-
+      
       #maskCanvas {
         z-index: 3;
       }
-
+      
       #maskCanvas {
         opacity: 0.5;
         mix-blend-mode: multiply;
         pointer-events: none;
       }
-
+      
       .file-item,
       .folder-item {
         cursor: pointer;
@@ -122,20 +117,16 @@
         align-items: center;
         gap: 8px;
       }
-
+      
       .file-item:hover,
       .folder-item:hover {
         background: #f1f5f9;
         transform: translateY(-1px);
         box-shadow: var(--shadow-sm);
       }
-
+      
       .file-item.active {
-        background: linear-gradient(
-          135deg,
-          var(--accent-color),
-          var(--accent-hover)
-        );
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
         color: white;
         box-shadow: var(--shadow-md);
         transform: translateY(-1px);
@@ -161,20 +152,16 @@
         align-items: center;
         justify-content: center;
       }
-
+      
       .tool-btn:hover {
         background: var(--primary-bg);
         transform: translateY(-1px);
         box-shadow: var(--shadow-md);
         color: var(--text-primary);
       }
-
+      
       .tool-btn.active {
-        background: linear-gradient(
-          135deg,
-          var(--accent-color),
-          var(--accent-hover)
-        );
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
         color: white;
         box-shadow: var(--shadow-md);
         transform: translateY(-1px);
@@ -200,7 +187,7 @@
         box-shadow: var(--shadow-lg);
         border: 1px solid var(--border-color);
       }
-
+      
       /* 橡皮擦预览圆 - 现代化样式 */
       .eraser-preview {
         position: absolute;
@@ -212,7 +199,7 @@
         z-index: 10;
         box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
       }
-
+      
       /* 画笔预览圆 - 现代化样式 */
       .brush-preview {
         position: absolute;
@@ -224,13 +211,13 @@
         z-index: 10;
         box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
       }
-
+      
       /* 禁用状态的控件样式 */
       input:disabled {
         opacity: 0.5;
         cursor: not-allowed;
       }
-
+      
       /* 汉堡菜单按钮样式 */
       .hamburger-menu {
         position: fixed;
@@ -246,19 +233,20 @@
         cursor: pointer;
         transition: all 0.3s ease;
       }
-
+      
       .hamburger-menu:hover {
         background-color: var(--primary-bg);
       }
-
+      
       /* 蒙版模式下的暗化效果 */
       .mask-mode .editor-pane {
         background: var(--secondary-bg);
       }
       .mask-mode .canvas-container {
-        background: linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
-          linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
-          linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+        background: 
+          linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+          linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
           linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
         background-size: 20px 20px;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
@@ -266,16 +254,14 @@
       .mask-mode #baseCanvas {
         filter: brightness(0.5);
       }
-
+      
       /* 现代化控件样式 */
-      select:focus,
-      input:focus,
-      textarea:focus {
+      select:focus, input:focus, textarea:focus {
         outline: none;
         border-color: var(--accent-color);
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
-
+      
       /* 圆形状态指示器 */
       .status-indicator {
         width: 8px;
@@ -284,20 +270,20 @@
         display: inline-block;
         margin-right: 6px;
       }
-
+      
       .status-indicator.ready {
         background: #10b981;
       }
-
+      
       .status-indicator.loading {
         background: #f59e0b;
         animation: pulse 1.5s infinite;
       }
-
+      
       .status-indicator.error {
         background: #ef4444;
       }
-
+      
       /* 现代化工具栏分组 */
       .toolbar-group {
         background: var(--secondary-bg);
@@ -309,14 +295,10 @@
         gap: 8px;
         box-shadow: var(--shadow-sm);
       }
-
+      
       /* 现代化按钮样式 */
       .modern-btn {
-        background: linear-gradient(
-          135deg,
-          var(--accent-color),
-          var(--accent-hover)
-        );
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
         color: white;
         border: none;
         border-radius: var(--radius-lg);
@@ -330,47 +312,47 @@
         align-items: center;
         gap: 8px;
       }
-
+      
       .modern-btn:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
       }
-
+      
       .modern-btn.success {
         background: linear-gradient(135deg, #10b981, #059669);
       }
-
+      
       .modern-btn.purple {
         background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       }
-
+      
       /* 工具栏按钮的特殊颜色变体 */
       .tool-btn.success-btn {
         background: linear-gradient(135deg, #10b981, #059669);
         color: white;
       }
-
+      
       .tool-btn.success-btn:hover {
         background: linear-gradient(135deg, #059669, #047857);
         transform: translateY(-1px);
       }
-
+      
       .tool-btn.purple-btn {
         background: linear-gradient(135deg, #8b5cf6, #7c3aed);
         color: white;
       }
-
+      
       .tool-btn.purple-btn:hover {
         background: linear-gradient(135deg, #7c3aed, #6d28d9);
         transform: translateY(-1px);
       }
-
+      
       /* 移动端适配 */
       @media (max-width: 2290px) {
         .hamburger-menu {
           display: block;
         }
-
+        
         .sidebar {
           position: fixed;
           top: 0;
@@ -381,37 +363,37 @@
           transition: left 0.3s ease;
           border-right: 1px solid var(--border-color);
         }
-
+        
         .sidebar.show {
           left: 0;
         }
-
+        
         .editor-pane {
           width: 100vw;
           margin-left: 0;
           margin: 8px;
         }
-
+        
         .canvas-container {
           height: calc(100vh - 120px);
           margin: 8px;
         }
       }
-
+      
       /* iPad 横屏适配 */
       @media (min-width: 1491px) and (max-width: 2290px) and (orientation: landscape) {
         .sidebar {
           width: 250px;
         }
-
+        
         .tool-btn {
           padding: 6px;
         }
-
+        
         .flex.items-center.bg-gray-600 {
           padding: 4px 6px;
         }
-
+        
         .flex.items-center.bg-gray-600 label {
           font-size: 12px;
         }
@@ -439,8 +421,7 @@
       .python-interface-btn:hover {
         background-color: var(--accent-hover);
         transform: translateY(-2px);
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1),
-          0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
       }
 
       .python-interface-btn i {
@@ -458,15 +439,13 @@
         min-height: 400px;
         background: linear-gradient(145deg, #ffffff, #f8fafc);
         border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15),
-          0 8px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
         z-index: 1002;
         display: none;
         border: 1px solid rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(20px);
         overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       .python-modal.open {
@@ -503,17 +482,13 @@
       }
 
       .modal-header::before {
-        content: "";
+        content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          rgba(255, 255, 255, 0) 100%
-        );
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
         border-radius: 16px 16px 0 0;
         pointer-events: none;
       }
@@ -589,14 +564,7 @@
         width: 24px;
         height: 24px;
         cursor: nw-resize;
-        background: linear-gradient(
-          -45deg,
-          transparent 0%,
-          transparent 35%,
-          rgba(0, 0, 0, 0.1) 35%,
-          rgba(0, 0, 0, 0.1) 65%,
-          transparent 65%
-        );
+        background: linear-gradient(-45deg, transparent 0%, transparent 35%, rgba(0,0,0,0.1) 35%, rgba(0,0,0,0.1) 65%, transparent 65%);
         background-size: 6px 6px;
         border-radius: 0 0 16px 0;
         opacity: 0.6;
@@ -658,7 +626,7 @@
       }
 
       .chat-message.user::before {
-        content: "";
+        content: '';
         position: absolute;
         right: -6px;
         top: 50%;
@@ -678,7 +646,7 @@
       }
 
       .chat-message.assistant::before {
-        content: "";
+        content: '';
         position: absolute;
         left: -6px;
         top: 50%;
@@ -1001,17 +969,11 @@
       }
 
       @keyframes pulse {
-        0% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
-        100% {
-          opacity: 1;
-        }
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
       }
-
+      
       /* 文件上传区域 - 现代化样式 */
       .file-upload-area {
         border: 2px dashed var(--border-color);
@@ -1021,51 +983,43 @@
         cursor: pointer;
         margin-bottom: 1rem;
         transition: all 0.3s ease;
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.02),
-          rgba(147, 51, 234, 0.02)
-        );
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.02), rgba(147, 51, 234, 0.02));
       }
-
+      
       .file-upload-area:hover {
         border-color: var(--accent-color);
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.05),
-          rgba(147, 51, 234, 0.05)
-        );
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
         transform: translateY(-2px);
         box-shadow: var(--shadow-md);
       }
-
+      
       .file-upload-area i {
         font-size: 2.5rem;
         margin-bottom: 0.5rem;
         color: var(--accent-color);
       }
-
+      
       .file-upload-area p {
         margin: 0;
         color: var(--text-secondary);
         font-weight: 500;
       }
-
+      
       /* 现代化滚动条 */
       ::-webkit-scrollbar {
         width: 6px;
       }
-
+      
       ::-webkit-scrollbar-track {
         background: var(--primary-bg);
         border-radius: 3px;
       }
-
+      
       ::-webkit-scrollbar-thumb {
         background: var(--border-color);
         border-radius: 3px;
       }
-
+      
       ::-webkit-scrollbar-thumb:hover {
         background: var(--text-secondary);
       }
@@ -1076,54 +1030,22 @@
     <button id="hamburger-menu" class="hamburger-menu" title="显示/隐藏侧边栏">
       <i class="fas fa-bars"></i>
     </button>
-
+    
     <!-- Sidebar -->
     <aside class="sidebar flex flex-col p-6 space-y-6">
       <div class="text-center">
-        <h1
-          class="text-2xl font-bold"
-          style="
-            background: linear-gradient(
-              135deg,
-              var(--accent-color),
-              var(--accent-hover)
-            );
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          "
-        >
-          PhotoRemark
-        </h1>
-        <p
-          class="text-sm"
-          style="color: var(--text-secondary); margin-top: 4px"
-        >
-          智能图像标注工具
-        </p>
+        <h1 class="text-2xl font-bold" style="background: linear-gradient(135deg, var(--accent-color), var(--accent-hover)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">PhotoRemark</h1>
+        <p class="text-sm" style="color: var(--text-secondary); margin-top: 4px;">智能图像标注工具</p>
       </div>
       <div class="flex flex-col space-y-2">
-        <div
-          class="p-4 rounded-lg"
-          style="
-            background: var(--primary-bg);
-            border: 1px solid var(--border-color);
-          "
-        >
-          <label
-            for="wrinkleTypeSelect"
-            class="text-sm font-semibold mb-2 block"
-            style="color: var(--text-primary)"
+        <div class="p-4 rounded-lg" style="background: var(--primary-bg); border: 1px solid var(--border-color);">
+          <label for="wrinkleTypeSelect" class="text-sm font-semibold mb-2 block" style="color: var(--text-primary);"
             >🏷️ 皱纹类型</label
           >
           <select
             id="wrinkleTypeSelect"
             class="w-full py-3 px-4 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-            style="
-              background: var(--secondary-bg);
-              border-color: var(--border-color);
-              color: var(--text-primary);
-            "
+            style="background: var(--secondary-bg); border-color: var(--border-color); color: var(--text-primary);"
           >
             <option value="">请选择皱纹类型</option>
           </select>
@@ -1132,47 +1054,17 @@
 
       <div class="flex-grow">
         <div class="mb-4">
-          <h3
-            class="text-sm font-semibold mb-3"
-            style="color: var(--text-primary)"
-          >
-            📁 文件管理
-          </h3>
+          <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary);">📁 文件管理</h3>
           <div id="file-tree" class="space-y-2 overflow-y-auto pr-2 max-h-96">
-            <p style="color: var(--text-secondary); font-size: 14px">
-              拖拽图片到此处或点击导入按钮
-            </p>
+            <p style="color: var(--text-secondary); font-size: 14px;">拖拽图片到此处或点击导入按钮</p>
           </div>
         </div>
-
-        <div
-          class="p-4 rounded-lg"
-          style="
-            background: var(--primary-bg);
-            border: 1px solid var(--border-color);
-          "
-        >
-          <h3
-            class="text-sm font-semibold mb-2"
-            style="color: var(--text-primary)"
-          >
-            📊 状态信息
-          </h3>
+        
+        <div class="p-4 rounded-lg" style="background: var(--primary-bg); border: 1px solid var(--border-color);">
+          <h3 class="text-sm font-semibold mb-2" style="color: var(--text-primary);">📊 状态信息</h3>
           <div class="space-y-1">
-            <p class="text-xs" style="color: var(--text-secondary)">
-              状态: <span class="status-indicator ready"></span
-              ><span
-                id="status-text"
-                class="font-medium"
-                style="color: var(--accent-color)"
-                >就绪</span
-              >
-            </p>
-            <p
-              id="source-info"
-              class="text-xs"
-              style="color: var(--text-secondary)"
-            ></p>
+            <p class="text-xs" style="color: var(--text-secondary);">状态: <span class="status-indicator ready"></span><span id="status-text" class="font-medium" style="color: var(--accent-color);">就绪</span></p>
+            <p id="source-info" class="text-xs" style="color: var(--text-secondary);"></p>
           </div>
         </div>
       </div>
@@ -1182,45 +1074,59 @@
     <main class="editor-pane flex flex-col">
       <!-- Toolbar -->
       <div
-        class="p-2 flex items-center justify-between border-b"
-        style="
-          background: var(--secondary-bg);
-          border-color: var(--border-color);
-          min-height: 60px;
-        "
+        class="p-2 flex items-center justify-between border-b" style="background: var(--secondary-bg); border-color: var(--border-color); min-height: 60px;"
       >
         <!-- 左侧工具栏 -->
         <div class="flex items-center gap-1">
           <!-- 绘图工具组 -->
           <div class="toolbar-group">
-            <button id="tool-pan" class="tool-btn" title="移动 (V)">
+            <button
+              id="tool-pan"
+              class="tool-btn"
+              title="移动 (V)"
+            >
               <i class="fas fa-hand-paper fa-fw"></i>
             </button>
-            <button id="tool-pencil" class="tool-btn active" title="画笔 (B)">
+            <button
+              id="tool-pencil"
+              class="tool-btn active"
+              title="画笔 (B)"
+            >
               <i class="fas fa-pencil-alt fa-fw"></i>
             </button>
-            <button id="tool-rectangle" class="tool-btn" title="矩形 (R)">
+            <button
+              id="tool-rectangle"
+              class="tool-btn"
+              title="矩形 (R)"
+            >
               <i class="fas fa-vector-square fa-fw"></i>
             </button>
-            <button id="tool-polygon" class="tool-btn" title="多边形 (P)">
+            <button
+              id="tool-polygon"
+              class="tool-btn"
+              title="多边形 (P)"
+            >
               <i class="fas fa-draw-polygon fa-fw"></i>
             </button>
-            <button id="tool-eraser" class="tool-btn" title="橡皮擦 (E)">
+            <button
+              id="tool-eraser"
+              class="tool-btn"
+              title="橡皮擦 (E)"
+            >
               <i class="fas fa-eraser fa-fw"></i>
             </button>
-            <button id="tool-mask" class="tool-btn" title="蒙版工具 (T)">
+            <button
+              id="tool-mask"
+              class="tool-btn"
+              title="蒙版工具 (T)"
+            >
               <i class="fas fa-highlighter fa-fw"></i>
             </button>
           </div>
-
+          
           <!-- 绘图属性组 -->
           <div class="toolbar-group">
-            <label
-              for="brush-size"
-              class="text-xs font-medium"
-              style="color: var(--text-secondary)"
-              >大小</label
-            >
+            <label for="brush-size" class="text-xs font-medium" style="color: var(--text-secondary);">大小</label>
             <input
               type="range"
               id="brush-size"
@@ -1228,49 +1134,22 @@
               max="100"
               value="5"
               class="w-12"
-              style="accent-color: var(--accent-color)"
+              style="accent-color: var(--accent-color);"
             />
           </div>
-
+          
           <div class="toolbar-group" id="color-container">
-            <label
-              for="brush-color"
-              class="text-xs font-medium"
-              style="color: var(--text-secondary)"
-              >颜色</label
-            >
-            <input
-              type="color"
-              id="brush-color"
-              value="#ff0000"
-              class="w-6 h-6 rounded border"
-              style="border-color: var(--border-color)"
-            />
+            <label for="brush-color" class="text-xs font-medium" style="color: var(--text-secondary);">颜色</label>
+            <input type="color" id="brush-color" value="#ff0000" class="w-6 h-6 rounded border" style="border-color: var(--border-color);" />
           </div>
-
+          
           <div class="toolbar-group" id="mask-color-container">
-            <label
-              for="mask-color"
-              class="text-xs font-medium"
-              style="color: var(--text-secondary)"
-              >蒙版</label
-            >
-            <input
-              type="color"
-              id="mask-color"
-              value="#ffff00"
-              class="w-6 h-6 rounded border"
-              style="border-color: var(--border-color)"
-            />
+            <label for="mask-color" class="text-xs font-medium" style="color: var(--text-secondary);">蒙版</label>
+            <input type="color" id="mask-color" value="#ffff00" class="w-6 h-6 rounded border" style="border-color: var(--border-color);" />
           </div>
-
+          
           <div class="toolbar-group" id="layer-opacity-container">
-            <label
-              for="layer-opacity"
-              class="text-xs font-medium"
-              style="color: var(--text-secondary)"
-              >标注</label
-            >
+            <label for="layer-opacity" class="text-xs font-medium" style="color: var(--text-secondary);">标注</label>
             <input
               type="range"
               id="layer-opacity"
@@ -1279,23 +1158,13 @@
               step="10"
               value="100"
               class="w-10"
-              style="accent-color: var(--accent-color)"
+              style="accent-color: var(--accent-color);"
             />
-            <span
-              id="layer-opacity-value"
-              class="text-xs font-medium"
-              style="color: var(--text-primary)"
-              >100%</span
-            >
+            <span id="layer-opacity-value" class="text-xs font-medium" style="color: var(--text-primary);">100%</span>
           </div>
-
+          
           <div class="toolbar-group" id="mask-opacity-container">
-            <label
-              for="mask-opacity"
-              class="text-xs font-medium"
-              style="color: var(--text-secondary)"
-              >蒙版</label
-            >
+            <label for="mask-opacity" class="text-xs font-medium" style="color: var(--text-secondary);">蒙版</label>
             <input
               type="range"
               id="mask-opacity"
@@ -1303,60 +1172,68 @@
               max="100"
               value="50"
               class="w-10"
-              style="accent-color: var(--accent-color)"
+              style="accent-color: var(--accent-color);"
             />
-            <span
-              id="mask-opacity-value"
-              class="text-xs font-medium"
-              style="color: var(--text-primary)"
-              >50%</span
-            >
+            <span id="mask-opacity-value" class="text-xs font-medium" style="color: var(--text-primary);">50%</span>
           </div>
         </div>
-
+        
         <!-- 中间缩放控制组 -->
         <div class="toolbar-group">
           <button id="zoom-out" class="tool-btn" title="缩小">
             <i class="fas fa-search-minus fa-fw"></i>
           </button>
-          <span
-            id="zoom-level"
-            class="text-xs w-8 text-center font-semibold px-1 py-1 rounded"
-            style="color: var(--text-primary); background: var(--primary-bg)"
-            >100%</span
-          >
+          <span id="zoom-level" class="text-xs w-8 text-center font-semibold px-1 py-1 rounded" style="color: var(--text-primary); background: var(--primary-bg);">100%</span>
           <button id="zoom-in" class="tool-btn" title="放大">
             <i class="fas fa-search-plus fa-fw"></i>
           </button>
-          <button id="zoom-reset" class="tool-btn" title="重置缩放">
+          <button
+            id="zoom-reset"
+            class="tool-btn"
+            title="重置缩放"
+          >
             <i class="fas fa-expand fa-fw"></i>
           </button>
         </div>
-
+        
         <!-- 右侧操作按钮组 -->
         <div class="flex items-center gap-1">
-          <button id="toggle-mask" class="tool-btn" title="切换蒙版 (M)">
+          <button
+            id="toggle-mask"
+            class="tool-btn"
+            title="切换蒙版 (M)"
+          >
             <i class="fas fa-layer-group fa-fw"></i>
           </button>
-          <button id="clear-mask" class="tool-btn" title="清除蒙版">
+          <button
+            id="clear-mask"
+            class="tool-btn"
+            title="清除蒙版"
+          >
             <i class="fas fa-trash-alt fa-fw"></i>
           </button>
-          <button id="saveBtn" class="tool-btn success-btn" title="导出标注">
+          <button
+            id="saveBtn"
+            class="tool-btn success-btn"
+            title="导出标注"
+          >
             <i class="fas fa-download fa-fw"></i>
           </button>
-          <button id="exportBtn" class="tool-btn purple-btn" title="导出合并">
+          <button
+            id="exportBtn"
+            class="tool-btn purple-btn"
+            title="导出合并"
+          >
             <i class="fas fa-file-export fa-fw"></i>
           </button>
-          <button id="importBtn" class="tool-btn" title="导入图像">
+          <button
+            id="importBtn"
+            class="tool-btn"
+            title="导入图像"
+          >
             <i class="fas fa-image fa-fw"></i>
           </button>
-          <input
-            id="localImageInput"
-            type="file"
-            accept="image/*"
-            multiple
-            class="hidden"
-          />
+          <input id="localImageInput" type="file" accept="image/*" multiple class="hidden" />
         </div>
       </div>
       <!-- Canvas Area -->
@@ -1372,11 +1249,13 @@
     <!-- Modal for messages -->
     <div id="modal" class="modal-backdrop hidden">
       <div class="modal-content">
-        <p
-          id="modal-message"
-          style="color: var(--text-primary); margin-bottom: 1.5rem"
-        ></p>
-        <button id="modal-close" class="modern-btn">关闭</button>
+        <p id="modal-message" style="color: var(--text-primary); margin-bottom: 1.5rem;"></p>
+        <button
+          id="modal-close"
+          class="modern-btn"
+        >
+          关闭
+        </button>
       </div>
     </div>
 
@@ -1398,16 +1277,15 @@
           </button>
         </div>
       </div>
-
+      
       <div class="modal-body">
         <div class="ai-chat-container">
           <div class="chat-messages" id="chat-messages">
             <div class="chat-message assistant">
-              <strong>AI助手:</strong>
-              欢迎使用AI助手！我可以帮助您分析图像、回答问题或协助标注工作。
+              <strong>AI助手:</strong> 欢迎使用AI助手！我可以帮助您分析图像、回答问题或协助标注工作。
             </div>
           </div>
-
+          
           <div class="chat-input-area">
             <div class="input-controls">
               <button id="file-upload-btn" class="input-btn" title="上传文件">
@@ -1417,39 +1295,28 @@
                 <i class="fas fa-microphone"></i>
               </button>
             </div>
-            <textarea
-              id="chat-input"
-              class="chat-input"
+            <textarea 
+              id="chat-input" 
+              class="chat-input" 
               placeholder="输入您的问题，或点击按钮使用语音/文件..."
-              rows="1"
-            ></textarea>
+              rows="1"></textarea>
             <button id="send-btn" class="send-btn">
               <i class="fas fa-paper-plane"></i>
             </button>
-            <input
-              type="file"
-              id="file-input"
-              accept="image/*,audio/*"
-              style="display: none"
-              multiple
-            />
+            <input type="file" id="file-input" accept="image/*,audio/*" style="display: none;" multiple>
           </div>
-
+          
           <!-- 语音录制状态 -->
-          <div
-            id="voice-recording"
-            class="voice-recording"
-            style="display: none"
-          >
+          <div id="voice-recording" class="voice-recording" style="display: none;">
             <div class="recording-indicator">
               <div class="pulse-dot"></div>
               <span>正在录音...</span>
               <button id="stop-recording" class="stop-btn">停止</button>
             </div>
           </div>
-
+          
           <!-- 文件预览区域 -->
-          <div id="file-preview" class="file-preview" style="display: none">
+          <div id="file-preview" class="file-preview" style="display: none;">
             <div class="preview-header">
               <span>已选择文件:</span>
               <button id="clear-files" class="clear-btn">清除</button>
@@ -1457,27 +1324,11 @@
             <div id="preview-content" class="preview-content"></div>
           </div>
         </div>
-
+        
         <!-- 高级设置区域 -->
-        <details class="advanced-settings" style="margin-top: 16px">
-          <summary
-            style="
-              cursor: pointer;
-              font-weight: 500;
-              color: var(--text-secondary);
-            "
-          >
-            高级设置
-          </summary>
-          <div
-            style="
-              margin-top: 12px;
-              padding: 12px;
-              background: var(--primary-bg);
-              border-radius: 6px;
-              border: 1px solid var(--border-color);
-            "
-          >
+        <details class="advanced-settings" style="margin-top: 16px;">
+          <summary style="cursor: pointer; font-weight: 500; color: var(--text-secondary);">高级设置</summary>
+          <div style="margin-top: 12px; padding: 12px; background: var(--primary-bg); border-radius: 6px; border: 1px solid var(--border-color);">
             <div class="form-group">
               <label for="api-service">选择服务</label>
               <select id="api-service">
@@ -1486,23 +1337,19 @@
                 <option value="voice">语音交互服务</option>
               </select>
             </div>
-
+            
             <div class="form-group">
               <label for="api-endpoint">API 端点</label>
-              <input
-                type="text"
-                id="api-endpoint"
-                placeholder="请输入API端点URL"
-              />
+              <input type="text" id="api-endpoint" placeholder="请输入API端点URL" />
             </div>
-
+            
             <div class="button-group">
               <button id="test-api-btn" class="btn-secondary">测试连接</button>
             </div>
           </div>
         </details>
       </div>
-
+      
       <div class="resize-handle"></div>
     </div>
 
@@ -1532,12 +1379,9 @@
         const brushColorInput = document.getElementById("brush-color");
         const maskColorInput = document.getElementById("mask-color");
         const layerOpacityInput = document.getElementById("layer-opacity");
-        const layerOpacityValueDisplay = document.getElementById(
-          "layer-opacity-value"
-        );
+        const layerOpacityValueDisplay = document.getElementById("layer-opacity-value");
         const maskOpacityInput = document.getElementById("mask-opacity");
-        const maskOpacityValueDisplay =
-          document.getElementById("mask-opacity-value");
+        const maskOpacityValueDisplay = document.getElementById("mask-opacity-value");
         const eraserPreview = document.getElementById("eraser-preview");
         const brushPreview = document.getElementById("brush-preview");
 
@@ -1560,18 +1404,12 @@
         const sidebar = document.querySelector(".sidebar");
 
         // Python接口相关元素
-        const pythonInterfaceBtn = document.getElementById(
-          "python-interface-btn"
-        );
+        const pythonInterfaceBtn = document.getElementById("python-interface-btn");
         const pythonModal = document.getElementById("python-modal");
-        const modalHeader = pythonModal.querySelector(".modal-header");
-        const modalCloseBtn = pythonModal.querySelector(
-          ".modal-control-btn.close"
-        );
-        const modalMinimizeBtn = pythonModal.querySelector(
-          ".modal-control-btn.minimize"
-        );
-        const resizeHandle = pythonModal.querySelector(".resize-handle");
+        const modalHeader = pythonModal.querySelector('.modal-header');
+        const modalCloseBtn = pythonModal.querySelector('.modal-control-btn.close');
+        const modalMinimizeBtn = pythonModal.querySelector('.modal-control-btn.minimize');
+        const resizeHandle = pythonModal.querySelector('.resize-handle');
         const chatMessages = document.getElementById("chat-messages");
         const chatInput = document.getElementById("chat-input");
         const sendMessageBtn = document.getElementById("send-message-btn");
@@ -1601,13 +1439,10 @@
           savedCanvasState: null,
           polygonPoints: [], // 多边形顶点
           supportsPressure: false, // 压力感应支持检测
-          isMobile:
-            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-              navigator.userAgent
-            ),
+          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
           // 蒙版相关状态
           isMaskVisible: true,
-          maskColor: "rgba(255, 255, 0, 0.5)",
+          maskColor: 'rgba(255, 255, 0, 0.5)',
           maskOpacity: 50,
           // API相关状态
           apiStatus: "disconnected", // disconnected, connecting, connected
@@ -1615,7 +1450,7 @@
           apiEndpoints: {
             chat: "http://127.0.0.1:5001/chat",
             ocr: "http://127.0.0.1:6000/ocr",
-            voice: "http://127.0.0.1:7000/chat",
+            voice: "http://127.0.0.1:7000/chat"
           },
           // 悬浮窗状态
           modalDragging: false,
@@ -1624,125 +1459,118 @@
           modalStartSize: { width: 0, height: 0 },
           modalIsMinimized: false,
           // 聊天历史
-          chatHistory: [],
+          chatHistory: []
         };
 
         // --- 悬浮窗拖拽和缩放功能 ---
-
+        
         // 初始化悬浮窗拖拽功能
         function initModalDrag() {
-          modalHeader.addEventListener("mousedown", startDrag);
-          document.addEventListener("mousemove", drag);
-          document.addEventListener("mouseup", stopDrag);
+          modalHeader.addEventListener('mousedown', startDrag);
+          document.addEventListener('mousemove', drag);
+          document.addEventListener('mouseup', stopDrag);
         }
-
+        
         function startDrag(e) {
-          if (e.target.closest(".modal-control-btn")) return;
+          if (e.target.closest('.modal-control-btn')) return;
           state.modalDragging = true;
           state.modalStartPos = {
             x: e.clientX - pythonModal.offsetLeft,
-            y: e.clientY - pythonModal.offsetTop,
+            y: e.clientY - pythonModal.offsetTop
           };
-          pythonModal.style.cursor = "move";
+          pythonModal.style.cursor = 'move';
           e.preventDefault();
         }
-
+        
         function drag(e) {
           if (!state.modalDragging && !state.modalResizing) return;
-
+          
           if (state.modalDragging) {
             const newX = e.clientX - state.modalStartPos.x;
             const newY = e.clientY - state.modalStartPos.y;
-
+            
             // 限制在窗口范围内
             const maxX = window.innerWidth - pythonModal.offsetWidth;
             const maxY = window.innerHeight - pythonModal.offsetHeight;
-
-            pythonModal.style.left = Math.max(0, Math.min(newX, maxX)) + "px";
-            pythonModal.style.top = Math.max(0, Math.min(newY, maxY)) + "px";
+            
+            pythonModal.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+            pythonModal.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
           }
-
+          
           if (state.modalResizing) {
-            const newWidth = Math.max(
-              400,
-              e.clientX - pythonModal.offsetLeft + 10
-            );
-            const newHeight = Math.max(
-              300,
-              e.clientY - pythonModal.offsetTop + 10
-            );
-
-            pythonModal.style.width = newWidth + "px";
-            pythonModal.style.height = newHeight + "px";
+            const newWidth = Math.max(400, e.clientX - pythonModal.offsetLeft + 10);
+            const newHeight = Math.max(300, e.clientY - pythonModal.offsetTop + 10);
+            
+            pythonModal.style.width = newWidth + 'px';
+            pythonModal.style.height = newHeight + 'px';
           }
         }
-
+        
         function stopDrag() {
           state.modalDragging = false;
           state.modalResizing = false;
-          pythonModal.style.cursor = "default";
+          pythonModal.style.cursor = 'default';
         }
-
+        
         // 初始化缩放功能
         function initModalResize() {
-          resizeHandle.addEventListener("mousedown", startResize);
+          resizeHandle.addEventListener('mousedown', startResize);
         }
-
+        
         function startResize(e) {
           state.modalResizing = true;
           e.preventDefault();
           e.stopPropagation();
         }
-
+        
         // 打开悬浮窗
         function openPythonModal() {
-          pythonModal.classList.add("open");
+          pythonModal.classList.add('open');
           if (state.modalIsMinimized) {
             toggleMinimize();
           }
         }
-
+        
         // 关闭悬浮窗
         function closePythonModal() {
-          pythonModal.classList.remove("open");
+          pythonModal.classList.remove('open');
         }
-
+        
         // 最小化/恢复悬浮窗
         function toggleMinimize() {
-          const modalBody = pythonModal.querySelector(".modal-body");
-          const resizeHandle = pythonModal.querySelector(".resize-handle");
-
+          const modalBody = pythonModal.querySelector('.modal-body');
+          const resizeHandle = pythonModal.querySelector('.resize-handle');
+          
           if (state.modalIsMinimized) {
             // 恢复
-            modalBody.style.display = "flex";
-            resizeHandle.style.display = "block";
-            pythonModal.style.height = "500px";
+            modalBody.style.display = 'flex';
+            resizeHandle.style.display = 'block';
+            pythonModal.style.height = '500px';
             modalMinimizeBtn.innerHTML = '<i class="fas fa-minus"></i>';
             state.modalIsMinimized = false;
           } else {
             // 最小化
-            modalBody.style.display = "none";
-            resizeHandle.style.display = "none";
-            pythonModal.style.height = "50px";
-            modalMinimizeBtn.innerHTML =
-              '<i class="fas fa-window-restore"></i>';
+            modalBody.style.display = 'none';
+            resizeHandle.style.display = 'none';
+            pythonModal.style.height = '50px';
+            modalMinimizeBtn.innerHTML = '<i class="fas fa-window-restore"></i>';
             state.modalIsMinimized = true;
           }
         }
-
+        
         // 测试API连接
         // async function testApiConnection() {
         //   const service = apiServiceSelect.value;
         //   const endpoint = apiEndpointInput.value;
-
+          
         //   if (!endpoint) {
         //     updateApiResponse("错误: 请输入API端点URL");
         //     return;
         //   }
-
+          
         //   updateApiResponse("测试连接中...");
         //   setApiStatus("connecting");
-
+          
         //   try {
         //     let testUrl = endpoint;
         //     let options = {
@@ -1751,7 +1579,7 @@
         //         'Content-Type': 'application/json',
         //       },
         //     };
-
+            
         //     // 根据不同服务调整测试URL
         //     if (service === 'chat') {
         //       testUrl = endpoint.replace('/chat', '/status');
@@ -1760,9 +1588,9 @@
         //     } else if (service === 'voice') {
         //       testUrl = endpoint.replace('/chat', '/status');
         //     }
-
+            
         //     const response = await fetch(testUrl, options);
-
+            
         //     if (response.ok) {
         //       const data = await response.json();
         //       updateApiResponse(`连接成功: ${JSON.stringify(data, null, 2)}`);
@@ -1779,40 +1607,40 @@
         async function testApiConnection() {
           const service = apiServiceSelect.value;
           const endpoint = apiEndpointInput.value;
-
+          
           if (!endpoint) {
             showConnectionStatus("错误: 请输入API端点URL", true);
             return;
           }
-
+          
           showConnectionStatus("测试连接中...");
           setApiStatus("connecting");
-
+          
           try {
             // 构建健康检查URL
             let healthCheckUrl;
-            if (service === "chat") {
-              healthCheckUrl = endpoint.replace("/chat", "/health");
-            } else if (service === "ocr") {
-              healthCheckUrl = endpoint.replace("/ocr", "/health");
-            } else if (service === "voice") {
-              healthCheckUrl = endpoint.replace("/chat", "/health");
+            if (service === 'chat') {
+              healthCheckUrl = endpoint.replace('/chat', '/health');
+            } else if (service === 'ocr') {
+              healthCheckUrl = endpoint.replace('/ocr', '/health');
+            } else if (service === 'voice') {
+              healthCheckUrl = endpoint.replace('/chat', '/health');
             } else {
               throw new Error("未知的服务类型");
             }
-
+            
             const response = await fetch(healthCheckUrl, {
-              method: "GET",
+              method: 'GET',
               headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
               },
             });
-
+            
             if (response.ok) {
               const data = await response.json();
-              showConnectionStatus(`连接成功: ${data.status || "服务正常"}`);
+              showConnectionStatus(`连接成功: ${data.status || '服务正常'}`);
               setApiStatus("connected");
-
+              
               // 更新API端点配置
               state.apiEndpoints[service] = endpoint;
             } else {
@@ -1821,269 +1649,316 @@
             }
           } catch (error) {
             let errorMsg = `连接错误: ${error.message}`;
-
+            
             // 提供更具体的错误诊断
-            if (error.message.includes("Failed to fetch")) {
+            if (error.message.includes('Failed to fetch')) {
               errorMsg += "\n可能的原因: 服务未启动或网络问题";
             }
-
+            
             showConnectionStatus(errorMsg, true);
             setApiStatus("disconnected");
           }
         }
-
+        
         // --- AI聊天功能 ---
-
+        
         // 全局变量
         let mediaRecorder = null;
         let audioChunks = [];
         let selectedFiles = [];
         let isRecording = false;
-
+        
         // 发送消息（支持多模态）
         async function sendMessage() {
           const message = chatInput.value.trim();
           const hasFiles = selectedFiles.length > 0;
-
+          
           if (!message && !hasFiles) return;
-
+          
           // 构建消息内容
           let messageContent = message;
           if (hasFiles) {
-            const fileNames = selectedFiles.map((f) => f.name).join(", ");
-            messageContent +=
-              hasFiles && message
-                ? `\n[附件: ${fileNames}]`
-                : `[附件: ${fileNames}]`;
+            const fileList = selectedFiles.map(f => f.name).join(', ');
+            messageContent = `${message}\n[附件: ${fileList}]`;
           }
-
+          
           // 添加用户消息到聊天记录
-          addMessageToChat("user", messageContent);
-          chatInput.value = "";
+          addMessageToChat('user', messageContent);
+          chatInput.value = '';
           clearSelectedFiles();
-
-          // 显示正在输入状态
-          const typingMsg = addMessageToChat("assistant", "正在处理中...");
-          const sendBtn = document.getElementById("send-btn");
+          
+          // 创建助手消息容器用于流式显示
+          const assistantMsg = addMessageToChat('assistant', '');
+          const assistantContent = assistantMsg.querySelector('.message-content') || assistantMsg;
+          const sendBtn = document.getElementById('send-btn');
           sendBtn.disabled = true;
-
+          
           try {
             let response;
-
             if (hasFiles) {
-              // 处理文件上传
+              // 文件上传暂时不支持流式，显示处理中状态
+              assistantContent.textContent = '正在处理文件...';
               response = await handleFileUpload(selectedFiles, message);
+              assistantContent.textContent = response;
             } else {
-              // 普通文字聊天
-              response = await sendTextMessage(message);
+              // 文字消息支持流式显示
+              assistantContent.innerHTML = '';
+              
+              response = await sendTextMessage(message, (chunk, fullText) => {
+                // 格式化并显示内容
+                assistantContent.innerHTML = formatStreamingText(fullText);
+                // 自动滚动到底部
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              });
+              
+              // 确保最终内容正确显示
+              assistantContent.innerHTML = formatStreamingText(response);
             }
-
-            // 移除正在输入消息，添加实际回复
-            typingMsg.remove();
-            addMessageToChat("assistant", response);
+            
           } catch (error) {
-            typingMsg.remove();
-            addMessageToChat("assistant", `抱歉，处理失败：${error.message}`);
+            assistantContent.textContent = `抱歉，处理失败：${error.message}`;
           } finally {
             sendBtn.disabled = false;
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         }
-
-        // 发送文字消息
-        async function sendTextMessage(message) {
+        
+        // 发送文字消息 - 支持流式输出
+        async function sendTextMessage(message, onChunk = null) {
           const endpoint = state.apiEndpoints.chat;
           const response = await fetch(endpoint, {
-            method: "POST",
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              user_id: "annotation_tool_user",
-              message: message,
-            }),
+              user_id: 'default_user',
+              message: message
+            })
           });
-
+          
           if (!response.ok) {
-            throw new Error(`HTTP错误: ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
-
-          const data = await response.json();
-          return (
-            data.reply ||
-            data.response ||
-            data.message ||
-            "抱歉，AI服务暂时不可用。"
-          );
+          
+          // 检查是否为流式响应
+          if (response.headers.get('content-type')?.includes('text/event-stream')) {
+            return await handleStreamingResponse(response, onChunk);
+          } else {
+            // 兼容非流式响应
+            const data = await response.json();
+            if (data.status !== 'success') {
+              throw new Error(data.message || '服务器返回错误');
+            }
+            return data.reply;
+          }
         }
-
-        // 处理文件上传
-        async function handleFileUpload(files, textMessage = "") {
-          const formData = new FormData();
-
-          for (let file of files) {
-            if (file.type.startsWith("image/")) {
-              // 图片文件 - 使用OCR API
-              formData.append("image", file);
-
-              const response = await fetch("http://127.0.0.1:8000/ocr", {
-                method: "POST",
-                body: formData,
-              });
-
-              if (!response.ok) {
-                throw new Error("OCR处理失败");
+        
+        // 处理流式响应
+        async function handleStreamingResponse(response, onChunk) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let fullResponse = '';
+          
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\n');
+              
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const jsonStr = line.slice(6);
+                  if (jsonStr.trim()) {
+                    try {
+                      const data = JSON.parse(jsonStr);
+                      if (data.content) {
+                        fullResponse += data.content;
+                        if (onChunk) {
+                          onChunk(data.content, fullResponse);
+                        }
+                      }
+                      if (data.finished) {
+                        return fullResponse;
+                      }
+                    } catch (e) {
+                      console.warn('解析流式数据失败:', e);
+                    }
+                  }
+                }
               }
-
+            }
+          } finally {
+            reader.releaseLock();
+          }
+          
+          return fullResponse;
+        }
+        
+        // 处理文件上传
+        async function handleFileUpload(files, textMessage = '') {
+          const formData = new FormData();
+          
+          for (let file of files) {
+            if (file.type.startsWith('image/')) {
+              // 图片文件 - 使用OCR API
+              formData.append('image', file);
+              
+              const response = await fetch('http://127.0.0.1:8000/ocr', {
+                method: 'POST',
+                body: formData
+              });
+              
+              if (!response.ok) {
+                throw new Error('OCR处理失败');
+              }
+              
               const data = await response.json();
-              let result = `图片识别结果：\n${data.text || "未识别到文字"}`;
-
+              let result = `图片识别结果：\n${data.text || '未识别到文字'}`;
+              
               if (textMessage) {
                 // 将OCR结果和用户问题一起发送给聊天API
-                const chatResponse = await sendTextMessage(
-                  `${textMessage}\n\n图片内容：${data.text}`
-                );
+                const chatResponse = await sendTextMessage(`${textMessage}\n\n图片内容：${data.text}`);
                 result += `\n\nAI分析：${chatResponse}`;
               }
-
+              
               return result;
-            } else if (file.type.startsWith("audio/")) {
+              
+            } else if (file.type.startsWith('audio/')) {
               // 音频文件 - 使用语音API
               const audioFormData = new FormData();
-              audioFormData.append("audio", file);
-
-              const response = await fetch("http://127.0.0.1:7000/chat", {
-                method: "POST",
-                body: audioFormData,
+              audioFormData.append('audio', file);
+              
+              const response = await fetch('http://127.0.0.1:7000/chat', {
+                method: 'POST',
+                body: audioFormData
               });
-
+              
               if (!response.ok) {
-                throw new Error("语音处理失败");
+                throw new Error('语音处理失败');
               }
-
+              
               const data = await response.json();
-              let result = `语音识别：${data.text || "未识别到语音"}`;
-
+              let result = `语音识别：${data.text || '未识别到语音'}`;
+              
               if (data.audio_file) {
                 result += `\n[AI语音回复已生成]`;
                 // 可以在这里添加播放音频的功能
               }
-
+              
               return result;
             }
           }
-
-          return "文件类型不支持";
+          
+          return '文件类型不支持';
         }
-
+        
         // 语音录制功能
         async function startVoiceRecording() {
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
-            });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
-
+            
             mediaRecorder.ondataavailable = (event) => {
               audioChunks.push(event.data);
             };
-
+            
             mediaRecorder.onstop = async () => {
-              const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+              const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
               await handleVoiceInput(audioBlob);
-              stream.getTracks().forEach((track) => track.stop());
+              stream.getTracks().forEach(track => track.stop());
             };
-
+            
             mediaRecorder.start();
             isRecording = true;
-
+            
             // 显示录制状态
-            document.getElementById("voice-recording").style.display = "block";
-            document.getElementById("voice-btn").classList.add("active");
+            document.getElementById('voice-recording').style.display = 'block';
+            document.getElementById('voice-btn').classList.add('active');
+            
           } catch (error) {
-            addMessageToChat("assistant", `语音录制失败：${error.message}`);
+            addMessageToChat('assistant', `语音录制失败：${error.message}`);
           }
         }
-
+        
         function stopVoiceRecording() {
           if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
             isRecording = false;
-
+            
             // 隐藏录制状态
-            document.getElementById("voice-recording").style.display = "none";
-            document.getElementById("voice-btn").classList.remove("active");
+            document.getElementById('voice-recording').style.display = 'none';
+            document.getElementById('voice-btn').classList.remove('active');
           }
         }
-
+        
         async function handleVoiceInput(audioBlob) {
           const formData = new FormData();
-          formData.append("audio", audioBlob, "voice_input.wav");
-
-          const typingMsg = addMessageToChat("assistant", "正在识别语音...");
-
+          formData.append('audio', audioBlob, 'voice_input.wav');
+          
+          const typingMsg = addMessageToChat('assistant', '正在识别语音...');
+          
           try {
-            const response = await fetch("http://127.0.0.1:7000/chat", {
-              method: "POST",
-              body: formData,
+            const response = await fetch('http://127.0.0.1:7000/chat', {
+              method: 'POST',
+              body: formData
             });
-
+            
             if (!response.ok) {
-              throw new Error("语音识别失败");
+              throw new Error('语音识别失败');
             }
-
+            
             const data = await response.json();
             typingMsg.remove();
-
+            
             // 显示识别结果
-            addMessageToChat("user", `[语音] ${data.text || "未识别到内容"}`);
-
+            addMessageToChat('user', `[语音] ${data.text || '未识别到内容'}`);
+            
             if (data.text) {
               // 将识别的文字填入输入框
               chatInput.value = data.text;
             }
-
+            
             if (data.audio_file) {
-              addMessageToChat(
-                "assistant",
-                `语音回复已生成 [${data.audio_file}]`
-              );
+              addMessageToChat('assistant', `语音回复已生成 [${data.audio_file}]`);
             }
+            
           } catch (error) {
             typingMsg.remove();
-            addMessageToChat("assistant", `语音处理失败：${error.message}`);
+            addMessageToChat('assistant', `语音处理失败：${error.message}`);
           }
         }
-
+        
         // 文件上传功能
         function handleFileSelect(event) {
           const files = Array.from(event.target.files);
           selectedFiles = [...selectedFiles, ...files];
           updateFilePreview();
         }
-
+        
         function updateFilePreview() {
-          const previewDiv = document.getElementById("file-preview");
-          const previewContent = document.getElementById("preview-content");
-
+          const previewDiv = document.getElementById('file-preview');
+          const previewContent = document.getElementById('preview-content');
+          
           if (selectedFiles.length === 0) {
-            previewDiv.style.display = "none";
+            previewDiv.style.display = 'none';
             return;
           }
-
-          previewDiv.style.display = "block";
-          previewContent.innerHTML = "";
-
+          
+          previewDiv.style.display = 'block';
+          previewContent.innerHTML = '';
+          
           selectedFiles.forEach((file, index) => {
-            const fileItem = document.createElement("div");
-            fileItem.className = "file-item";
-
-            const icon = file.type.startsWith("image/")
-              ? "🖼️"
-              : file.type.startsWith("audio/")
-              ? "🎵"
-              : "📄";
-
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const icon = file.type.startsWith('image/') ? '🖼️' : 
+                        file.type.startsWith('audio/') ? '🎵' : '📄';
+            
             fileItem.innerHTML = `
               <div class="file-icon">${icon}</div>
               <div class="file-info">
@@ -2092,147 +1967,180 @@
               </div>
               <button onclick="removeFile(${index})" class="clear-btn">×</button>
             `;
-
+            
             previewContent.appendChild(fileItem);
           });
         }
-
+        
         function removeFile(index) {
           selectedFiles.splice(index, 1);
           updateFilePreview();
         }
-
+        
         function clearSelectedFiles() {
           selectedFiles = [];
           updateFilePreview();
-          document.getElementById("file-input").value = "";
+          document.getElementById('file-input').value = '';
         }
-
+        
         function formatFileSize(bytes) {
-          if (bytes === 0) return "0 B";
+          if (bytes === 0) return '0 B';
           const k = 1024;
-          const sizes = ["B", "KB", "MB", "GB"];
+          const sizes = ['B', 'KB', 'MB', 'GB'];
           const i = Math.floor(Math.log(bytes) / Math.log(k));
-          return (
-            parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-          );
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 格式化流式文本显示
+        function formatStreamingText(text) {
+          if (!text) return '';
+          
+          // 处理段落分隔
+          let formatted = text
+            // 将多个连续换行符转换为段落分隔
+            .replace(/\n{3,}/g, '\n\n')
+            // 处理标题格式 ### 
+            .replace(/^### (.+)$/gm, '<h4 style="margin: 16px 0 8px 0; font-weight: 600; color: #374151;">$1</h4>')
+            // 处理粗体 **text**
+            .replace(/\*\*(.+?)\*\*/g, '<strong style="color: #1f2937;">$1</strong>')
+            // 处理列表项 - 
+            .replace(/^- (.+)$/gm, '<div style="margin: 4px 0; padding-left: 16px; position: relative;"><span style="position: absolute; left: 0; color: #6b7280;">•</span>$1</div>')
+            // 处理双换行为段落
+            .replace(/\n\n/g, '</p><p style="margin: 12px 0; line-height: 1.6;">')
+            // 处理单换行
+            .replace(/\n/g, '<br>');
+          
+          // 包装在段落标签中
+          if (formatted && !formatted.startsWith('<h4') && !formatted.startsWith('<div')) {
+            formatted = '<p style="margin: 12px 0; line-height: 1.6;">' + formatted + '</p>';
+          }
+          
+          return formatted;
         }
 
         // 添加消息到聊天界面
         function addMessageToChat(sender, message) {
-          const messageDiv = document.createElement("div");
+          const messageDiv = document.createElement('div');
           messageDiv.className = `chat-message ${sender}`;
-
-          if (sender === "user") {
-            messageDiv.innerHTML = `<strong>您:</strong> ${message}`;
+          
+          const contentSpan = document.createElement('span');
+          contentSpan.className = 'message-content';
+          
+          if (sender === 'user') {
+            messageDiv.innerHTML = '<strong>您:</strong> ';
+            contentSpan.textContent = message;
+            messageDiv.appendChild(contentSpan);
           } else {
-            messageDiv.innerHTML = `<strong>AI助手:</strong> ${message}`;
+            messageDiv.innerHTML = '<strong>AI助手:</strong> ';
+            // AI消息支持HTML格式
+            contentSpan.innerHTML = message ? formatStreamingText(message) : '';
+            messageDiv.appendChild(contentSpan);
           }
-
+          
           chatMessages.appendChild(messageDiv);
           chatMessages.scrollTop = chatMessages.scrollHeight;
-
+          
           // 保存到聊天历史
           state.chatHistory.push({ sender, message, timestamp: Date.now() });
-
+          
           return messageDiv;
         }
-
+        
         // 处理输入框回车事件
         function handleChatInput(e) {
           // 修复特殊符号输入问题：只在非组合输入状态下处理回车
-          if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+          if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
             e.preventDefault();
             sendMessage();
           }
         }
-
+        
         // 根据选择的服务更新端点输入框
         function updateApiUI() {
           const service = apiServiceSelect.value;
           apiEndpointInput.value = state.apiEndpoints[service] || "";
         }
-
+        
         // 设置API状态
         function setApiStatus(status) {
           state.apiStatus = status;
         }
-
+        
         // 显示连接状态消息
         function showConnectionStatus(message, isError = false) {
-          const statusMsg = addMessageToChat("assistant", message);
+          const statusMsg = addMessageToChat('assistant', message);
           if (isError) {
-            statusMsg.style.color = "#ef4444";
+            statusMsg.style.color = '#ef4444';
           } else {
-            statusMsg.style.color = "#10b981";
+            statusMsg.style.color = '#10b981';
           }
         }
-
+        
+        
         // 绑定悬浮窗相关事件
-        pythonInterfaceBtn.addEventListener("click", openPythonModal);
-        modalCloseBtn.addEventListener("click", closePythonModal);
-        modalMinimizeBtn.addEventListener("click", toggleMinimize);
-
+        pythonInterfaceBtn.addEventListener('click', openPythonModal);
+        modalCloseBtn.addEventListener('click', closePythonModal);
+        modalMinimizeBtn.addEventListener('click', toggleMinimize);
+        
         // 聊天相关事件
-        const sendBtn = document.getElementById("send-btn");
-        const voiceBtn = document.getElementById("voice-btn");
-        const fileUploadBtn = document.getElementById("file-upload-btn");
-        const fileInput = document.getElementById("file-input");
-        const stopRecordingBtn = document.getElementById("stop-recording");
-        const clearFilesBtn = document.getElementById("clear-files");
-
-        sendBtn.addEventListener("click", sendMessage);
-        chatInput.addEventListener("keydown", handleChatInput);
-
+        const sendBtn = document.getElementById('send-btn');
+        const voiceBtn = document.getElementById('voice-btn');
+        const fileUploadBtn = document.getElementById('file-upload-btn');
+        const fileInput = document.getElementById('file-input');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const clearFilesBtn = document.getElementById('clear-files');
+        
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', handleChatInput);
+        
         // 语音录制事件
-        voiceBtn.addEventListener("click", () => {
+        voiceBtn.addEventListener('click', () => {
           if (isRecording) {
             stopVoiceRecording();
           } else {
             startVoiceRecording();
           }
         });
-
-        stopRecordingBtn.addEventListener("click", stopVoiceRecording);
-
+        
+        stopRecordingBtn.addEventListener('click', stopVoiceRecording);
+        
         // 文件上传事件
-        fileUploadBtn.addEventListener("click", () => {
+        fileUploadBtn.addEventListener('click', () => {
           fileInput.click();
         });
-
-        fileInput.addEventListener("change", handleFileSelect);
-        clearFilesBtn.addEventListener("click", clearSelectedFiles);
-
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        clearFilesBtn.addEventListener('click', clearSelectedFiles);
+        
         // 修复输入法兼容性问题
-        chatInput.addEventListener("compositionstart", () => {
+        chatInput.addEventListener('compositionstart', () => {
           chatInput.isComposing = true;
         });
-        chatInput.addEventListener("compositionend", () => {
+        chatInput.addEventListener('compositionend', () => {
           chatInput.isComposing = false;
         });
-
+        
         // 自动调整输入框高度
-        chatInput.addEventListener("input", () => {
-          chatInput.style.height = "auto";
-          chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
+        chatInput.addEventListener('input', () => {
+          chatInput.style.height = 'auto';
+          chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
         });
-
+        
         // 高级设置事件
-        testApiBtn.addEventListener("click", testApiConnection);
-        apiServiceSelect.addEventListener("change", updateApiUI);
-
+        testApiBtn.addEventListener('click', testApiConnection);
+        apiServiceSelect.addEventListener('change', updateApiUI);
+        
         // 初始化拖拽和缩放功能
         initModalDrag();
         initModalResize();
-
+        
         // 初始化API端点配置
         apiEndpointInput.value = state.apiEndpoints.chat;
-
+        
         // --- 本地模式：工具函数与数据流 ---
         function dataURLFromBlankPNG(width, height, fillColor = "#ffffff") {
           const c = document.createElement("canvas");
-          c.width = width;
-          c.height = height;
+          c.width = width; c.height = height;
           const ctx = c.getContext("2d");
           // 白板背景
           ctx.fillStyle = fillColor;
@@ -2245,11 +2153,11 @@
           // iPad内存限制参数
           const MAX_CANVAS_SIZE = 16777216; // 16MB像素限制
           const MAX_DIMENSION = 9000; // 单边最大尺寸
-
+          
           let canvasWidth = originalWidth;
           let canvasHeight = originalHeight;
           let scale = 1;
-
+          
           // 检查是否超过单边限制
           if (canvasWidth > MAX_DIMENSION || canvasHeight > MAX_DIMENSION) {
             const scaleX = MAX_DIMENSION / canvasWidth;
@@ -2258,7 +2166,7 @@
             canvasWidth = Math.floor(canvasWidth * scale);
             canvasHeight = Math.floor(canvasHeight * scale);
           }
-
+          
           // 检查是否超过总像素限制
           if (canvasWidth * canvasHeight > MAX_CANVAS_SIZE) {
             const totalPixels = canvasWidth * canvasHeight;
@@ -2267,57 +2175,42 @@
             canvasWidth = Math.floor(originalWidth * scale);
             canvasHeight = Math.floor(originalHeight * scale);
           }
-
+          
           // 确保最小尺寸
           const MIN_SIZE = 100;
           if (canvasWidth < MIN_SIZE || canvasHeight < MIN_SIZE) {
-            const minScale = Math.max(
-              MIN_SIZE / originalWidth,
-              MIN_SIZE / originalHeight
-            );
+            const minScale = Math.max(MIN_SIZE / originalWidth, MIN_SIZE / originalHeight);
             scale = Math.max(scale, minScale);
             canvasWidth = Math.floor(originalWidth * scale);
             canvasHeight = Math.floor(originalHeight * scale);
           }
-
-          console.log(
-            `画布尺寸调整: 原始(${originalWidth}x${originalHeight}) -> 画布(${canvasWidth}x${canvasHeight}), 缩放比例: ${scale.toFixed(
-              3
-            )}`
-          );
-
+          
+          console.log(`画布尺寸调整: 原始(${originalWidth}x${originalHeight}) -> 画布(${canvasWidth}x${canvasHeight}), 缩放比例: ${scale.toFixed(3)}`);
+          
           return {
             width: canvasWidth,
             height: canvasHeight,
-            scale: scale,
+            scale: scale
           };
         }
 
         // 处理本地文件列表（FileList 或 Array<File>）
         function handleLocalFiles(fileList) {
-          const filesArray = Array.from(fileList).filter((f) =>
-            f.type.startsWith("image/")
-          );
+          const filesArray = Array.from(fileList).filter(f => f.type.startsWith("image/"));
           if (filesArray.length === 0) return;
-          const readers = filesArray.map((file) => {
+          const readers = filesArray.map(file => {
             return new Promise((resolve) => {
               const reader = new FileReader();
-              reader.onload = () =>
-                resolve({ name: file.name, dataURL: reader.result });
+              reader.onload = () => resolve({ name: file.name, dataURL: reader.result });
               reader.readAsDataURL(file);
             });
           });
-          Promise.all(readers).then((images) => {
-            images.forEach((img) =>
-              state.localFiles.push({ name: img.name, dataURL: img.dataURL })
-            );
+          Promise.all(readers).then(images => {
+            images.forEach(img => state.localFiles.push({ name: img.name, dataURL: img.dataURL }));
             renderFileTree();
             sourceInfo.textContent = `数据源: 本地 (${state.localFiles.length} 张)`;
             statusText.textContent = "已导入图像";
-            if (
-              state.activeLocalIndex === null &&
-              state.localFiles.length > 0
-            ) {
+            if (state.activeLocalIndex === null && state.localFiles.length > 0) {
               selectLocalFile(0);
             }
           });
@@ -2335,30 +2228,19 @@
             // 设置画布尺寸为容器大小
             const containerWidth = canvasContainer.clientWidth;
             const containerHeight = canvasContainer.clientHeight;
-
-            baseCanvas.width =
-              drawingCanvas.width =
-              maskCanvas.width =
-                containerWidth;
-            baseCanvas.height =
-              drawingCanvas.height =
-              maskCanvas.height =
-                containerHeight;
-
+            
+            baseCanvas.width = drawingCanvas.width = maskCanvas.width = containerWidth;
+            baseCanvas.height = drawingCanvas.height = maskCanvas.height = containerHeight;
+            
             baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
-            drawingCtx.clearRect(
-              0,
-              0,
-              drawingCanvas.width,
-              drawingCanvas.height
-            );
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
             maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
             // 计算图像在画布中的位置和大小
             const containerRatio = containerWidth / containerHeight;
             const imageRatio = img.width / img.height;
             let drawWidth, drawHeight, drawX, drawY;
-
+            
             if (containerRatio > imageRatio) {
               drawHeight = containerHeight * 0.9;
               drawWidth = drawHeight * imageRatio;
@@ -2370,30 +2252,19 @@
               drawX = (containerWidth - drawWidth) / 2;
               drawY = (containerHeight - drawHeight) / 2;
             }
-
+            
             // 绘制图像到基础画布
             baseCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-
+            
             // 保存图像绘制信息用于坐标转换
-            state.imageDrawInfo = {
-              x: drawX,
-              y: drawY,
-              width: drawWidth,
-              height: drawHeight,
-            };
+            state.imageDrawInfo = { x: drawX, y: drawY, width: drawWidth, height: drawHeight };
 
             // 尝试恢复对应的 overlay 数据
             for (const file of state.localFiles) {
               if (file.name === name && file.overlayData) {
                 const overlayImg = new Image();
                 overlayImg.onload = () => {
-                  drawingCtx.drawImage(
-                    overlayImg,
-                    drawX,
-                    drawY,
-                    drawWidth,
-                    drawHeight
-                  );
+                  drawingCtx.drawImage(overlayImg, drawX, drawY, drawWidth, drawHeight);
                   state.isCanvasReady = true;
                   resetZoomAndPan();
                   statusText.textContent = `已加载: ${name}`;
@@ -2432,26 +2303,16 @@
           const file = state.localFiles[index];
           if (!file) return;
           // 高亮
-          document
-            .querySelectorAll(".file-item.active")
-            .forEach((el) => el.classList.remove("active"));
-          const currentFileEl = Array.from(
-            document.querySelectorAll(".file-item")
-          ).find((el) => el.textContent.trim().endsWith(file.name));
+          document.querySelectorAll(".file-item.active").forEach(el => el.classList.remove("active"));
+          const currentFileEl = Array.from(document.querySelectorAll('.file-item')).find(el => el.textContent.trim().endsWith(file.name));
           if (currentFileEl) currentFileEl.classList.add("active");
           loadBaseFromDataURL(file.name, file.dataURL);
-
+          
           // 恢复蒙版数据
           if (file.maskData) {
             const maskImg = new Image();
             maskImg.onload = () => {
-              maskCtx.drawImage(
-                maskImg,
-                0,
-                0,
-                maskCanvas.width,
-                maskCanvas.height
-              );
+              maskCtx.drawImage(maskImg, 0, 0, maskCanvas.width, maskCanvas.height);
             };
             maskImg.src = file.maskData;
           }
@@ -2462,25 +2323,15 @@
           state.originalImageSize = { width, height };
           state.imageSize = { width, height };
           state.canvasScale = 1;
-          state.originalBaseImageDataURL = dataURLFromBlankPNG(
-            width,
-            height,
-            "#ffffff"
-          );
+          state.originalBaseImageDataURL = dataURLFromBlankPNG(width, height, "#ffffff");
 
           // 设置画布尺寸为容器大小
           const containerWidth = canvasContainer.clientWidth;
           const containerHeight = canvasContainer.clientHeight;
-
-          baseCanvas.width =
-            drawingCanvas.width =
-            maskCanvas.width =
-              containerWidth;
-          baseCanvas.height =
-            drawingCanvas.height =
-            maskCanvas.height =
-              containerHeight;
-
+          
+          baseCanvas.width = drawingCanvas.width = maskCanvas.width = containerWidth;
+          baseCanvas.height = drawingCanvas.height = maskCanvas.height = containerHeight;
+          
           // 白色底板填充整个画布
           baseCtx.fillStyle = "#ffffff";
           baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
@@ -2488,12 +2339,7 @@
           maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
           // 设置绘制区域信息
-          state.imageDrawInfo = {
-            x: 0,
-            y: 0,
-            width: containerWidth,
-            height: containerHeight,
-          };
+          state.imageDrawInfo = { x: 0, y: 0, width: containerWidth, height: containerHeight };
 
           state.isCanvasReady = true;
           resetZoomAndPan();
@@ -2503,8 +2349,7 @@
 
         // --- UI 更新函数 ---
         function populateWrinkleTypeSelect(wrinkleTypes) {
-          wrinkleTypeSelect.innerHTML =
-            '<option value="">请选择皱纹类型</option>';
+          wrinkleTypeSelect.innerHTML = '<option value="">请选择皱纹类型</option>';
           wrinkleTypes.forEach((type) => {
             const option = document.createElement("option");
             option.value = type.value;
@@ -2515,23 +2360,16 @@
 
         function renderFileTree() {
           if (!state.localFiles || state.localFiles.length === 0) {
-            fileTreeContainer.innerHTML =
-              '<p class="text-gray-400">本地模式：使用上方"导入图像"按钮或将图片拖拽到画布区域。</p>';
+            fileTreeContainer.innerHTML = '<p class="text-gray-400">本地模式：使用上方"导入图像"按钮或将图片拖拽到画布区域。</p>';
             return;
           }
-          const html = state.localFiles
-            .map(
-              (file, idx) => `
-            <div class="file-item ${
-              idx === state.activeLocalIndex ? "active" : ""
-            }" data-idx="${idx}">
+          const html = state.localFiles.map((file, idx) => `
+            <div class="file-item ${idx === state.activeLocalIndex ? 'active' : ''}" data-idx="${idx}">
               <i class="fas fa-image mr-2"></i>${file.name}
-            </div>`
-            )
-            .join("");
+            </div>`).join("");
           fileTreeContainer.innerHTML = html;
-          fileTreeContainer.querySelectorAll(".file-item").forEach((el) => {
-            el.addEventListener("click", (e) => {
+          fileTreeContainer.querySelectorAll('.file-item').forEach(el => {
+            el.addEventListener('click', (e) => {
               const idx = parseInt(e.currentTarget.dataset.idx);
               selectLocalFile(idx);
             });
@@ -2543,18 +2381,16 @@
 
         // 本地模式：隐藏皱纹类型选择器
         if (wrinkleTypeSelect) {
-          const wrapper = wrinkleTypeSelect.closest(".flex.flex-col.space-y-2");
-          if (wrapper) wrapper.style.display = "none";
+          const wrapper = wrinkleTypeSelect.closest('.flex.flex-col.space-y-2');
+          if (wrapper) wrapper.style.display = 'none';
         }
 
         // --- 蒙版相关函数 ---
         function toggleMask() {
           state.isMaskVisible = !state.isMaskVisible;
-          maskCanvas.style.display = state.isMaskVisible ? "block" : "none";
-          toggleMaskBtn.classList.toggle("active", state.isMaskVisible);
-          statusText.textContent = `蒙版已${
-            state.isMaskVisible ? "显示" : "隐藏"
-          }`;
+          maskCanvas.style.display = state.isMaskVisible ? 'block' : 'none';
+          toggleMaskBtn.classList.toggle('active', state.isMaskVisible);
+          statusText.textContent = `蒙版已${state.isMaskVisible ? '显示' : '隐藏'}`;
         }
 
         function clearMask() {
@@ -2567,117 +2403,91 @@
           const r = parseInt(hex.slice(1, 3), 16);
           const g = parseInt(hex.slice(3, 5), 16);
           const b = parseInt(hex.slice(5, 7), 16);
-          state.maskColor = `rgba(${r}, ${g}, ${b}, ${
-            state.maskOpacity / 100
-          })`;
+          state.maskColor = `rgba(${r}, ${g}, ${b}, ${state.maskOpacity/100})`;
         }
 
         function updateMaskOpacity(e) {
           state.maskOpacity = parseInt(e.target.value);
           maskOpacityValueDisplay.textContent = `${state.maskOpacity}%`;
           maskCanvas.style.opacity = state.maskOpacity / 100;
-
+          
           // 更新颜色以包含新的透明度
           const hex = maskColorInput.value;
           const r = parseInt(hex.slice(1, 3), 16);
           const g = parseInt(hex.slice(3, 5), 16);
           const b = parseInt(hex.slice(5, 7), 16);
-          state.maskColor = `rgba(${r}, ${g}, ${b}, ${
-            state.maskOpacity / 100
-          })`;
+          state.maskColor = `rgba(${r}, ${g}, ${b}, ${state.maskOpacity/100})`;
         }
 
         // --- 多边形工具函数 ---
         function redrawPolygonPreview(mousePos) {
-          if (!state.savedCanvasState) return;
-          drawingCtx.putImageData(state.savedCanvasState, 0, 0);
-          if (state.polygonPoints.length === 0) return;
-
-          drawingCtx.beginPath();
-          drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
-          for (let i = 1; i < state.polygonPoints.length; i++) {
-            drawingCtx.lineTo(
-              state.polygonPoints[i].x,
-              state.polygonPoints[i].y
-            );
-          }
-          if (mousePos) {
-            drawingCtx.lineTo(mousePos.x, mousePos.y);
-          }
-          drawingCtx.stroke();
+            if (!state.savedCanvasState) return;
+            drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+            if (state.polygonPoints.length === 0) return;
+            
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
+            for (let i = 1; i < state.polygonPoints.length; i++) {
+                drawingCtx.lineTo(state.polygonPoints[i].x, state.polygonPoints[i].y);
+            }
+            if (mousePos) {
+                drawingCtx.lineTo(mousePos.x, mousePos.y);
+            }
+            drawingCtx.stroke();
         }
 
         function finishPolygon(shouldClosePath = true) {
-          if (!state.isDrawingPolygon || state.polygonPoints.length < 2) {
-            cancelPolygon();
-            return;
-          }
-          drawingCtx.putImageData(state.savedCanvasState, 0, 0);
-          drawingCtx.beginPath();
-          drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
-          for (let i = 1; i < state.polygonPoints.length; i++) {
-            drawingCtx.lineTo(
-              state.polygonPoints[i].x,
-              state.polygonPoints[i].y
-            );
-          }
-          if (shouldClosePath) {
-            drawingCtx.closePath();
-          }
-          drawingCtx.stroke();
-          state.polygonPoints = [];
-          state.isDrawingPolygon = false;
-          state.savedCanvasState = null;
-        }
-
-        function cancelPolygon() {
-          if (state.isDrawingPolygon) {
+            if (!state.isDrawingPolygon || state.polygonPoints.length < 2) {
+                cancelPolygon();
+                return;
+            }
             drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(state.polygonPoints[0].x, state.polygonPoints[0].y);
+            for (let i = 1; i < state.polygonPoints.length; i++) {
+                drawingCtx.lineTo(state.polygonPoints[i].x, state.polygonPoints[i].y);
+            }
+            if (shouldClosePath) {
+                drawingCtx.closePath();
+            }
+            drawingCtx.stroke();
             state.polygonPoints = [];
             state.isDrawingPolygon = false;
             state.savedCanvasState = null;
-          }
+        }
+
+        function cancelPolygon() {
+            if (state.isDrawingPolygon) {
+                drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+                state.polygonPoints = [];
+                state.isDrawingPolygon = false;
+                state.savedCanvasState = null;
+            }
         }
 
         // --- 画布与工具 ---
         function updateTool(newTool) {
           if (state.isDrawingPolygon) finishPolygon(false); // 如果切换工具，则完成当前的多边形（不闭合）
           state.currentTool = newTool;
-          [
-            toolPan,
-            toolPencil,
-            toolEraser,
-            toolRectangle,
-            toolPolygon,
-            toolMask,
-          ].forEach((btn) => btn.classList.remove("active"));
+          [toolPan, toolPencil, toolEraser, toolRectangle, toolPolygon, toolMask].forEach((btn) =>
+            btn.classList.remove("active")
+          );
           document.getElementById(`tool-${newTool}`).classList.add("active");
-
+          
           // 切换蒙版模式视觉效果
           if (newTool === "mask") {
             document.body.classList.add("mask-mode");
           } else {
             document.body.classList.remove("mask-mode");
           }
-
+          
           if (newTool === "pan") canvasContainer.style.cursor = "grab";
-          else if (
-            newTool === "eraser" ||
-            newTool === "pencil" ||
-            newTool === "mask"
-          )
-            canvasContainer.style.cursor = "none";
+          else if (newTool === "eraser" || newTool === "pencil" || newTool === "mask") canvasContainer.style.cursor = "none";
           else canvasContainer.style.cursor = "crosshair";
-
+          
           const colorContainer = document.getElementById("color-container");
-          const maskColorContainer = document.getElementById(
-            "mask-color-container"
-          );
-          if (
-            newTool === "pencil" ||
-            newTool === "rectangle" ||
-            newTool === "polygon"
-          ) {
+          const maskColorContainer = document.getElementById("mask-color-container");
+          if (newTool === "pencil" || newTool === "rectangle" || newTool === "polygon") {
             colorContainer.style.opacity = "1";
             brushColorInput.disabled = false;
             maskColorContainer.style.opacity = "0.5";
@@ -2693,10 +2503,9 @@
             maskColorContainer.style.opacity = "0.5";
             maskColorInput.disabled = true;
           }
-
+          
           if (newTool !== "eraser") eraserPreview.style.display = "none";
-          if (newTool !== "pencil" && newTool !== "mask")
-            brushPreview.style.display = "none";
+          if (newTool !== "pencil" && newTool !== "mask") brushPreview.style.display = "none";
         }
 
         toolPan.addEventListener("click", () => updateTool("pan"));
@@ -2718,10 +2527,10 @@
         function updateToolPreview(e) {
           const containerRect = canvasContainer.getBoundingClientRect();
           const size = parseInt(brushSizeInput.value);
-
+          
           const previewX = e.clientX - containerRect.left - size / 2;
           const previewY = e.clientY - containerRect.top - size / 2;
-
+          
           if (state.currentTool === "eraser") {
             eraserPreview.style.display = "block";
             eraserPreview.style.width = `${size}px`;
@@ -2729,24 +2538,18 @@
             eraserPreview.style.left = `${previewX}px`;
             eraserPreview.style.top = `${previewY}px`;
             brushPreview.style.display = "none";
-          } else if (
-            state.currentTool === "pencil" ||
-            state.currentTool === "mask"
-          ) {
+          } else if (state.currentTool === "pencil" || state.currentTool === "mask") {
             brushPreview.style.display = "block";
             brushPreview.style.width = `${size}px`;
             brushPreview.style.height = `${size}px`;
             brushPreview.style.left = `${previewX}px`;
             brushPreview.style.top = `${previewY}px`;
             eraserPreview.style.display = "none";
-
+            
             // 设置预览颜色
             if (state.currentTool === "mask") {
               brushPreview.style.borderColor = maskColorInput.value;
-              brushPreview.style.backgroundColor = maskColorInput.value.replace(
-                ")",
-                ", 0.1)"
-              );
+              brushPreview.style.backgroundColor = maskColorInput.value.replace(')', ', 0.1)');
             } else {
               brushPreview.style.borderColor = "#22c55e";
               brushPreview.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
@@ -2768,42 +2571,41 @@
           const rect = canvasContainer.getBoundingClientRect();
           const rawX = e.clientX - rect.left;
           const rawY = e.clientY - rect.top;
-
+          
           // 考虑画布的缩放和平移变换
           const x = (rawX - state.pan.x) / state.zoom;
           const y = (rawY - state.pan.y) / state.zoom;
-
+          
           return { x, y };
         }
 
         function draw(e) {
           if (!state.isDrawing) return;
           const pos = getCanvasCoordinates(e);
-
+          
           // 压力感应支持
           const pressure = e.pressure > 0 ? e.pressure : 0.5;
           const baseBrushSize = parseFloat(brushSizeInput.value);
           const adjustedBrushSize = baseBrushSize * (0.5 + pressure * 0.5);
-
-          const currentCtx =
-            state.currentTool === "mask" ? maskCtx : drawingCtx;
-
+          
+          const currentCtx = state.currentTool === "mask" ? maskCtx : drawingCtx;
+          
           if (state.currentTool === "eraser") {
             currentCtx.globalCompositeOperation = "destination-out";
           } else {
             currentCtx.globalCompositeOperation = "source-over";
           }
-
+          
           currentCtx.lineWidth = adjustedBrushSize;
           currentCtx.lineCap = "round";
           currentCtx.lineJoin = "round";
-
+          
           if (state.currentTool === "mask") {
             currentCtx.strokeStyle = maskColorInput.value;
           } else if (state.currentTool === "pencil") {
             currentCtx.strokeStyle = brushColorInput.value;
           }
-
+          
           if (state.lastPos) {
             // 只有在连续绘制时才连线
             currentCtx.beginPath();
@@ -2816,7 +2618,7 @@
             currentCtx.arc(pos.x, pos.y, adjustedBrushSize / 2, 0, Math.PI * 2);
             currentCtx.fill();
           }
-
+          
           state.lastPos = pos;
         }
 
@@ -2832,7 +2634,7 @@
 
         drawingCanvas.addEventListener("pointerdown", (e) => {
           if (!state.isCanvasReady) return;
-
+          
           // 检测压力感应支持
           if (e.pressure > 0 && e.pressure < 1) {
             if (!state.supportsPressure) {
@@ -2840,7 +2642,7 @@
               console.log("检测到压力感应支持");
             }
           }
-
+          
           // 设置指针捕获以确保在移动设备上正常工作
           drawingCanvas.setPointerCapture(e.pointerId);
 
@@ -2848,34 +2650,29 @@
             state.isPanning = true;
             [state.lastX, state.lastY] = [e.clientX, e.clientY];
             canvasContainer.style.cursor = "grabbing";
-          } else if (state.currentTool === "polygon") {
+          } else if (state.currentTool === 'polygon') {
             const pos = getCanvasCoordinates(e);
             if (state.isDrawingPolygon && state.polygonPoints.length > 1) {
-              const firstPoint = state.polygonPoints[0];
-              const dx = pos.x - firstPoint.x;
-              const dy = pos.y - firstPoint.y;
-              const threshold = 10 / state.zoom;
-              if (Math.sqrt(dx * dx + dy * dy) < threshold) {
-                finishPolygon(true);
-                return;
-              }
+                const firstPoint = state.polygonPoints[0];
+                const dx = pos.x - firstPoint.x;
+                const dy = pos.y - firstPoint.y;
+                const threshold = 10 / state.zoom;
+                if (Math.sqrt(dx * dx + dy * dy) < threshold) {
+                    finishPolygon(true);
+                    return;
+                }
             }
             if (!state.isDrawingPolygon) {
-              state.isDrawingPolygon = true;
-              state.savedCanvasState = drawingCtx.getImageData(
-                0,
-                0,
-                drawingCanvas.width,
-                drawingCanvas.height
-              );
-              drawingCtx.lineWidth = brushSizeInput.value;
-              drawingCtx.strokeStyle = brushColorInput.value;
-              drawingCtx.lineJoin = "round";
-              drawingCtx.lineCap = "round";
+                state.isDrawingPolygon = true;
+                state.savedCanvasState = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.lineWidth = brushSizeInput.value;
+                drawingCtx.strokeStyle = brushColorInput.value;
+                drawingCtx.lineJoin = "round";
+                drawingCtx.lineCap = "round";
             }
             state.polygonPoints.push(pos);
             redrawPolygonPreview();
-          } else if (state.currentTool === "mask") {
+          } else if (state.currentTool === 'mask') {
             state.isDrawing = true;
             const pos = getCanvasCoordinates(e);
             state.lastPos = pos;
@@ -2893,88 +2690,78 @@
             state.lastPos = pos;
             drawingCtx.globalCompositeOperation = "source-over";
             drawingCtx.globalAlpha = 1.0;
-            if (state.currentTool === "rectangle") {
-              state.savedCanvasState = drawingCtx.getImageData(
-                0,
-                0,
-                drawingCanvas.width,
-                drawingCanvas.height
-              );
-              drawingCtx.lineWidth = brushSizeInput.value;
-              drawingCtx.lineJoin = "miter";
-              drawingCtx.lineCap = "square";
-              drawingCtx.strokeStyle = brushColorInput.value;
+            if (state.currentTool === 'rectangle') {
+                state.savedCanvasState = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.lineWidth = brushSizeInput.value;
+                drawingCtx.lineJoin = "miter";
+                drawingCtx.lineCap = "square";
+                drawingCtx.strokeStyle = brushColorInput.value;
             } else {
-              // 压力感应初始设置
-              const pressure = e.pressure > 0 ? e.pressure : 0.5;
-              const baseBrushSize = parseFloat(brushSizeInput.value);
-              const adjustedBrushSize = baseBrushSize * (0.5 + pressure * 0.5);
-
-              drawingCtx.lineWidth = adjustedBrushSize;
-              drawingCtx.lineJoin = "round";
-              drawingCtx.lineCap = "round";
-              if (state.currentTool === "eraser") {
-                drawingCtx.globalCompositeOperation = "destination-out";
-                drawingCtx.globalAlpha = 1.0;
-                drawingCtx.strokeStyle = `rgba(0, 0, 0, 1)`;
-              } else if (state.currentTool === "pencil") {
-                const color = brushColorInput.value;
-                const r = parseInt(color.slice(1, 3), 16);
-                const g = parseInt(color.slice(3, 5), 16);
-                const b = parseInt(color.slice(5, 7), 16);
-                drawingCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, 1.0)`;
-              }
-              state.lastPos = null; // 确保新笔画开始时清除上一个位置
-              draw(e);
+                // 压力感应初始设置
+                const pressure = e.pressure > 0 ? e.pressure : 0.5;
+                const baseBrushSize = parseFloat(brushSizeInput.value);
+                const adjustedBrushSize = baseBrushSize * (0.5 + pressure * 0.5);
+                
+                drawingCtx.lineWidth = adjustedBrushSize;
+                drawingCtx.lineJoin = "round";
+                drawingCtx.lineCap = "round";
+                if (state.currentTool === "eraser") {
+                  drawingCtx.globalCompositeOperation = "destination-out";
+                  drawingCtx.globalAlpha = 1.0;
+                  drawingCtx.strokeStyle = `rgba(0, 0, 0, 1)`;
+                } else if (state.currentTool === "pencil") {
+                  const color = brushColorInput.value;
+                  const r = parseInt(color.slice(1, 3), 16);
+                  const g = parseInt(color.slice(3, 5), 16);
+                  const b = parseInt(color.slice(5, 7), 16);
+                  drawingCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, 1.0)`;
+                }
+                state.lastPos = null; // 确保新笔画开始时清除上一个位置
+                draw(e);
             }
           }
         });
 
         drawingCanvas.addEventListener("pointermove", (e) => {
           if (state.isDrawing) {
-            if (state.currentTool === "rectangle") {
-              if (state.savedCanvasState)
-                drawingCtx.putImageData(state.savedCanvasState, 0, 0);
-              const pos = getCanvasCoordinates(e);
-              const width = pos.x - state.lastPos.x;
-              const height = pos.y - state.lastPos.y;
-              drawingCtx.beginPath();
-              drawingCtx.rect(state.lastPos.x, state.lastPos.y, width, height);
-              drawingCtx.stroke();
+            if (state.currentTool === 'rectangle') {
+                if (state.savedCanvasState) drawingCtx.putImageData(state.savedCanvasState, 0, 0);
+                const pos = getCanvasCoordinates(e);
+                const width = pos.x - state.lastPos.x;
+                const height = pos.y - state.lastPos.y;
+                drawingCtx.beginPath();
+                drawingCtx.rect(state.lastPos.x, state.lastPos.y, width, height);
+                drawingCtx.stroke();
             } else {
-              draw(e);
+                draw(e);
             }
           } else if (state.isPanning) {
             pan(e);
-          } else if (
-            state.currentTool === "polygon" &&
-            state.isDrawingPolygon
-          ) {
+          } else if (state.currentTool === 'polygon' && state.isDrawingPolygon) {
             redrawPolygonPreview(getCanvasCoordinates(e));
           }
         });
 
         drawingCanvas.addEventListener("pointerup", (e) => {
-          if (state.isDrawing && state.currentTool !== "polygon") {
-            if (state.currentTool === "rectangle")
-              state.savedCanvasState = null;
-            state.isDrawing = false;
-            state.lastPos = null; // 清除最后位置，防止自动连线
-          }
-          if (state.isPanning) {
-            state.isPanning = false;
-            canvasContainer.style.cursor = "grab";
-          }
-
-          // 释放指针捕获
-          drawingCanvas.releasePointerCapture(e.pointerId);
+            if (state.isDrawing && state.currentTool !== 'polygon') {
+                if (state.currentTool === 'rectangle') state.savedCanvasState = null;
+                state.isDrawing = false;
+                state.lastPos = null; // 清除最后位置，防止自动连线
+            }
+            if (state.isPanning) {
+                state.isPanning = false;
+                canvasContainer.style.cursor = "grab";
+            }
+            
+            // 释放指针捕获
+            drawingCanvas.releasePointerCapture(e.pointerId);
         });
 
         drawingCanvas.addEventListener("pointerleave", () => {
-          if (state.isDrawing && state.currentTool !== "polygon") {
-            state.isDrawing = false;
-            state.lastPos = null; // 清除最后位置，防止自动连线
-          }
+            if (state.isDrawing && state.currentTool !== 'polygon') {
+                state.isDrawing = false;
+                state.lastPos = null; // 清除最后位置，防止自动连线
+            }
         });
 
         // --- 缩放与平移 ---
@@ -3020,9 +2807,7 @@
         }
 
         // 远程刷新不再需要
-        async function refreshFileListAndReselect() {
-          renderFileTree();
-        }
+        async function refreshFileListAndReselect() { renderFileTree(); }
 
         // 导出仅标注图层 PNG
         saveBtn.addEventListener("click", async () => {
@@ -3037,22 +2822,12 @@
               tempCanvas.width = state.originalImageSize.width;
               tempCanvas.height = state.originalImageSize.height;
               const tempCtx = tempCanvas.getContext("2d");
-              tempCtx.drawImage(
-                drawingCanvas,
-                0,
-                0,
-                state.originalImageSize.width,
-                state.originalImageSize.height
-              );
+              tempCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
               finalCanvas = tempCanvas;
             }
             const canvasDataURL = finalCanvas.toDataURL("image/png");
-            const name =
-              state.activeLocalIndex !== null
-                ? state.localFiles[state.activeLocalIndex].name
-                : "whiteboard.png";
-            const baseName =
-              name.split(".").slice(0, -1).join(".") || "whiteboard";
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
             downloadURI(canvasDataURL, `${baseName}_overlay.png`);
           } catch (error) {
             console.error("导出标注失败:", error);
@@ -3073,114 +2848,69 @@
           baseImg.onload = () => {
             exportCtx.drawImage(baseImg, 0, 0);
             if (state.canvasScale !== 1) {
-              exportCtx.drawImage(
-                drawingCanvas,
-                0,
-                0,
-                state.originalImageSize.width,
-                state.originalImageSize.height
-              );
+              exportCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
             } else {
               exportCtx.drawImage(drawingCanvas, 0, 0);
             }
-
+            
             // 添加蒙版图层
             if (state.isMaskVisible) {
               exportCtx.globalAlpha = state.maskOpacity / 100;
               if (state.canvasScale !== 1) {
-                exportCtx.drawImage(
-                  maskCanvas,
-                  0,
-                  0,
-                  state.originalImageSize.width,
-                  state.originalImageSize.height
-                );
+                exportCtx.drawImage(maskCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
               } else {
                 exportCtx.drawImage(maskCanvas, 0, 0);
               }
             }
-
-            const name =
-              state.activeLocalIndex !== null
-                ? state.localFiles[state.activeLocalIndex].name
-                : "whiteboard.png";
-            const baseName =
-              name.split(".").slice(0, -1).join(".") || "whiteboard";
-            downloadURI(
-              exportCanvas.toDataURL("image/png"),
-              `${baseName}_merged.png`
-            );
+            
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+            downloadURI(exportCanvas.toDataURL("image/png"), `${baseName}_merged.png`);
           };
           baseImg.onerror = () => {
             // 退化为直接用当前可见底图
             const fallback = new Image();
             fallback.onload = () => {
-              exportCtx.drawImage(
-                fallback,
-                0,
-                0,
-                state.originalImageSize.width,
-                state.originalImageSize.height
-              );
+              exportCtx.drawImage(fallback, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
               if (state.canvasScale !== 1) {
-                exportCtx.drawImage(
-                  drawingCanvas,
-                  0,
-                  0,
-                  state.originalImageSize.width,
-                  state.originalImageSize.height
-                );
+                exportCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
               } else {
                 exportCtx.drawImage(drawingCanvas, 0, 0);
               }
-
+              
               // 添加蒙版图层
               if (state.isMaskVisible) {
                 exportCtx.globalAlpha = state.maskOpacity / 100;
                 if (state.canvasScale !== 1) {
-                  exportCtx.drawImage(
-                    maskCanvas,
-                    0,
-                    0,
-                    state.originalImageSize.width,
-                    state.originalImageSize.height
-                  );
+                  exportCtx.drawImage(maskCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
                 } else {
                   exportCtx.drawImage(maskCanvas, 0, 0);
                 }
               }
-
-              const name =
-                state.activeLocalIndex !== null
-                  ? state.localFiles[state.activeLocalIndex].name
-                  : "whiteboard.png";
-              const baseName =
-                name.split(".").slice(0, -1).join(".") || "whiteboard";
-              downloadURI(
-                exportCanvas.toDataURL("image/png"),
-                `${baseName}_merged.png`
-              );
+              
+              const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+              const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+              downloadURI(exportCanvas.toDataURL("image/png"), `${baseName}_merged.png`);
             };
             fallback.src = baseCanvas.toDataURL();
           };
-          baseImg.src =
-            state.originalBaseImageDataURL || baseCanvas.toDataURL();
+          baseImg.src = state.originalBaseImageDataURL || baseCanvas.toDataURL();
         });
 
         // 导入图像
-        importBtn.addEventListener("click", () => localImageInput.click());
-        localImageInput.addEventListener("change", (e) => {
+        importBtn.addEventListener('click', () => localImageInput.click());
+        localImageInput.addEventListener('change', (e) => {
           if (e.target.files && e.target.files.length > 0) {
             handleLocalFiles(e.target.files);
-            e.target.value = "";
+            e.target.value = '';
           }
         });
 
         // 支持拖拽导入
-        canvasContainer.addEventListener("dragover", (e) => {
+        canvasContainer.addEventListener('dragover', (e) => {
           e.preventDefault();
         });
-        canvasContainer.addEventListener("drop", (e) => {
+        canvasContainer.addEventListener('drop', (e) => {
           e.preventDefault();
           if (e.dataTransfer && e.dataTransfer.files) {
             handleLocalFiles(e.dataTransfer.files);
@@ -3188,43 +2918,31 @@
         });
 
         // 蒙版控制
-        toggleMaskBtn.addEventListener("click", toggleMask);
-        clearMaskBtn.addEventListener("click", clearMask);
+        toggleMaskBtn.addEventListener('click', toggleMask);
+        clearMaskBtn.addEventListener('click', clearMask);
 
         // --- 键盘快捷键 ---
         window.addEventListener("keydown", (e) => {
-          if (e.target.tagName === "INPUT") return; // Ignore keydown on input elements
+          if (e.target.tagName === 'INPUT') return; // Ignore keydown on input elements
           switch (e.key.toLowerCase()) {
-            case "b":
-              updateTool("pencil");
-              break;
-            case "e":
-              updateTool("eraser");
-              break;
-            case "v":
-              updateTool("pan");
-              break;
-            case "r":
-              updateTool("rectangle");
-              break;
-            case "p":
-              updateTool("polygon");
-              break;
-            case "t":
-              updateTool("mask");
-              break;
-            case "m":
+            case "b": updateTool("pencil"); break;
+            case "e": updateTool("eraser"); break;
+            case "v": updateTool("pan"); break;
+            case "r": updateTool("rectangle"); break;
+            case "p": updateTool("polygon"); break;
+            case "t": updateTool("mask"); break;
+            case "m": 
               e.preventDefault();
               toggleMask();
               break;
             case "enter":
-              if (state.currentTool === "polygon") {
+              if (state.currentTool === 'polygon') {
                 e.preventDefault();
                 finishPolygon(true);
               }
               break;
             case "escape":
-              if (state.currentTool === "polygon") {
+               if (state.currentTool === 'polygon') {
                 e.preventDefault();
                 cancelPolygon();
               }
@@ -3245,15 +2963,13 @@
         hamburgerMenu.addEventListener("click", () => {
           sidebar.classList.toggle("show");
         });
-
+        
         // 点击侧边栏外部区域关闭侧边栏
         document.addEventListener("click", (e) => {
-          if (
-            window.innerWidth <= 2290 &&
-            !sidebar.contains(e.target) &&
-            !hamburgerMenu.contains(e.target) &&
-            sidebar.classList.contains("show")
-          ) {
+          if (window.innerWidth <= 2290 && 
+              !sidebar.contains(e.target) && 
+              !hamburgerMenu.contains(e.target) && 
+              sidebar.classList.contains("show")) {
             sidebar.classList.remove("show");
           }
         });
@@ -3273,38 +2989,30 @@
           try {
             statusText.textContent = "正在初始化本地模式...";
             // 移动端优化：防止双击缩放
-            document.addEventListener(
-              "touchstart",
-              function (e) {
-                if (e.touches.length > 1) {
-                  e.preventDefault();
-                }
-              },
-              { passive: false }
-            );
+            document.addEventListener('touchstart', function(e) {
+              if (e.touches.length > 1) {
+                e.preventDefault();
+              }
+            }, { passive: false });
 
             let lastTouchEnd = 0;
-            document.addEventListener(
-              "touchend",
-              function (e) {
-                const now = new Date().getTime();
-                if (now - lastTouchEnd <= 300) {
-                  e.preventDefault();
-                }
-                lastTouchEnd = now;
-              },
-              { passive: false }
-            );
+            document.addEventListener('touchend', function(e) {
+              const now = (new Date()).getTime();
+              if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+              }
+              lastTouchEnd = now;
+            }, { passive: false });
 
             // 默认创建白板
             setWhiteboard(1920, 1080);
             renderFileTree();
             statusText.textContent = "本地模式已就绪";
             sourceInfo.textContent = "数据源: 本地";
-
+            
             // 初始化蒙版设置
-            maskCanvas.style.display = state.isMaskVisible ? "block" : "none";
-            toggleMaskBtn.classList.toggle("active", state.isMaskVisible);
+            maskCanvas.style.display = state.isMaskVisible ? 'block' : 'none';
+            toggleMaskBtn.classList.toggle('active', state.isMaskVisible);
             maskCanvas.style.opacity = state.maskOpacity / 100;
           } catch (error) {
             console.error("初始化失败:", error);
@@ -3314,53 +3022,50 @@
 
         initialize();
         updateTool("pencil");
-
+        
         // 修改导入图像的处理逻辑
-        importBtn.addEventListener("click", () => localImageInput.click());
-        localImageInput.addEventListener("change", (e) => {
+        importBtn.addEventListener('click', () => localImageInput.click());
+        localImageInput.addEventListener('change', (e) => {
           if (e.target.files && e.target.files.length > 0) {
             // 使用FormData上传文件到Flask后端
             const formData = new FormData();
             for (let i = 0; i < e.target.files.length; i++) {
-              formData.append("file", e.target.files[i]);
+              formData.append('file', e.target.files[i]);
             }
-
-            fetch("/upload", {
-              method: "POST",
-              body: formData,
+            
+            fetch('/upload', {
+              method: 'POST',
+              body: formData
             })
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.error) {
-                  showModal(`上传失败: ${data.error}`);
-                  return;
-                }
-
-                // 将上传的图像添加到本地文件列表
-                data.files.forEach((fileInfo) => {
-                  state.localFiles.push({
-                    name: fileInfo.name,
-                    dataURL: fileInfo.url, // 使用服务器提供的URL
-                    serverStored: true, // 标记为服务器存储的文件
-                  });
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                showModal(`上传失败: ${data.error}`);
+                return;
+              }
+              
+              // 将上传的图像添加到本地文件列表
+              data.files.forEach(fileInfo => {
+                state.localFiles.push({
+                  name: fileInfo.name,
+                  dataURL: fileInfo.url, // 使用服务器提供的URL
+                  serverStored: true // 标记为服务器存储的文件
                 });
-
-                renderFileTree();
-                sourceInfo.textContent = `数据源: 服务器 (${state.localFiles.length} 张)`;
-                statusText.textContent = "已导入图像";
-                if (
-                  state.activeLocalIndex === null &&
-                  state.localFiles.length > 0
-                ) {
-                  selectLocalFile(0);
-                }
-              })
-              .catch((error) => {
-                console.error("上传错误:", error);
-                showModal("上传文件时发生错误");
               });
-
-            e.target.value = "";
+              
+              renderFileTree();
+              sourceInfo.textContent = `数据源: 服务器 (${state.localFiles.length} 张)`;
+              statusText.textContent = "已导入图像";
+              if (state.activeLocalIndex === null && state.localFiles.length > 0) {
+                selectLocalFile(0);
+              }
+            })
+            .catch(error => {
+              console.error('上传错误:', error);
+              showModal('上传文件时发生错误');
+            });
+            
+            e.target.value = '';
           }
         });
 
@@ -3377,230 +3082,48 @@
               tempCanvas.width = state.originalImageSize.width;
               tempCanvas.height = state.originalImageSize.height;
               const tempCtx = tempCanvas.getContext("2d");
-              tempCtx.drawImage(
-                drawingCanvas,
-                0,
-                0,
-                state.originalImageSize.width,
-                state.originalImageSize.height
-              );
+              tempCtx.drawImage(drawingCanvas, 0, 0, state.originalImageSize.width, state.originalImageSize.height);
               finalCanvas = tempCanvas;
             }
             const canvasDataURL = finalCanvas.toDataURL("image/png");
-            const name =
-              state.activeLocalIndex !== null
-                ? state.localFiles[state.activeLocalIndex].name
-                : "whiteboard.png";
-            const baseName =
-              name.split(".").slice(0, -1).join(".") || "whiteboard";
-
+            const name = state.activeLocalIndex !== null ? state.localFiles[state.activeLocalIndex].name : 'whiteboard.png';
+            const baseName = name.split('.').slice(0, -1).join('.') || 'whiteboard';
+            
             // 发送到服务器保存
-            fetch("/save_annotation", {
-              method: "POST",
+            fetch('/save_annotation', {
+              method: 'POST',
               headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json'
               },
               body: JSON.stringify({
                 image_data: canvasDataURL,
-                filename: `${baseName}_overlay.png`,
-              }),
-            })
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.success) {
-                  showModal(`标注已保存: ${data.filename}`);
-                  // 可选: 提供下载链接
-                  const downloadLink = document.createElement("a");
-                  downloadLink.href = data.url;
-                  downloadLink.download = data.filename;
-                  document.body.appendChild(downloadLink);
-                  downloadLink.click();
-                  document.body.removeChild(downloadLink);
-                } else {
-                  showModal(`保存失败: ${data.error}`);
-                }
+                filename: `${baseName}_overlay.png`
               })
-              .catch((error) => {
-                console.error("保存错误:", error);
-                showModal("保存标注时发生错误");
-              });
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showModal(`标注已保存: ${data.filename}`);
+                // 可选: 提供下载链接
+                const downloadLink = document.createElement('a');
+                downloadLink.href = data.url;
+                downloadLink.download = data.filename;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+              } else {
+                showModal(`保存失败: ${data.error}`);
+              }
+            })
+            .catch(error => {
+              console.error('保存错误:', error);
+              showModal('保存标注时发生错误');
+            });
           } catch (error) {
             console.error("导出标注失败:", error);
             showModal(`导出标注失败: ${error.message}`);
           }
         });
-      });
-    </script>
-
-    <script>
-      // 新增聊天功能JavaScript
-      document.addEventListener("DOMContentLoaded", function () {
-        const chatMessages = document.getElementById("chat-messages");
-        const chatInput = document.getElementById("chat-input");
-        const sendButton = document.getElementById("send-message-btn");
-        const imageUploadBtn = document.getElementById("image-upload-btn");
-        const voiceUploadBtn = document.getElementById("voice-upload-btn");
-        const imageFileInput = document.getElementById("image-file-input");
-        const voiceFileInput = document.getElementById("voice-file-input");
-        const apiService = document.getElementById("api-service");
-
-        // 添加用户消息到聊天
-        function addUserMessage(message) {
-          const messageEl = document.createElement("div");
-          messageEl.className = "message user-message";
-          messageEl.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-user"></i>
-        </div>
-        <div class="message-content">
-          <p>${message}</p>
-          <div class="message-time">${getCurrentTime()}</div>
-        </div>
-      `;
-          chatMessages.appendChild(messageEl);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // 添加机器人消息到聊天
-        function addBotMessage(message) {
-          const messageEl = document.createElement("div");
-          messageEl.className = "message bot-message";
-          messageEl.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
-        <div class="message-content">
-          <p>${message}</p>
-          <div class="message-time">${getCurrentTime()}</div>
-        </div>
-      `;
-          chatMessages.appendChild(messageEl);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // 获取当前时间
-        function getCurrentTime() {
-          return new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        }
-
-        // 发送消息处理
-        function handleSendMessage() {
-          const message = chatInput.value.trim();
-          if (message) {
-            addUserMessage(message);
-
-            // 设置聊天消息到隐藏的textarea
-            document.getElementById("chat-message").value = message;
-
-            // 根据服务类型执行相应操作
-            if (apiService.value === "chat") {
-              // 执行聊天操作
-              executeApiAction();
-            } else if (apiService.value === "ocr") {
-              // 如果有图片文件，执行OCR
-              if (state.ocrFile) {
-                executeApiAction();
-              } else {
-                addBotMessage("请先上传图片进行识别");
-              }
-            } else if (apiService.value === "voice") {
-              // 如果有语音文件，执行语音识别
-              if (state.voiceFile) {
-                executeApiAction();
-              } else {
-                addBotMessage("请先上传语音文件");
-              }
-            }
-
-            chatInput.value = "";
-          }
-        }
-
-        // 绑定发送消息事件
-        sendButton.addEventListener("click", handleSendMessage);
-        chatInput.addEventListener("keypress", function (e) {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-          }
-        });
-
-        // 图片上传处理
-        imageUploadBtn.addEventListener("click", function () {
-          // 切换到OCR服务
-          apiService.value = "ocr";
-          imageFileInput.click();
-        });
-
-        imageFileInput.addEventListener("change", function (e) {
-          if (e.target.files.length > 0) {
-            handleOcrFileUpload(e.target.files[0]);
-            addUserMessage("[图片已上传]");
-            addBotMessage("图片上传成功，请问您想对这张图片进行什么操作？");
-          }
-        });
-
-        // 语音上传处理
-        voiceUploadBtn.addEventListener("click", function () {
-          // 切换到语音服务
-          apiService.value = "voice";
-          voiceFileInput.click();
-        });
-
-        voiceFileInput.addEventListener("change", function (e) {
-          if (e.target.files.length > 0) {
-            handleVoiceFileUpload(e.target.files[0]);
-            addUserMessage("[语音消息已上传]");
-            addBotMessage("语音文件上传成功，正在处理...");
-            executeApiAction();
-          }
-        });
-
-        // 修改API响应处理函数，将结果显示在聊天中
-        const originalUpdateApiResponse = updateApiResponse;
-        window.updateApiResponse = function (message) {
-          originalUpdateApiResponse(message);
-
-          // 尝试解析JSON响应
-          try {
-            const data = JSON.parse(message);
-            if (data.text || data.message) {
-              addBotMessage(data.text || data.message);
-            } else {
-              addBotMessage("请求成功完成");
-            }
-          } catch (e) {
-            // 如果不是JSON，直接显示消息
-            if (message.length > 200) {
-              addBotMessage("收到较长响应，请查看详情");
-            } else {
-              addBotMessage(message);
-            }
-          }
-        };
-
-        // 修改API状态更新函数
-        const originalSetApiStatus = setApiStatus;
-        window.setApiStatus = function (status) {
-          originalSetApiStatus(status);
-
-          const statusElement = document.getElementById("api-status-text");
-          const statusIndicator = document.querySelector(".api-status");
-
-          if (statusElement && statusIndicator) {
-            statusElement.textContent =
-              status === "connected"
-                ? "在线"
-                : status === "connecting"
-                ? "连接中..."
-                : "离线";
-
-            statusIndicator.className = "api-status " + status;
-          }
-        };
       });
     </script>
   </body>
