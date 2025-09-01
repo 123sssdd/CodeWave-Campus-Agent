@@ -225,6 +225,7 @@
         border-radius: 10px;
         padding: 20px;
         margin: 20px 0;
+        color: #000;
     }
     
     .feedback-correct {
@@ -1552,7 +1553,7 @@ console.log(solution('测试输入'));`;
                 feedbackHTML += `
                     <div class="mt-3">
                         <strong>📋 详细分析:</strong>
-                        <div class="mt-2" style="white-space: pre-line; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <div class="mt-2" style="white-space: pre-line; background-color: #f8f9fa; padding: 10px; border-radius: 5px; color: #000;">
                             ${grading.feedback}
                         </div>
                     </div>`;
@@ -1613,7 +1614,7 @@ console.log(solution('测试输入'));`;
         feedbackHTML += `
                     <div class="mt-3">
                         <strong>📖 标准答案:</strong>
-                        <div class="mt-2" style="background-color: #e8f5e8; padding: 10px; border-radius: 5px;">
+                        <div class="mt-2" style="background-color: #e8f5e8; padding: 10px; border-radius: 5px; color: #000;">
                             ${response.correct_answer}
                         </div>
                     </div>`;
@@ -1623,7 +1624,7 @@ console.log(solution('测试输入'));`;
             feedbackHTML += `
                     <div class="mt-3">
                         <strong>📚 解释:</strong>
-                        <div class="mt-2">
+                        <div class="mt-2" style="color: #000;">
                             ${response.explanation}
                         </div>
                     </div>`;
@@ -1634,7 +1635,7 @@ console.log(solution('测试输入'));`;
             feedbackHTML += `
                     <div class="mt-3">
                         <strong>💻 代码执行结果:</strong>
-                        <div class="execution-result mt-2" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px;">
+                        <div class="execution-result mt-2" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; color: #000;">
                             ${response.execution_result.success ? '✅ 执行成功' : '❌ 执行失败'}
                             ${response.execution_result.total_test_cases > 0 ? 
                                 `<br>测试通过: ${response.execution_result.test_cases_passed}/${response.execution_result.total_test_cases}` : ''}
