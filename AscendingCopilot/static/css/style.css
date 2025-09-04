@@ -902,27 +902,34 @@ body::before {
 
 /* 置信度消息样式 */
 .confidence-message {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 15px;
-  margin: 10px 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 4px solid #64ffda;
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin: 12px 0;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .confidence-bar {
   position: relative;
-  height: 20px;
-  background: #edf2f7;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  height: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border-radius: 12px;
+  margin-bottom: 12px;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .confidence-fill {
   height: 100%;
-  background: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
-  border-radius: 10px;
+  background: linear-gradient(90deg, #64ffda 0%, #ff77c6 60%, #7c4dff 100%);
+  border-radius: 12px;
   transition: width 0.3s ease;
+  box-shadow: 0 0 18px rgba(100, 255, 218, 0.35), 0 0 28px rgba(124, 77, 255, 0.25);
 }
 
 .confidence-threshold {
@@ -930,8 +937,9 @@ body::before {
   top: 0;
   width: 2px;
   height: 100%;
-  background: #e53e3e;
+  background: rgba(255, 119, 198, 0.9);
   border-radius: 1px;
+  box-shadow: 0 0 8px rgba(255, 119, 198, 0.8);
 }
 
 .confidence-text {
@@ -939,19 +947,20 @@ body::before {
   justify-content: space-between;
   align-items: center;
   font-size: 0.9rem;
-  color: #4a5568;
+  color: #e2e8f0;
 }
 
 .confidence-status {
   font-weight: 600;
+  color: #e2e8f0;
 }
 
 .confidence-status:contains("不足") {
-  color: #e53e3e;
+  color: #ff7b7b;
 }
 
 .confidence-status:contains("充足") {
-  color: #38a169;
+  color: #64ffda;
 }
 
 /* 输入区域样式 */
