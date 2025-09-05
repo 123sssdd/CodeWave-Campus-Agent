@@ -1,7 +1,7 @@
 {
 	"Hero": {
-		"h1": "AscendLight Copilot",
-		"h2": "希望能帮助到您的学习(#^.^#)"
+		"h1": "AI码",
+		"h2": "您的智能学习伙伴(#^.^#)"
 	},
 	"Feature": {
 		"h2": "Feature",
@@ -22,7 +22,7 @@
 		"h3": "学习工具",
 		"description1": "以下是学习工具",
 		"description2": "点击即可跳转",
-		"description3": "，您都可以免费使用"
+		"description3": "，欢迎使用"
 	},
 	"Faq": {
 		"h2": "FAQ",

@@ -46,28 +46,28 @@ export const FeaturesList = {
   FRETURES_ZH: [
     {
       icon: SiGithub,
-      title: "开源优势",
-      description: "完全免费，拥有丰富的自定义选项。",
+      title: "专业对口",
+      description: "专门为计算机领域学习者、爱好者设计的学习助手。",
     },
     {
       icon: FaMobileAlt,
-      title: "响应式设计",
-      description: "精心设计的模板，确保在任何设备上都能最佳显示。",
+      title: "全程陪伴",
+      description: "从学习策略到成果总结，ai码产品全程相伴，致力于提供最全面的帮助。",
     },
     {
       icon: MdDashboardCustomize,
-      title: "易于定制",
-      description: "无需任何编程知识，轻松更改颜色、字体和布局。",
+      title: "全新的AI角色",
+      description: "完全颠覆常见的学霸 AI 形象。马马虎虎经常提问，幽默风趣爱开玩笑，这样聪明又不聪明的“Al学渣”你见过吗?",
     },
     {
       icon: GrOptimize,
-      title: "SEO优化",
-      description: "模板内置搜索引擎优化，提升网站的可见性。",
+      title: "一站式解决",
+      description: "答疑解惑、就业辅导、制定计划、休闲娱乐,所有功能一站配齐。在ai码，没有最便捷，只有更便捷。",
     },
     {
       icon: GrDeploy,
-      title: "一键部署",
-      description: "与领先的网络托管服务紧密集成，实现即时网站发布。",
+      title: "个性化题库",
+      description: "适用于学习者的学术题库+适用于求职者的面试题库，个性化题库将根据你的需求量身定制。",
     },
     {
       icon: FaEarthAsia,
